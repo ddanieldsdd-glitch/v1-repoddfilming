@@ -1,6 +1,6 @@
 {
   "site": {
-    "name": "Daniel Díaz Sánchez",
+    "name": "Dani Díaz",
     "title": {
       "es": "Director de Fotografía",
       "en": "Director of Photography"
@@ -10,6 +10,7 @@
       "en": "Light as narrative. Image as memory."
     },
     "showreel_url": "https://vimeo.com/1054144154",
+    "about_image": "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777663983/IMG_3307_o1hbol.jpg",
     "social": {
       "email": "ddfilming@gmail.com",
       "instagram": "https://www.instagram.com/ddani_00",
@@ -24,6 +25,51 @@
   },
   "projects": [
     {
+      "id": "p-origami",
+      "slug": "origami",
+      "category": "fiction",
+      "title": "Origami",
+      "year": 2024,
+      "type": { "es": "Cortometraje de Ficción", "en": "Fiction Short Film" },
+      "director": "Álvaro León",
+      "format": "Sony FX6 & Canon FD",
+      "synopsis": {
+        "es": "La felicidad de Lucía se quiebra cuando su padre inicia una discusión violenta. Un plano secuencia nos sumerge en la angustia emocional de una infancia marcada por el miedo y la violencia intrafamiliar.",
+        "en": "Lucía's happiness shatters when her father starts a violent argument. A single sequence shot immerses us in the emotional anguish of a childhood marked by fear and domestic violence."
+      },
+      "cover": "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777654136/1751032809861_qaqeld.jpg",
+      "poster": "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777654137/POSTER-ORIGAMI2-scaled_r5mmum.jpg",
+      "preview_url": "https://www.youtube.com/watch?v=Luc-wGy0fyI",
+      "stills": [
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777654136/1751032809861_qaqeld.jpg",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777654135/1751032809816_ljerlx.jpg",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777654135/1751032809737_pi4siu.jpg",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777654134/1751032809662_rkr83u.jpg"
+      ],
+      "bts": [],
+      "external_link": "https://www.imdb.com/es-es/title/tt37457776/"
+    },
+    {
+      "id": "p-ayer",
+      "slug": "ayer",
+      "category": "music-video",
+      "title": "Ayer",
+      "year": 2024,
+      "type": { "es": "Videoclip", "en": "Music Video" },
+      "director": "",
+      "format": "Sony FX6 & Canon FD",
+      "synopsis": {
+        "es": "Canción en colaboración entre Moreira y Antónimo.",
+        "en": "A collaboration track between Moreira and Antónimo."
+      },
+      "cover": "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777653886/Captura_de_pantalla_2025-02-01_a_las_15.47.50_bbpr9n.png",
+      "poster": "",
+      "preview_url": "https://www.youtube.com/watch?v=cG5_13a4scM",
+      "stills": [],
+      "bts": [],
+      "external_link": ""
+    },
+    {
       "id": "p-001",
       "slug": "la-edad-de-la-ira",
       "category": "fiction",
@@ -37,6 +83,8 @@
         "en": "An intimate portrait of adolescence and quiet rage in a small coastal town. Natural light and grain build a world that feels close, almost tactile."
       },
       "cover": "https://images.unsplash.com/photo-1634812932571-b33d55f0c016?crop=entropy&cs=srgb&fm=jpg&q=85&w=2400",
+      "poster": "",
+      "preview_url": "",
       "stills": [
         "https://images.unsplash.com/photo-1542204165-65bf26472b9b?crop=entropy&cs=srgb&fm=jpg&q=85&w=2000",
         "https://images.unsplash.com/photo-1518929458119-e5bf444c30f4?crop=entropy&cs=srgb&fm=jpg&q=85&w=2000",
@@ -62,6 +110,8 @@
         "en": "Two sisters meet again at their family home after ten years apart. A single night to say everything that was never said."
       },
       "cover": "https://images.unsplash.com/photo-1485846234645-a62644f84728?crop=entropy&cs=srgb&fm=jpg&q=85&w=2400",
+      "poster": "",
+      "preview_url": "",
       "stills": [
         "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?crop=entropy&cs=srgb&fm=jpg&q=85&w=2000",
         "https://images.unsplash.com/photo-1440404653325-ab127d49abc1?crop=entropy&cs=srgb&fm=jpg&q=85&w=2000"
@@ -83,31 +133,12 @@
         "en": "A journey across the rural communities of inland Iberia. Portraits of craft, slow time, and landscapes that still resist."
       },
       "cover": "https://images.unsplash.com/photo-1500382017468-9049fed747ef?crop=entropy&cs=srgb&fm=jpg&q=85&w=2400",
+      "poster": "",
+      "preview_url": "",
       "stills": [
         "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?crop=entropy&cs=srgb&fm=jpg&q=85&w=2000",
         "https://images.unsplash.com/photo-1501785888041-af3ef285b470?crop=entropy&cs=srgb&fm=jpg&q=85&w=2000",
         "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?crop=entropy&cs=srgb&fm=jpg&q=85&w=2000"
-      ],
-      "bts": [],
-      "external_link": ""
-    },
-    {
-      "id": "p-004",
-      "slug": "los-dias-que-quedan",
-      "category": "documentary",
-      "title": "Los Días que Quedan",
-      "year": 2022,
-      "type": { "es": "Documental", "en": "Documentary" },
-      "director": "Carla Moreno",
-      "format": "Blackmagic URSA Mini Pro 12K · Canon FD",
-      "synopsis": {
-        "es": "Una familia y una enfermedad. La cámara como testigo silencioso de los gestos pequeños que sostienen el final de un tiempo.",
-        "en": "A family and an illness. The camera as a silent witness to the small gestures that sustain the end of an era."
-      },
-      "cover": "https://images.unsplash.com/photo-1502139214982-d0ad755818d8?crop=entropy&cs=srgb&fm=jpg&q=85&w=2400",
-      "stills": [
-        "https://images.unsplash.com/photo-1499781350541-7783f6c6a0c8?crop=entropy&cs=srgb&fm=jpg&q=85&w=2000",
-        "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?crop=entropy&cs=srgb&fm=jpg&q=85&w=2000"
       ],
       "bts": [],
       "external_link": ""
@@ -126,72 +157,11 @@
         "en": "A fashion campaign built on the contrast between body and landscape. Anamorphic glass, natural light and a contemplative cut."
       },
       "cover": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?crop=entropy&cs=srgb&fm=jpg&q=85&w=2400",
+      "poster": "",
+      "preview_url": "",
       "stills": [
         "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?crop=entropy&cs=srgb&fm=jpg&q=85&w=2000",
         "https://images.unsplash.com/photo-1483985988355-763728e1935b?crop=entropy&cs=srgb&fm=jpg&q=85&w=2000"
-      ],
-      "bts": [],
-      "external_link": ""
-    },
-    {
-      "id": "p-006",
-      "slug": "mahou-verbena",
-      "category": "commercial",
-      "title": "Mahou — Verbena",
-      "year": 2023,
-      "type": { "es": "Spot publicitario", "en": "Commercial" },
-      "director": "Pablo Maestres",
-      "format": "RED V-Raptor · Tribe7 Blackwing",
-      "synopsis": {
-        "es": "Verano, calle, gente real. Una celebración a la luz dorada de las terrazas españolas en una pieza para Mahou.",
-        "en": "Summer, street, real people. A celebration of the golden light of Spanish terraces in a piece for Mahou."
-      },
-      "cover": "https://images.unsplash.com/photo-1504609813442-a8924e83f76e?crop=entropy&cs=srgb&fm=jpg&q=85&w=2400",
-      "stills": [
-        "https://images.unsplash.com/photo-1551845041-63e8e76836ea?crop=entropy&cs=srgb&fm=jpg&q=85&w=2000"
-      ],
-      "bts": [],
-      "external_link": ""
-    },
-    {
-      "id": "p-007",
-      "slug": "rosalia-balada",
-      "category": "music-video",
-      "title": "Balada",
-      "year": 2024,
-      "type": { "es": "Videoclip", "en": "Music Video" },
-      "director": "Manuel Alcalá",
-      "format": "35mm Kodak Vision3 500T · Panavision Primo",
-      "synopsis": {
-        "es": "Un único plano secuencia de 4 minutos rodado en 35mm. Cuerpo, baile y arquitectura brutalista bajo una sola fuente de luz.",
-        "en": "A single 4-minute sequence shot on 35mm. Body, dance and brutalist architecture under a single source of light."
-      },
-      "cover": "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?crop=entropy&cs=srgb&fm=jpg&q=85&w=2400",
-      "stills": [
-        "https://images.unsplash.com/photo-1516280440614-37939bbacd81?crop=entropy&cs=srgb&fm=jpg&q=85&w=2000",
-        "https://images.unsplash.com/photo-1506157786151-b8491531f063?crop=entropy&cs=srgb&fm=jpg&q=85&w=2000"
-      ],
-      "bts": [
-        "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?crop=entropy&cs=srgb&fm=jpg&q=85&w=2000"
-      ],
-      "external_link": ""
-    },
-    {
-      "id": "p-008",
-      "slug": "vetusta-morla-noche",
-      "category": "music-video",
-      "title": "Noche",
-      "year": 2022,
-      "type": { "es": "Videoclip", "en": "Music Video" },
-      "director": "Sara Ochoa",
-      "format": "16mm Kodak 250D · Lomo Anamorphic",
-      "synopsis": {
-        "es": "Madrid de madrugada. Coches, neón y un viaje imposible. Una pieza nostálgica rodada íntegramente en 16mm.",
-        "en": "Madrid at dawn. Cars, neon and an impossible journey. A nostalgic piece shot entirely on 16mm."
-      },
-      "cover": "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?crop=entropy&cs=srgb&fm=jpg&q=85&w=2400",
-      "stills": [
-        "https://images.unsplash.com/photo-1542038784456-1ea8e935640e?crop=entropy&cs=srgb&fm=jpg&q=85&w=2000"
       ],
       "bts": [],
       "external_link": ""

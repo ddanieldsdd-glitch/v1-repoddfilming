@@ -87,3 +87,17 @@ a:focus-visible {
 .fade-up {
   animation: ddpFadeUp 700ms ease-out both;
 }
+
+/* Fullscreen hero: make the Vimeo iframe COVER the viewport without letterbox */
+.hero-fullscreen iframe {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  width: 177.77vh !important;   /* 16/9 * 100vh */
+  height: 100vh !important;
+  min-width: 100vw !important;
+  min-height: 56.25vw !important; /* 9/16 * 100vw */
+  transform: translate(-50%, -50%) !important;
+  pointer-events: none !important;
+  border: 0 !important;
+}

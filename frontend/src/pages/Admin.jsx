@@ -215,6 +215,14 @@ const SiteSection = ({ content, onSave }) => {
             onChange={(e) => updSite({ showreel_url: e.target.value })}
           />
         </Field>
+        <Field label="About photo URL (shown on /about)">
+          <input
+            data-testid="site-about-image"
+            className={inputCls}
+            value={draft.site.about_image || ""}
+            onChange={(e) => updSite({ about_image: e.target.value })}
+          />
+        </Field>
         <Field label="Title ES">
           <input
             className={inputCls}
@@ -384,6 +392,7 @@ export default function Admin() {
       format: "",
       synopsis: { es: "", en: "" },
       cover: "",
+      poster: "",
       preview_url: "",
       stills: [],
       bts: [],

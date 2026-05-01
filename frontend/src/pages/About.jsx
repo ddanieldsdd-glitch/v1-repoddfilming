@@ -7,11 +7,12 @@ export default function About() {
 
   const text = tr(content.about, lang);
   const paragraphs = String(text).split("\n").filter(Boolean);
+  const photo = content.site.about_image;
 
   return (
     <div data-testid="about-page" className="bg-white pt-32 md:pt-40 pb-24">
       <div className="px-6 md:px-12 lg:px-16 grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-16">
-        <div className="md:col-span-4">
+        <div className="md:col-span-5">
           <p className="text-[11px] tracking-[0.32em] uppercase text-neutral-500 mb-6">
             {tr(T.about.title, lang)}
           </p>
@@ -21,8 +22,19 @@ export default function About() {
           <p className="mt-4 text-sm tracking-[0.2em] uppercase text-neutral-500">
             {tr(content.site.title, lang)}
           </p>
+
+          {photo && (
+            <div className="mt-10 md:mt-14 overflow-hidden bg-neutral-100 aspect-[4/5] max-w-md">
+              <img
+                src={photo}
+                alt={content.site.name}
+                data-testid="about-photo"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
         </div>
-        <div className="md:col-span-7 md:col-start-6">
+        <div className="md:col-span-6 md:col-start-7">
           <div className="space-y-6 text-[17px] md:text-[18px] leading-[1.7] text-neutral-800 max-w-2xl">
             {paragraphs.map((p, i) => (
               <p key={i}>{p}</p>

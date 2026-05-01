@@ -8,28 +8,44 @@ export const Nav = () => {
   const [lang, setLang] = useLang();
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
+  const [pastHero, setPastHero] = useState(false);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 24);
+      // Nav hidden until scroll reaches near the end of the fullscreen hero (only on home)
+      setPastHero(y > window.innerHeight * 0.85);
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [location.pathname]);
 
   useEffect(() => setOpen(false), [location.pathname]);
+  // Reset hero-pastness when route changes
+  useEffect(() => {
+    if (location.pathname === "/") {
+      setPastHero(window.scrollY > window.innerHeight * 0.85);
+    } else {
+      setPastHero(true);
+    }
+  }, [location.pathname]);
 
   if (location.pathname.startsWith("/admin")) return null;
 
-  // Hero is now on a white background — nav uses normal dark text everywhere.
   const txt = "text-black";
   const muted = "text-neutral-500";
   const divider = "border-black/15";
   const inactiveLink = "text-neutral-500 hover:text-black";
-  const isHomeHero = false;
 
-  // Enlarge the logo at the top of the home page so the name reads big.
-  const bigLogo = location.pathname === "/" && !scrolled;
+  const isHome = location.pathname === "/";
+  const navVisible = !isHome || pastHero;
 
   const linkClass = ({ isActive }) =>
     `text-[11px] tracking-[0.28em] uppercase transition-colors ${
@@ -39,28 +55,20 @@ export const Nav = () => {
   return (
     <header
       data-testid="site-nav"
-      className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
-        scrolled ? "bg-white/85 backdrop-blur-xl border-b border-black/5" : "bg-transparent"
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        navVisible
+          ? "opacity-100 translate-y-0 pointer-events-auto"
+          : "opacity-0 -translate-y-2 pointer-events-none"
+      } ${
+        scrolled ? "bg-white/85 backdrop-blur-xl border-b border-black/5" : "bg-white/70 backdrop-blur-md border-b border-black/5"
       }`}
     >
-      <div className={`px-6 md:px-12 lg:px-16 flex items-center justify-between transition-all duration-500 ${bigLogo ? "py-8 md:py-12" : "py-5 md:py-6"}`}>
+      <div className="px-6 md:px-12 lg:px-16 py-5 md:py-6 flex items-center justify-between">
         <Link to="/" data-testid="nav-logo" className="flex flex-col leading-none">
-          <span
-            className={`font-medium tracking-[0.02em] transition-all duration-500 ${txt} ${
-              bigLogo
-                ? "text-2xl md:text-4xl lg:text-5xl"
-                : "text-[15px] md:text-base"
-            }`}
-          >
+          <span className={`font-medium text-[15px] md:text-base tracking-[0.04em] ${txt}`}>
             {content.site.name}
           </span>
-          <span
-            className={`tracking-[0.32em] uppercase transition-all duration-500 ${muted} ${
-              bigLogo
-                ? "text-[11px] md:text-[13px] mt-3 md:mt-4"
-                : "text-[10px] md:text-[11px] mt-1"
-            }`}
-          >
+          <span className={`text-[10px] md:text-[11px] tracking-[0.32em] uppercase mt-1 ${muted}`}>
             {tr(content.site.title, lang)}
           </span>
         </Link>
@@ -85,7 +93,7 @@ export const Nav = () => {
             >
               ES
             </button>
-            <span className={isHomeHero ? "text-white/40" : "text-neutral-300"}>/</span>
+            <span className="text-neutral-300">/</span>
             <button
               data-testid="lang-en"
               onClick={() => setLang("en")}
@@ -104,9 +112,9 @@ export const Nav = () => {
           onClick={() => setOpen((v) => !v)}
           aria-label="Menu"
         >
-          <span className={`block w-5 h-px transition-transform ${isHomeHero ? "bg-white" : "bg-black"} ${open ? "translate-y-[6px] rotate-45" : ""}`} />
-          <span className={`block w-5 h-px transition-opacity ${isHomeHero ? "bg-white" : "bg-black"} ${open ? "opacity-0" : "opacity-100"}`} />
-          <span className={`block w-5 h-px transition-transform ${isHomeHero ? "bg-white" : "bg-black"} ${open ? "-translate-y-[6px] -rotate-45" : ""}`} />
+          <span className={`block w-5 h-px bg-black transition-transform ${open ? "translate-y-[6px] rotate-45" : ""}`} />
+          <span className={`block w-5 h-px bg-black transition-opacity ${open ? "opacity-0" : "opacity-100"}`} />
+          <span className={`block w-5 h-px bg-black transition-transform ${open ? "-translate-y-[6px] -rotate-45" : ""}`} />
         </button>
       </div>
 

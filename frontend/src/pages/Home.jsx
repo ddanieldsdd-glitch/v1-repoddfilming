@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, ChevronDown } from "lucide-react";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 import { VimeoEmbed } from "../components/VimeoEmbed";
@@ -14,24 +14,37 @@ export default function Home() {
 
   return (
     <div data-testid="home-page" className="bg-white">
-      {/* HERO — showreel only (name is shown big in the navbar) */}
-      <section className="pt-40 md:pt-48 pb-12 md:pb-16 px-6 md:px-12 lg:px-16">
-        <div className="bg-black">
-          <VimeoEmbed
-            url={content.site.showreel_url}
-            autoplay
-            background
-            muted
-            className="aspect-video w-full"
-            testId="hero-showreel"
-          />
+      {/* FULLSCREEN HERO — showreel covers the entire viewport; nav appears on scroll */}
+      <section className="relative w-full h-screen bg-black overflow-hidden hero-fullscreen">
+        <VimeoEmbed
+          url={content.site.showreel_url}
+          autoplay
+          background
+          muted
+          className="absolute inset-0 w-full h-full"
+          testId="hero-showreel"
+        />
+        {/* Subtle scroll hint */}
+        <div className="absolute bottom-8 md:bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/70 text-[10px] tracking-[0.32em] uppercase pointer-events-none">
+          <span>{tr(T.hero.scroll, lang)}</span>
+          <ChevronDown className="w-4 h-4 animate-bounce" strokeWidth={1} />
         </div>
-        {/* Hidden H1 kept for accessibility / SEO / tests */}
+        {/* Hidden H1/title for SEO/accessibility/tests */}
         <h1 data-testid="hero-name" className="sr-only">
           {content.site.name}
         </h1>
         <p data-testid="hero-title" className="sr-only">
           {tr(content.site.title, lang)}
+        </p>
+      </section>
+
+      {/* NAME BLOCK — below the hero, big editorial */}
+      <section className="px-6 md:px-12 lg:px-16 py-20 md:py-28">
+        <p className="text-[11px] tracking-[0.32em] uppercase text-neutral-500 mb-6">
+          {tr(content.site.title, lang)}
+        </p>
+        <p className="text-6xl md:text-8xl lg:text-9xl font-light tracking-tight leading-[0.92]">
+          {content.site.name}
         </p>
       </section>
 

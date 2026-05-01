@@ -98,12 +98,14 @@ export default function ProjectDetail() {
 
           <aside className="md:col-span-4 md:border-l md:border-black/10 md:pl-10 pt-6 md:pt-2">
             <dl className="space-y-6 text-sm">
-              <div>
-                <dt className="text-[10px] tracking-[0.32em] uppercase text-neutral-400 mb-1">
-                  {tr(T.project.director, lang)}
-                </dt>
-                <dd className="text-black">{project.director}</dd>
-              </div>
+              {project.director && (
+                <div>
+                  <dt className="text-[10px] tracking-[0.32em] uppercase text-neutral-400 mb-1">
+                    {tr(T.project.director, lang)}
+                  </dt>
+                  <dd className="text-black">{project.director}</dd>
+                </div>
+              )}
               <div>
                 <dt className="text-[10px] tracking-[0.32em] uppercase text-neutral-400 mb-1">
                   {tr(T.project.year, lang)}
@@ -123,6 +125,17 @@ export default function ProjectDetail() {
                 <dd className="text-black">{project.format}</dd>
               </div>
             </dl>
+            {project.poster && (
+              <div className="mt-10 bg-neutral-100 overflow-hidden">
+                <img
+                  src={project.poster}
+                  alt={`${project.title} poster`}
+                  data-testid="project-poster"
+                  loading="lazy"
+                  className="w-full h-auto object-cover"
+                />
+              </div>
+            )}
           </aside>
         </div>
       </section>
