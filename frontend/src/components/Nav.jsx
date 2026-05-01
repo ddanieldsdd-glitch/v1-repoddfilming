@@ -21,12 +21,12 @@ export const Nav = () => {
 
   if (location.pathname.startsWith("/admin")) return null;
 
-  // On the home page, the hero has a dark background; switch to dark text only after scroll.
-  const isHomeHero = location.pathname === "/" && !scrolled;
-  const txt = isHomeHero ? "text-white" : "text-black";
-  const muted = isHomeHero ? "text-white/65" : "text-neutral-500";
-  const divider = isHomeHero ? "border-white/25" : "border-black/15";
-  const inactiveLink = isHomeHero ? "text-white/65 hover:text-white" : "text-neutral-500 hover:text-black";
+  // Hero is now on a white background — nav uses normal dark text everywhere.
+  const txt = "text-black";
+  const muted = "text-neutral-500";
+  const divider = "border-black/15";
+  const inactiveLink = "text-neutral-500 hover:text-black";
+  const isHomeHero = false;
 
   const linkClass = ({ isActive }) =>
     `text-[11px] tracking-[0.28em] uppercase transition-colors ${
