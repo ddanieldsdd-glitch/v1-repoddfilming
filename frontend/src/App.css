@@ -1,34 +1,115 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
+/* Editorial cinematic typography */
+@import url("https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@300,400,500,700&f[]=satoshi@300,400,500,700&display=swap");
+
+html,
+body,
+#root,
+.App {
+  background: #ffffff;
+  color: #0a0a0a;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+body {
+  font-family: "Satoshi", -apple-system, BlinkMacSystemFont, "Helvetica Neue",
+    Arial, sans-serif;
+  font-feature-settings: "kern" 1, "liga" 1;
+  letter-spacing: -0.005em;
 }
 
-.App-header {
-    background-color: #0f0f10;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.font-display {
+  font-family: "Cabinet Grotesk", "Helvetica Neue", Arial, sans-serif;
+  font-feature-settings: "ss01" 1;
 }
 
-.App-link {
-    color: #61dafb;
+/* Selection */
+::selection {
+  background: #0a0a0a;
+  color: #fdfdfd;
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+/* Custom thin scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #ffffff;
+}
+::-webkit-scrollbar-thumb {
+  background: #d4d4d4;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a3a3a3;
+}
+
+/* Image base */
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* Smoother focus */
+:focus-visible {
+  outline: 2px solid #0a0a0a;
+  outline-offset: 2px;
+}
+button:focus,
+a:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+}
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #0a0a0a;
+  outline-offset: 4px;
+}
+
+/* Subtle entrance animation utility */
+@keyframes ddpFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-up {
+  animation: ddpFadeUp 700ms ease-out both;
+}
+
+/* Hero video bg fit (keeps it cinematic & full bleed) */
+section .aspect-video iframe {
+  width: 100%;
+  height: 100%;
+}
+
+/* Make hero showreel cover container */
+[data-testid="hero-showreel"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+}
+[data-testid="hero-showreel"] iframe {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 177.77vh; /* 16:9 fill */
+  height: 100vh;
+  min-width: 100%;
+  min-height: 56.25vw;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
 }
