@@ -16,7 +16,6 @@ export default function Home() {
     <div data-testid="home-page" className="bg-white">
       {/* HERO */}
       <section className="pt-28 md:pt-32 pb-16 md:pb-24 px-6 md:px-12 lg:px-16">
-        {/* Autoplay showreel (muted, looped, no controls) — text sits below */}
         <div className="bg-black">
           <VimeoEmbed
             url={content.site.showreel_url}
@@ -28,7 +27,6 @@ export default function Home() {
           />
         </div>
 
-        {/* Caption block below the player */}
         <div className="mt-10 md:mt-14 grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-10 items-end">
           <div className="md:col-span-9">
             <h1
@@ -47,7 +45,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* SELECTED WORK PREVIEW */}
+      {/* SELECTED WORK — full-bleed tiles */}
       <section
         data-testid="home-selected-section"
         className="px-6 md:px-12 lg:px-16 py-20 md:py-28 border-t border-black/10"
@@ -65,14 +63,9 @@ export default function Home() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-16 md:gap-y-24">
+        <div className="flex flex-col gap-20 md:gap-28">
           {featured.map((p, i) => (
-            <div
-              key={p.id}
-              className={i % 2 === 1 ? "md:mt-24" : ""}
-            >
-              <ProjectCard project={p} lang={lang} eager={i < 2} />
-            </div>
+            <ProjectCard key={p.id} project={p} lang={lang} eager={i < 1} />
           ))}
         </div>
 

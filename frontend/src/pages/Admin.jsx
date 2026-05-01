@@ -122,6 +122,15 @@ const ProjectForm = ({ value, onChange }) => {
           onChange={(e) => update({ cover: e.target.value })}
         />
       </Field>
+      <Field label="Preview video URL (Vimeo — plays on hover)">
+        <input
+          data-testid="form-preview"
+          className={inputCls}
+          value={value.preview_url || ""}
+          onChange={(e) => update({ preview_url: e.target.value })}
+          placeholder="https://vimeo.com/..."
+        />
+      </Field>
       <Field label="External link (optional)">
         <input
           className={inputCls}
@@ -375,6 +384,7 @@ export default function Admin() {
       format: "",
       synopsis: { es: "", en: "" },
       cover: "",
+      preview_url: "",
       stills: [],
       bts: [],
       external_link: "",

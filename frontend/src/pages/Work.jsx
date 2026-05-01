@@ -52,22 +52,15 @@ export default function Work() {
           ))}
         </div>
 
-        {/* GRID */}
+        {/* FULL-BLEED LIST */}
         {list.length === 0 ? (
           <p className="py-32 text-neutral-500" data-testid="work-empty">
             {tr(T.work.none, lang)}
           </p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 lg:gap-x-8 gap-y-14 md:gap-y-20 py-16 md:py-24">
+          <div className="flex flex-col gap-20 md:gap-28 py-16 md:py-24">
             {list.map((p, i) => (
-              <div
-                key={p.id}
-                className={
-                  i % 3 === 1 ? "lg:mt-12" : i % 3 === 2 ? "lg:mt-24" : ""
-                }
-              >
-                <ProjectCard project={p} lang={lang} eager={i < 3} />
-              </div>
+              <ProjectCard key={p.id} project={p} lang={lang} eager={i < 1} />
             ))}
           </div>
         )}
