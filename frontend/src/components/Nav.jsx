@@ -28,6 +28,9 @@ export const Nav = () => {
   const inactiveLink = "text-neutral-500 hover:text-black";
   const isHomeHero = false;
 
+  // Enlarge the logo at the top of the home page so the name reads big.
+  const bigLogo = location.pathname === "/" && !scrolled;
+
   const linkClass = ({ isActive }) =>
     `text-[11px] tracking-[0.28em] uppercase transition-colors ${
       isActive ? txt : inactiveLink
@@ -40,12 +43,24 @@ export const Nav = () => {
         scrolled ? "bg-white/85 backdrop-blur-xl border-b border-black/5" : "bg-transparent"
       }`}
     >
-      <div className="px-6 md:px-12 lg:px-16 py-5 md:py-6 flex items-center justify-between">
+      <div className={`px-6 md:px-12 lg:px-16 flex items-center justify-between transition-all duration-500 ${bigLogo ? "py-8 md:py-12" : "py-5 md:py-6"}`}>
         <Link to="/" data-testid="nav-logo" className="flex flex-col leading-none">
-          <span className={`font-medium text-[15px] md:text-base tracking-[0.04em] ${txt}`}>
+          <span
+            className={`font-medium tracking-[0.02em] transition-all duration-500 ${txt} ${
+              bigLogo
+                ? "text-2xl md:text-4xl lg:text-5xl"
+                : "text-[15px] md:text-base"
+            }`}
+          >
             {content.site.name}
           </span>
-          <span className={`text-[10px] md:text-[11px] tracking-[0.32em] uppercase mt-1 ${muted}`}>
+          <span
+            className={`tracking-[0.32em] uppercase transition-all duration-500 ${muted} ${
+              bigLogo
+                ? "text-[11px] md:text-[13px] mt-3 md:mt-4"
+                : "text-[10px] md:text-[11px] mt-1"
+            }`}
+          >
             {tr(content.site.title, lang)}
           </span>
         </Link>

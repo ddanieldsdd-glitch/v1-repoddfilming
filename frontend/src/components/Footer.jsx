@@ -14,7 +14,7 @@ export const Footer = () => {
   return (
     <footer
       data-testid="site-footer"
-      className="border-t border-black/10 mt-32 md:mt-48 px-6 md:px-12 lg:px-16 py-16 md:py-24 bg-white"
+      className="border-t border-black/10 mt-0 px-6 md:px-12 lg:px-16 py-16 md:py-20 bg-white"
     >
       <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-16">
         <div className="md:col-span-7">
