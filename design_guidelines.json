@@ -1,0 +1,109 @@
+{
+  "theme": "light",
+  "archetype": "Archetype 4: Swiss & High-Contrast",
+  "domain": "Cinematography Portfolio",
+  "colors": {
+    "background": "#FDFDFD",
+    "surface": "#FFFFFF",
+    "primary_text": "#0A0A0A",
+    "secondary_text": "#555555",
+    "border": "#E5E5E5",
+    "accent": "#0A0A0A",
+    "hover_bg": "#F5F5F5",
+    "dark_mode_alternative": "Avoid dark mode to keep editorial feel, but if needed: bg #0A0A0A, text #FDFDFD"
+  },
+  "typography": {
+    "headings": {
+      "family": "Cabinet Grotesk, sans-serif",
+      "weight": "font-light, font-medium, font-bold",
+      "tracking": "tracking-tighter",
+      "line_height": "leading-none"
+    },
+    "body": {
+      "family": "Satoshi, sans-serif",
+      "weight": "font-normal",
+      "tracking": "tracking-normal",
+      "line_height": "leading-relaxed"
+    },
+    "accent_labels": {
+      "family": "Cabinet Grotesk, sans-serif",
+      "weight": "font-medium",
+      "tracking": "tracking-[0.2em]",
+      "text_transform": "uppercase",
+      "size": "text-xs"
+    }
+  },
+  "spacing_and_layout": {
+    "philosophy": "Massive negative space, strict alignment, no arbitrary centering.",
+    "container_padding": "px-6 md:px-12 lg:px-24 py-12 md:py-24",
+    "grid_system": "Bento Grid Protocol (Mode A: The Tetris Grid) - Asymmetry, visual tension.",
+    "gallery_grid": "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-16",
+    "alignment": "Left-aligned for textual elements.",
+    "borders": "No rounded corners (`rounded-none`). Crisp, hard edges."
+  },
+  "components": {
+    "navigation": {
+      "style": "Glassmorphism (Crystal variant) ONLY if sticky, otherwise Solid transparent.",
+      "classes": "backdrop-blur-2xl bg-white/70 border-b border-black/5 z-50",
+      "links": "Minimalist text links. Hover state: underline or slight opacity change. Include ES/EN toggle."
+    },
+    "hero": {
+      "style": "Minimalist editorial. Vimeo embed (Showreel).",
+      "layout": "Large Vimeo player (aspect-video) centered or full width, Name & Title placed with huge typography below or overlapping."
+    },
+    "project_card": {
+      "style": "Image-driven. No borders, no shadows.",
+      "image_container": "overflow-hidden aspect-video or aspect-[4/3]",
+      "image_hover": "scale-105 transition-transform duration-700 ease-out",
+      "text": "Title in medium weight, director/category in small muted text below."
+    },
+    "buttons": {
+      "style": "Swiss Brutalist",
+      "classes": "border border-black px-6 py-3 text-sm tracking-widest uppercase hover:bg-black hover:text-white transition-colors rounded-none"
+    },
+    "footer": {
+      "style": "Massive space, huge typography for contact.",
+      "classes": "py-24 md:py-32 border-t border-gray-200"
+    }
+  },
+  "motion_and_interactions": {
+    "hover_states": "Images scale up slightly on hover. Text links underline or fade.",
+    "page_transitions": "Staggered fade up for grid items.",
+    "accessibility": "Ensure focus states use `focus:ring-2 focus:ring-black focus:outline-none`."
+  },
+  "media": {
+    "image_urls": [
+      {
+        "url": "https://images.unsplash.com/photo-1634812932571-b33d55f0c016?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHwzfHxjaW5lbWF0b2dyYXBoeSUyMG1vdmllJTIwc3RpbGx8ZW58MHx8fHwxNzc3NjU3NDM3fDA&ixlib=rb-4.1.0&q=85",
+        "category": "Cinematic Still / Fiction Project",
+        "description": "Two men looking forward, moody lighting."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1587472525957-e5c510c5307e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHw0fHxjaW5lbWF0b2dyYXBoeSUyMG1vdmllJTIwc3RpbGx8ZW58MHx8fHwxNzc3NjU3NDM3fDA&ixlib=rb-4.1.0&q=85",
+        "category": "Cinematic Still / Commercial Project",
+        "description": "Group of people looking at monitor."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1600352900303-c40aec6bf711?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzR8MHwxfHNlYXJjaHwzfHxtb3ZpZSUyMGRpcmVjdG9yJTIwc2hvb3RpbmclMjBiZWhpbmQlMjB0aGUlMjBzY2VuZXN8ZW58MHx8fHwxNzc3NjU3NDM3fDA&ixlib=rb-4.1.0&q=85",
+        "category": "Behind the Scenes (BTS)",
+        "description": "Man with cinema camera."
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1600352898655-6f4e3f68faa1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzR8MHwxfHNlYXJjaHw0fHxtb3ZpZSUyMGRpcmVjdG9yJTIwc2hvb3RpbmclMjBiZWhpbmQlMjB0aGUlMjBzY2VuZXN8ZW58MHx8fHwxNzc3NjU3NDM3fDA&ixlib=rb-4.1.0&q=85",
+        "category": "Behind the Scenes (BTS)",
+        "description": "Director and DP reviewing footage."
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Build a static JSON-driven site (React).",
+    "Use a highly structured, minimalistic editorial layout. Avoid decorative UI.",
+    "Implement the UI in pure HTML/Tailwind, do not overuse Shadcn components for marketing layouts unless for interactive logic.",
+    "Default language is Spanish with an English toggle. Create a JSON structure to handle translations.",
+    "Include a hidden `/admin` route for editing the JSON content (Projects, About text).",
+    "Implement the 4 categories (Fiction, Documentaries, Commercials, Music Videos) as filterable or separate sections on the Selected Works page.",
+    "Project Detail Page: Massive hero image/video, minimal text, a clean grid for stills, optional BTS section, and an external link button.",
+    "Footer/Contact: ddfilming@gmail.com, Instagram, Vimeo, LinkedIn, IMDb.",
+    "All interactive elements MUST have `data-testid` attributes (kebab-case, role-based)."
+  ]
+}
