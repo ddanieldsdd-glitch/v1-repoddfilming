@@ -1,70 +1,215 @@
-# Getting Started with Create React App
+# Dani Díaz — Director of Photography Portfolio
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A high-end, minimalist cinematic portfolio website built with React. Static
+JSON-driven, bilingual (ES / EN), with a hidden admin panel for editing the
+content via the browser and exporting/importing the JSON.
 
-## Available Scripts
+**Live**: _your-domain-here_
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **React 19** (Create React App + Craco)
+- **Tailwind CSS 3** (with `darkMode: 'class'`)
+- **react-router-dom v7** for client-side routing
+- **lucide-react** for icons
+- **sonner** for toasts (admin panel only)
+- **Vimeo / YouTube** embeds (no SDK, plain `<iframe>` + `postMessage`)
+- **Cloudinary** for hosting images and video posters
+- **Fontshare CDN** for the typefaces (Cabinet Grotesk + Satoshi)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+No backend, no database, no analytics. The whole site is one `JSON` file +
+React shell, deployable as a static bundle on Vercel, Netlify, GitHub Pages,
+Cloudflare Pages, S3, etc.
 
-### `npm test`
+---
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Project structure
 
-### `npm run build`
+```
+frontend/
+├── public/
+│   ├── _redirects          # Netlify SPA fallback
+│   └── index.html
+├── scripts/
+│   └── check-videos.js     # Validates Vimeo/YouTube URLs are embeddable
+├── src/
+│   ├── components/
+│   │   ├── Footer.jsx
+│   │   ├── Nav.jsx
+│   │   ├── ProjectCard.jsx
+│   │   └── VimeoEmbed.jsx
+│   ├── data/
+│   │   └── content.json    # ★ SINGLE SOURCE OF TRUTH for all content ★
+│   ├── lib/
+│   │   ├── contentStore.js # Reads JSON + LocalStorage overrides
+│   │   ├── i18n.js         # ES/EN dictionary
+│   │   ├── useContent.js
+│   │   └── useTheme.js     # Dark/light mode + Shift+D shortcut
+│   ├── pages/
+│   │   ├── About.jsx
+│   │   ├── Admin.jsx       # Hidden CMS at /admin
+│   │   ├── Contact.jsx
+│   │   ├── Home.jsx
+│   │   ├── ProjectDetail.jsx
+│   │   └── Work.jsx
+│   ├── App.css
+│   ├── App.js
+│   ├── index.css
+│   └── index.js
+├── .gitignore
+├── package.json
+├── tailwind.config.js
+└── vercel.json             # SPA rewrites + buildCommand: yarn predeploy
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+---
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Local development
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```bash
+cd frontend
+yarn install
+yarn start      # http://localhost:3000
+```
 
-### `npm run eject`
+Hot reload is enabled for both `.jsx` and `content.json`.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+---
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Editing content
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+You have **two options**:
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Option 1 — through the admin UI (recommended)
 
-## Learn More
+1. Run the site locally or open the deployed URL.
+2. Go to `/admin`.
+3. Sign in with the password (default `ddfilming2026`, configurable via
+   `REACT_APP_ADMIN_PASSWORD`).
+4. Edit the site info, About text, photo, social links, and project list.
+5. Reorder projects with the ↑ / ↓ buttons.
+6. Click **Export JSON** to download the updated `content.json`.
+7. Replace `src/data/content.json` with the downloaded file.
+8. Commit and push — the new content goes live on the next deploy.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+> Until you replace the source JSON, your edits live only in the
+> `localStorage` of the browser you used to edit them.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Option 2 — direct edit
 
-### Code Splitting
+Edit `src/data/content.json` in any editor. Schema:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```json
+{
+  "site": {
+    "name": "Dani Díaz",
+    "title": { "es": "...", "en": "..." },
+    "tagline": { "es": "...", "en": "..." },
+    "showreel_url": "https://vimeo.com/<id>",
+    "about_image": "https://...",
+    "logo_white": "https://...",
+    "social": {
+      "email": "...",
+      "instagram": "...",
+      "vimeo": "...",
+      "linkedin": "...",
+      "imdb": "..."
+    }
+  },
+  "about": { "es": "...", "en": "..." },
+  "projects": [
+    {
+      "id": "p-...",
+      "slug": "kebab-slug",
+      "category": "fiction | documentary | commercial | music-video",
+      "title": "...",
+      "year": 2025,
+      "type": { "es": "...", "en": "..." },
+      "director": "...",
+      "format": "Camera · Lenses",
+      "synopsis": { "es": "...", "en": "..." },
+      "cover": "https://...image.jpg",
+      "poster": "https://...optional.jpg",
+      "preview_url": "https://vimeo.com/<id>",
+      "stills": ["...", "..."],
+      "bts": ["...", "..."],
+      "external_link": "https://imdb.com/..."
+    }
+  ]
+}
+```
 
-### Analyzing the Bundle Size
+> When you change the JSON shape in a breaking way, bump
+> `STORAGE_KEY` in `src/lib/contentStore.js` (e.g. `ddp_content_v6` → `v7`)
+> so visitors with stale `localStorage` get the new content automatically.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+---
 
-### Making a Progressive Web App
+## Validating Vimeo / YouTube URLs
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+Before deploying, run:
 
-### Advanced Configuration
+```bash
+yarn check:videos
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+It hits Vimeo's and YouTube's official `oEmbed` endpoints and confirms each
+video is **publicly embeddable**. Failure usually means:
 
-### Deployment
+- the Vimeo video is set to *Unlisted* / *Private link*, or
+- the *Where can this be embedded?* setting is *Nowhere* or restricted to
+  domains you don't own.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+Fix at `https://vimeo.com/manage/videos/<id>/privacy` →
+**Privacy: Public** + **Embed: Anywhere** → Save.
 
-### `npm run build` fails to minify
+`yarn predeploy` runs the validator and only builds if every video passes —
+that command is wired to Vercel's build via `vercel.json`.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+---
+
+## Deploy
+
+### Vercel
+
+1. Push this repo to GitHub.
+2. Import the repo at [vercel.com/new](https://vercel.com/new).
+3. **Root Directory**: `frontend` (if you push the monorepo) or `.` (if you
+   only push the `frontend/` folder).
+4. Vercel auto-detects Create React App. Build settings come from
+   `vercel.json`:
+   - Build command: `yarn predeploy` (validates videos + builds)
+   - Output directory: `build`
+5. Deploy.
+
+### Netlify
+
+1. Push this repo to GitHub.
+2. New site → import → pick the repo.
+3. **Build command**: `yarn predeploy`
+4. **Publish directory**: `build`
+5. The `public/_redirects` file already handles SPA routing.
+
+### Manual / static host
+
+```bash
+yarn predeploy
+# Upload the contents of `build/` to any static host.
+```
+
+---
+
+## Keyboard shortcuts
+
+| Shortcut    | Action               |
+| ----------- | -------------------- |
+| `Shift + D` | Toggle dark / light  |
+
+---
+
+## License
+
+All visual content (images, videos, posters) © Dani Díaz / respective rights
+holders. Code released under MIT.
