@@ -26,6 +26,39 @@
   },
   "projects": [
     {
+      "id": "p-la-espantada",
+      "slug": "la-espantada",
+      "category": "fiction",
+      "title": "La Espantada",
+      "year": 2025,
+      "type": { "es": "Cortometraje de Ficción", "en": "Fiction Short Film" },
+      "director": "Guillermo Parrilla Sevilla, Ana Villa Zamorano",
+      "format": "ARRI Alexa SXT & XT · Anamorphic ATLAS ORION",
+      "synopsis": {
+        "es": "1947. Un matrimonio cena mientras, fuera, los perros salen de caza.",
+        "en": "1947. A married couple has dinner while, outside, the dogs go hunting."
+      },
+      "cover": "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777736286/1.1.10_1.1.10_nre66y.jpg",
+      "poster": "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777654313/MV5BNTYwMWZlZjgtMzEzYi00MTI5LTg5YTktZjIxMWNmZmQzZWExXkEyXkFqcGc._V1_FMjpg_UX1000__qnrwhq.jpg",
+      "preview_url": "https://vimeo.com/1188653745",
+      "stills": [
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777736383/1.1.9_1.1.9_tlacm9.jpg",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777736350/1.1.6_1.1.6_df8whf.jpg",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777736263/1.1.11_1.1.11_ejtm5z.jpg",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777736320/1.1.7_1.1.7_ukbnuw.jpg",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777736286/1.1.10_1.1.10_nre66y.jpg",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777736455/1.1.8_1.1.8_pg4lga.jpg",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777736235/1.1.4_1.1.4_valyaw.jpg",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777736425/1.1.3_1.1.3_dtyumj.jpg"
+      ],
+      "bts": [
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777654311/WhatsApp_Image_2025-04-03_at_18.04.33_1_fhjtku.jpg",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777654310/Captura_de_pantalla_2026-04-29_a_las_1.02.32_qqohqa.png",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777654308/Captura_de_pantalla_2026-04-29_a_las_1.02.19_u2m4xy.png"
+      ],
+      "external_link": "https://www.imdb.com/es-es/title/tt35601689/"
+    },
+    {
       "id": "p-origami",
       "slug": "origami",
       "category": "fiction",
@@ -65,7 +98,7 @@
       },
       "cover": "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777653886/Captura_de_pantalla_2025-02-01_a_las_15.47.50_bbpr9n.png",
       "poster": "",
-      "preview_url": "https://www.youtube.com/watch?v=cG5_13a4scM",
+      "preview_url": "https://vimeo.com/1054426558",
       "stills": [
         "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777653886/Captura_de_pantalla_2025-02-01_a_las_15.47.50_bbpr9n.png",
         "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777653884/Captura_de_pantalla_2025-02-01_a_las_15.47.29_ccuxcs.png",

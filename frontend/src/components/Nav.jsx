@@ -62,8 +62,9 @@ export const Nav = () => {
   }
 
   const logoUrl = content.site.logo_white;
-  // On white bg (scrolled + light mode), invert the white logo to black.
-  const logoInverted = !whiteText;
+  // The provided logo file actually has BLACK letters on transparent bg, so we
+  // need to invert it on dark backgrounds (hero / dark mode) to make it white.
+  const logoInverted = whiteText;
 
   return (
     <header
