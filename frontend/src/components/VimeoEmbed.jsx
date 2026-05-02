@@ -1,4 +1,3 @@
-// Accepts vimeo or youtube urls and renders an iframe player with the given aspect.
 const extractVimeoId = (url) => {
   const m = String(url).match(/vimeo\.com\/(?:video\/)?(\d+)/);
   return m ? m[1] : null;
@@ -17,6 +16,8 @@ export const VimeoEmbed = ({
   muted = false,
   className = "",
   testId,
+  interactive = true,
+  innerRef,
 }) => {
   const vid = extractVimeoId(url);
   const yid = !vid ? extractYoutubeId(url) : null;
@@ -25,7 +26,7 @@ export const VimeoEmbed = ({
     return (
       <div
         data-testid={testId}
-        className={`flex items-center justify-center bg-neutral-100 text-neutral-500 text-sm ${className}`}
+        className={`flex items-center justify-center bg-neutral-100 dark:bg-neutral-900 text-neutral-500 text-sm ${className}`}
       >
         Video URL invalid
       </div>
@@ -48,17 +49,26 @@ export const VimeoEmbed = ({
     const params = new URLSearchParams({ rel: "0", modestbranding: "1" });
     if (autoplay) params.set("autoplay", "1");
     if (muted) params.set("mute", "1");
+    if (background) {
+      params.set("controls", "0");
+      params.set("loop", "1");
+      params.set("playlist", yid);
+    }
     src = `https://www.youtube.com/embed/${yid}?${params.toString()}`;
   }
 
   return (
-    <div className={`relative w-full ${className}`} data-testid={testId}>
+    <div
+      className={`relative w-full ${className} ${interactive ? "" : "pointer-events-none"}`}
+      data-testid={testId}
+    >
       <iframe
+        ref={innerRef}
         src={src}
         title="Video player"
         allow="autoplay; fullscreen; picture-in-picture"
         allowFullScreen
-        className="absolute inset-0 w-full h-full border-0"
+        className={`absolute inset-0 w-full h-full border-0 ${interactive ? "" : "pointer-events-none"}`}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 import defaultContent from "../data/content.json";
 
-const STORAGE_KEY = "ddp_content_v3";
+const STORAGE_KEY = "ddp_content_v4";
 const LANG_KEY = "ddp_lang";
 const ADMIN_AUTH_KEY = "ddp_admin_auth";
 

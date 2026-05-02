@@ -7,6 +7,15 @@ body,
 .App {
   background: #ffffff;
   color: #0a0a0a;
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+html.dark,
+html.dark body,
+html.dark #root,
+html.dark .App {
+  background: #0a0a0a;
+  color: #f5f5f5;
 }
 
 body {
@@ -32,6 +41,10 @@ h6,
   background: #0a0a0a;
   color: #fdfdfd;
 }
+html.dark ::selection {
+  background: #f5f5f5;
+  color: #0a0a0a;
+}
 
 /* Custom thin scrollbar */
 ::-webkit-scrollbar {
@@ -46,6 +59,15 @@ h6,
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #a3a3a3;
+}
+html.dark ::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+html.dark ::-webkit-scrollbar-thumb {
+  background: #2a2a2a;
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #444;
 }
 
 /* Image base */

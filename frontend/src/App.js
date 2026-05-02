@@ -21,7 +21,7 @@ const ScrollToTop = () => {
 
 function App() {
   return (
-    <div className="App bg-white text-black antialiased">
+    <div className="App bg-white dark:bg-black text-black dark:text-white antialiased transition-colors duration-500">
       <BrowserRouter>
         <ScrollToTop />
         <Nav />

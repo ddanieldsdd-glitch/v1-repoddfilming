@@ -10,7 +10,8 @@
       "en": "Light as narrative. Image as memory."
     },
     "showreel_url": "https://vimeo.com/1054144154",
-    "about_image": "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777663983/IMG_3307_o1hbol.jpg",
+    "about_image": "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777731173/7ae19329-a9ee-4ad6-85d3-b2b784c25d7f_bigjxi.jpg",
+    "logo_white": "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777731841/DD_BLANCO_l8xqal.png",
     "social": {
       "email": "ddfilming@gmail.com",
       "instagram": "https://www.instagram.com/ddani_00",
@@ -65,8 +66,20 @@
       "cover": "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777653886/Captura_de_pantalla_2025-02-01_a_las_15.47.50_bbpr9n.png",
       "poster": "",
       "preview_url": "https://www.youtube.com/watch?v=cG5_13a4scM",
-      "stills": [],
-      "bts": [],
+      "stills": [
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777653886/Captura_de_pantalla_2025-02-01_a_las_15.47.50_bbpr9n.png",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777653884/Captura_de_pantalla_2025-02-01_a_las_15.47.29_ccuxcs.png",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777653880/Captura_de_pantalla_2025-02-01_a_las_15.45.42_ybaey0.png",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777653873/Captura_de_pantalla_2025-02-01_a_las_15.44.16_stln9i.png",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777653870/Captura_de_pantalla_2025-02-01_a_las_15.43.38_vtl2gd.png",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777653858/Captura_de_pantalla_2025-02-01_a_las_15.42.17_cvemsa.png"
+      ],
+      "bts": [
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777668446/DSF5511-scaled-qzznqhnj5bn57vnxxrmqhwrlbhhxu2j45mu10cv6gw_g3nvyp.jpg",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777668445/DSF5151j-scaled-qzznk58r0kygumvpziwe60ekyurqvmcca8b1e49ugw_qqp6gr.jpg",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777668444/Ayer-dia-2-5-copia-scaled-qzznugj0052q8lwerhe10wpnm1xqc2abd9ztyezc74_fnfypx.jpg",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777668443/Ayer-dia-2-3-copia-scaled-qzzntvujtsaf56qg48g8i1xijkrnmq07yfn5ebu000_jhvkvy.jpg"
+      ],
       "external_link": ""
     },
     {
