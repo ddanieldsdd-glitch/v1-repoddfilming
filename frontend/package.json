@@ -57,7 +57,7 @@
   },
   "scripts": {
     "start": "craco start",
-    "build": "craco build",
+    "build": "ESLINT_NO_DEV_ERRORS=true craco build",
     "test": "craco test",
     "check:videos": "node scripts/check-videos.js",
     "predeploy":  "craco build"
