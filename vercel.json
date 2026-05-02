@@ -1,6 +1,6 @@
 {
-  "buildCommand": "yarn predeploy",
-  "outputDirectory": "build",
+  "buildCommand": "cd frontend && npm run predeploy",
+  "outputDirectory": "frontend/build",
   "framework": "create-react-app",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
