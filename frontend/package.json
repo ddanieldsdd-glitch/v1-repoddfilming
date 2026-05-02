@@ -58,7 +58,9 @@
   "scripts": {
     "start": "craco start",
     "build": "craco build",
-    "test": "craco test"
+    "test": "craco test",
+    "check:videos": "node scripts/check-videos.js",
+    "predeploy": "node scripts/check-videos.js && craco build"
   },
   "browserslist": {
     "production": [
