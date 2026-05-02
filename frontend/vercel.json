@@ -1,0 +1,10 @@
+{
+  "buildCommand": "yarn predeploy",
+  "outputDirectory": "build",
+  "framework": "create-react-app",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "cleanUrls": true,
+  "trailingSlash": false
+}
