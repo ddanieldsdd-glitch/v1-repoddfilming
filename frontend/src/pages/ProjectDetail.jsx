@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowUpRight, ArrowRight } from "lucide-react";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 import { VimeoEmbed } from "../components/VimeoEmbed";
+import { CATEGORIES } from "../lib/contentStore";
 
 const isVideoUrl = (url) =>
   /vimeo\.com|youtube\.com|youtu\.be/.test(String(url || ""));
@@ -34,18 +35,24 @@ export default function ProjectDetail() {
     );
   }
 
-  const coverIsVideo = isVideoUrl(project.cover);
+  // Pick a video URL for the top hero (autoplay).
+  const heroVideoUrl =
+    (isVideoUrl(project.preview_url) && project.preview_url) ||
+    (isVideoUrl(project.cover) && project.cover) ||
+    "";
 
   return (
     <div data-testid="project-detail-page" className="bg-white">
-      {/* HERO MEDIA */}
+      {/* HERO MEDIA — autoplay video, fallback to cover image */}
       <section className="pt-24 md:pt-28">
         <div className="bg-black">
-          {coverIsVideo ? (
+          {heroVideoUrl ? (
             <VimeoEmbed
-              url={project.cover}
+              url={heroVideoUrl}
+              autoplay
+              muted
               className="aspect-video w-full"
-              testId="project-cover-video"
+              testId="project-hero-video"
             />
           ) : (
             <img
@@ -58,12 +65,39 @@ export default function ProjectDetail() {
         </div>
       </section>
 
+      {/* CATEGORY NAV — let users jump between categories without going back */}
+      <section className="px-6 md:px-12 lg:px-16 pt-10 md:pt-14 border-b border-black/10 pb-5">
+        <div className="flex flex-wrap gap-x-8 gap-y-3" data-testid="project-category-nav">
+          <Link
+            to="/work"
+            data-testid="project-cat-all"
+            className="text-[11px] tracking-[0.28em] uppercase text-neutral-500 hover:text-black border-b border-transparent pb-1"
+          >
+            {tr(T.work.all, lang)}
+          </Link>
+          {CATEGORIES.map((c) => (
+            <Link
+              key={c.id}
+              to={`/work/${c.id}`}
+              data-testid={`project-cat-${c.id}`}
+              className={`text-[11px] tracking-[0.28em] uppercase pb-1 transition-colors ${
+                project.category === c.id
+                  ? "text-black border-b border-black"
+                  : "text-neutral-500 hover:text-black border-b border-transparent"
+              }`}
+            >
+              {c[lang]}
+            </Link>
+          ))}
+        </div>
+      </section>
+
       {/* META */}
-      <section className="px-6 md:px-12 lg:px-16 py-16 md:py-24">
+      <section className="px-6 md:px-12 lg:px-16 py-12 md:py-20">
         <button
           onClick={() => navigate(-1)}
           data-testid="project-back-btn"
-          className="inline-flex items-center gap-2 text-[11px] tracking-[0.28em] uppercase text-neutral-500 hover:text-black mb-12"
+          className="inline-flex items-center gap-2 text-[11px] tracking-[0.28em] uppercase text-neutral-500 hover:text-black mb-10"
         >
           <ArrowLeft className="w-3.5 h-3.5" strokeWidth={1.5} /> {tr(T.project.back, lang)}
         </button>

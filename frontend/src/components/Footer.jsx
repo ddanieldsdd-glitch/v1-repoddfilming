@@ -7,6 +7,7 @@ export const Footer = () => {
   const [lang] = useLang();
   const location = useLocation();
   if (location.pathname.startsWith("/admin")) return null;
+  if (location.pathname.startsWith("/contact")) return null;
 
   const s = content.site.social;
   const year = new Date().getFullYear();
