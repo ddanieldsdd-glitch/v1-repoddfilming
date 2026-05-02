@@ -60,7 +60,7 @@
     "build": "ESLINT_NO_DEV_ERRORS=true craco build",
     "test": "craco test",
     "check:videos": "node scripts/check-videos.js",
-    "predeploy":  "craco build"
+    "predeploy": "ESLINT_NO_DEV_ERRORS=true craco build"
   },
   "browserslist": {
     "production": [
