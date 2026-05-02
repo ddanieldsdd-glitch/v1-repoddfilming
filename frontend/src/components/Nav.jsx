@@ -16,9 +16,12 @@ export const Nav = () => {
   useEffect(() => {
     const onScroll = () => {
       const y = window.scrollY;
-      const stillOverHero =
-        location.pathname === "/" && y < window.innerHeight - 80;
-      setOverHero(stillOverHero);
+      const hasHero =
+        location.pathname === "/" ||
+        location.pathname.startsWith("/project/");
+      // Hide the nav while the user is still over the (visible) hero area,
+      // approximately one viewport height. Same threshold for home & project.
+      setOverHero(hasHero && y < window.innerHeight - 80);
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -33,10 +36,12 @@ export const Nav = () => {
 
   if (location.pathname.startsWith("/admin")) return null;
 
-  // If in dark mode, nav always uses light text on dark bg (no hero variant needed, since everything is dark).
+  // Pages that have a hero (home, project detail) should hide the nav while over it.
+  const hideNav = overHero;
+
   const darkMode = theme === "dark";
-  // "whiteText" means letters should be white (over hero or in dark mode over dark bg).
-  const whiteText = overHero || darkMode;
+  // Once the nav appears (i.e., past the hero), letters depend only on theme.
+  const whiteText = darkMode;
 
   const txt = whiteText ? "text-white" : "text-black";
   const muted = whiteText ? "text-white/70" : "text-neutral-500";
@@ -51,11 +56,8 @@ export const Nav = () => {
     }`;
 
   // Background bar state:
-  // over hero (light mode) = transparent, else = white/black with blur
   let barBg;
-  if (overHero) {
-    barBg = "bg-transparent border-b border-transparent";
-  } else if (darkMode) {
+  if (darkMode) {
     barBg = "bg-black/85 backdrop-blur-xl border-b border-white/10";
   } else {
     barBg = "bg-white/90 backdrop-blur-xl border-b border-black/10";
@@ -69,7 +71,11 @@ export const Nav = () => {
   return (
     <header
       data-testid="site-nav"
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${barBg}`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        hideNav
+          ? "opacity-0 -translate-y-2 pointer-events-none"
+          : "opacity-100 translate-y-0 pointer-events-auto"
+      } ${barBg}`}
     >
       <div className="px-6 md:px-12 lg:px-16 py-5 md:py-6 flex items-center justify-between">
         <Link to="/" data-testid="nav-logo" className="flex items-center gap-3 leading-none">

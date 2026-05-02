@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
-import { CATEGORIES } from "../lib/contentStore";
+import { CATEGORIES, getActiveCategories } from "../lib/contentStore";
 import { ProjectCard } from "../components/ProjectCard";
 
 export default function Work() {
@@ -40,7 +40,7 @@ export default function Work() {
           >
             {tr(T.work.all, lang)}
           </Link>
-          {CATEGORIES.map((c) => (
+          {getActiveCategories(content.projects).map((c) => (
             <Link
               key={c.id}
               to={`/work/${c.id}`}

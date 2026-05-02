@@ -1,6 +1,6 @@
 import defaultContent from "../data/content.json";
 
-const STORAGE_KEY = "ddp_content_v6";
+const STORAGE_KEY = "ddp_content_v7";
 const LANG_KEY = "ddp_lang";
 const ADMIN_AUTH_KEY = "ddp_admin_auth";
 
@@ -69,6 +69,11 @@ export const CATEGORIES = [
   { id: "commercial", es: "Publicidad", en: "Commercials" },
   { id: "music-video", es: "Videoclips", en: "Music Videos" },
 ];
+
+// Returns only the categories that have at least one project.
+// Empty categories are hidden everywhere on the public site.
+export const getActiveCategories = (projects = []) =>
+  CATEGORIES.filter((c) => projects.some((p) => p.category === c.id));
 
 export const slugify = (str) =>
   String(str || "")

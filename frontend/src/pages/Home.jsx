@@ -4,7 +4,7 @@ import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 import { VimeoEmbed } from "../components/VimeoEmbed";
 import { ProjectCard } from "../components/ProjectCard";
-import { CATEGORIES } from "../lib/contentStore";
+import { CATEGORIES, getActiveCategories } from "../lib/contentStore";
 
 export default function Home() {
   const content = useContent();
@@ -15,7 +15,7 @@ export default function Home() {
   return (
     <div data-testid="home-page" className="bg-white dark:bg-black transition-colors duration-500">
       {/* FULLSCREEN HERO */}
-      <section className="relative w-full h-screen bg-black overflow-hidden hero-fullscreen">
+      <section data-hero className="relative w-full h-screen bg-black overflow-hidden hero-fullscreen">
         <VimeoEmbed
           url={content.site.showreel_url}
           autoplay
@@ -82,24 +82,38 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CATEGORIES STRIP */}
-      <section className="px-6 md:px-12 lg:px-16 py-10 md:py-12 border-t border-black/10 dark:border-white/10">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-6">
-          {CATEGORIES.map((c) => (
-            <Link
-              key={c.id}
-              to={`/work/${c.id}`}
-              data-testid={`home-category-${c.id}`}
-              className="group block"
-            >
-              <p className="text-lg md:text-xl tracking-tight text-black dark:text-white group-hover:opacity-50 transition">
-                {c[lang]}
-              </p>
-              <span className="mt-2 inline-block w-6 h-px bg-black/30 dark:bg-white/30 group-hover:w-12 group-hover:bg-black dark:group-hover:bg-white transition-all duration-500" />
-            </Link>
-          ))}
-        </div>
-      </section>
+      {/* CATEGORIES STRIP — empty categories are hidden automatically */}
+      {(() => {
+        const active = getActiveCategories(content.projects);
+        if (active.length === 0) return null;
+        const cols =
+          active.length === 1
+            ? "grid-cols-1"
+            : active.length === 2
+              ? "grid-cols-2"
+              : active.length === 3
+                ? "grid-cols-3"
+                : "grid-cols-2 md:grid-cols-4";
+        return (
+          <section className="px-6 md:px-12 lg:px-16 py-10 md:py-12 border-t border-black/10 dark:border-white/10">
+            <div className={`grid ${cols} gap-y-6 gap-x-6`}>
+              {active.map((c) => (
+                <Link
+                  key={c.id}
+                  to={`/work/${c.id}`}
+                  data-testid={`home-category-${c.id}`}
+                  className="group block"
+                >
+                  <p className="text-lg md:text-xl tracking-tight text-black dark:text-white group-hover:opacity-50 transition">
+                    {c[lang]}
+                  </p>
+                  <span className="mt-2 inline-block w-6 h-px bg-black/30 dark:bg-white/30 group-hover:w-12 group-hover:bg-black dark:group-hover:bg-white transition-all duration-500" />
+                </Link>
+              ))}
+            </div>
+          </section>
+        );
+      })()}
     </div>
   );
 }

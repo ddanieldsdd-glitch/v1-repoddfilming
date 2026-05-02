@@ -1,4 +1,9 @@
 {
+  "_README": "Lee src/data/CONTENT_GUIDE.md para saber cómo añadir/eliminar/modificar proyectos. Plantilla lista para copiar en src/data/PROJECT_TEMPLATE.json.",
+  "_HOW_TO_ADD_PROJECT": "Copia el objeto de PROJECT_TEMPLATE.json y pégalo dentro del array 'projects' de abajo, en la posición donde quieras que aparezca.",
+  "_HOW_TO_REMOVE_PROJECT": "Borra el objeto entero del proyecto (incluida la coma).",
+  "_HOW_TO_MODIFY_PROJECT": "Edita los campos del proyecto correspondiente.",
+
   "site": {
     "name": "Dani Díaz",
     "title": {
@@ -113,29 +118,6 @@
         "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777668444/Ayer-dia-2-5-copia-scaled-qzznugj0052q8lwerhe10wpnm1xqc2abd9ztyezc74_fnfypx.jpg",
         "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777668443/Ayer-dia-2-3-copia-scaled-qzzntvujtsaf56qg48g8i1xijkrnmq07yfn5ebu000_jhvkvy.jpg"
       ],
-      "external_link": ""
-    },
-    {
-      "id": "p-005",
-      "slug": "loewe-paisaje",
-      "category": "commercial",
-      "title": "Loewe — Paisaje",
-      "year": 2024,
-      "type": { "es": "Spot publicitario", "en": "Commercial" },
-      "director": "Marc Reig",
-      "format": "ARRI Alexa 35 · Cooke Anamorphic /i",
-      "synopsis": {
-        "es": "Una pieza publicitaria de moda construida sobre el contraste entre el cuerpo y el paisaje. Anamórfico, luz natural y un montaje contemplativo.",
-        "en": "A fashion campaign built on the contrast between body and landscape. Anamorphic glass, natural light and a contemplative cut."
-      },
-      "cover": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?crop=entropy&cs=srgb&fm=jpg&q=85&w=2400",
-      "poster": "",
-      "preview_url": "",
-      "stills": [
-        "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?crop=entropy&cs=srgb&fm=jpg&q=85&w=2000",
-        "https://images.unsplash.com/photo-1483985988355-763728e1935b?crop=entropy&cs=srgb&fm=jpg&q=85&w=2000"
-      ],
-      "bts": [],
       "external_link": ""
     }
   ]

@@ -1,0 +1,41 @@
+{
+  "_INSTRUCCIONES": "Copia este bloque completo (sin las comillas externas), pega dentro del array 'projects' de content.json en la posición donde quieras que aparezca el nuevo proyecto, y rellena los campos. Acuérdate de cambiar 'id' y 'slug' a valores únicos. Lee también CONTENT_GUIDE.md.",
+
+  "id": "p-CAMBIA-ESTO",
+  "slug": "titulo-del-proyecto-en-kebab-case",
+  "category": "fiction",
+  "_category_help": "fiction | documentary | commercial | music-video",
+
+  "title": "Título del Proyecto",
+  "year": 2025,
+  "type": { "es": "Cortometraje", "en": "Short Film" },
+  "director": "Nombre del Director",
+  "format": "ARRI Alexa Mini LF · Cooke S4",
+
+  "synopsis": {
+    "es": "Sinopsis en español, 2-3 frases.",
+    "en": "Synopsis in English, 2-3 sentences."
+  },
+
+  "cover": "https://res.cloudinary.com/.../cover.jpg",
+  "_cover_help": "Imagen estática que se muestra como miniatura en home y /work.",
+
+  "poster": "",
+  "_poster_help": "Cartel oficial vertical (opcional). Aparece en la barra lateral de la página de proyecto. Deja '' si no hay.",
+
+  "preview_url": "https://vimeo.com/XXXXXXXXX",
+  "_preview_url_help": "Vídeo de Vimeo o YouTube. Se reproduce al pasar el ratón por la miniatura y autoplay al entrar al proyecto.",
+
+  "stills": [
+    "https://res.cloudinary.com/.../still1.jpg",
+    "https://res.cloudinary.com/.../still2.jpg"
+  ],
+
+  "bts": [
+    "https://res.cloudinary.com/.../bts1.jpg"
+  ],
+  "_bts_help": "Behind-the-scenes. Opcional. Si dejas [] vacío, no aparece la sección.",
+
+  "external_link": "",
+  "_external_link_help": "URL a IMDb, web del proyecto, etc. Si está vacío, no se muestra el botón."
+}

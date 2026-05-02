@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowUpRight, ArrowRight, Volume2, VolumeX } from "lucide-re
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 import { VimeoEmbed } from "../components/VimeoEmbed";
-import { CATEGORIES } from "../lib/contentStore";
+import { CATEGORIES, getActiveCategories } from "../lib/contentStore";
 
 const isVideoUrl = (url) =>
   /vimeo\.com|youtube\.com|youtu\.be/.test(String(url || ""));
@@ -76,7 +76,7 @@ export default function ProjectDetail() {
   return (
     <div data-testid="project-detail-page" className="bg-white dark:bg-black transition-colors duration-500">
       {/* HERO VIDEO */}
-      <section className="pt-24 md:pt-28">
+      <section data-hero className="pt-24 md:pt-28">
         <div className="relative bg-black">
           {heroVideoUrl ? (
             <>
@@ -118,7 +118,7 @@ export default function ProjectDetail() {
           >
             {tr(T.work.all, lang)}
           </Link>
-          {CATEGORIES.map((c) => (
+          {getActiveCategories(projects).map((c) => (
             <Link
               key={c.id}
               to={`/work/${c.id}`}
@@ -217,7 +217,7 @@ export default function ProjectDetail() {
         </div>
       </section>
 
-      {/* STILLS */}
+      {/* STILLS — keep natural aspect ratio, no crop. Just a clean 2-col flow. */}
       {project.stills && project.stills.length > 0 && (
         <section
           data-testid="project-stills"
@@ -226,19 +226,17 @@ export default function ProjectDetail() {
           <p className="text-[11px] tracking-[0.32em] uppercase text-neutral-500 dark:text-neutral-400 mb-8">
             {tr(T.project.stills, lang)}
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 items-start">
             {project.stills.map((src, i) => (
               <div
                 key={i}
-                className={`bg-neutral-100 dark:bg-neutral-900 overflow-hidden ${
-                  i % 3 === 0 ? "md:col-span-2 aspect-[21/9]" : "aspect-[3/2]"
-                }`}
+                className="bg-neutral-100 dark:bg-neutral-900 overflow-hidden"
               >
                 <img
                   src={src}
                   alt={`${project.title} still ${i + 1}`}
                   loading="lazy"
-                  className="w-full h-full object-cover"
+                  className="w-full h-auto object-contain block"
                 />
               </div>
             ))}
