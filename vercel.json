@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd frontend && npm run predeploy",
+  "buildCommand": "cd frontend && yarn predeploy",
   "outputDirectory": "frontend/build",
   "framework": "create-react-app",
   "rewrites": [
