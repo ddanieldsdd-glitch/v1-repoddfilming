@@ -21,10 +21,10 @@ export default function ProjectDetail() {
   const projects = content.projects || [];
   const idx = projects.findIndex((p) => p.slug === slug);
   const project = idx >= 0 ? projects[idx] : null;
-  const next = useMemo(
-    () => (idx >= 0 ? projects[(idx + 1) % projects.length] : null),
-    [idx, projects]
-  );
+const next = useMemo(() => {
+  if (idx < 0 || projects.length === 0) return null;
+  return projects[(idx + 1) % projects.length];
+}, [idx, projects.length]);
 
   if (!project) {
     return (

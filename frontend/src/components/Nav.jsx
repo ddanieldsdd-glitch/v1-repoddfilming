@@ -10,17 +10,18 @@ export const Nav = () => {
   const [lang, setLang] = useLang();
   const [theme, toggleTheme] = useTheme();
   const location = useLocation();
+
   const [overHero, setOverHero] = useState(true);
   const [open, setOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
+  // Detectar scroll sobre el hero
   useEffect(() => {
     const onScroll = () => {
       const y = window.scrollY;
       const hasHero =
         location.pathname === "/" ||
         location.pathname.startsWith("/project/");
-      // Hide the nav while the user is still over the (visible) hero area,
-      // approximately one viewport height. Same threshold for home & project.
       setOverHero(hasHero && y < window.innerHeight - 80);
     };
     onScroll();
@@ -32,16 +33,30 @@ export const Nav = () => {
     };
   }, [location.pathname]);
 
+  // Detectar fullscreen real del navegador
+  useEffect(() => {
+    const onFsChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFsChange);
+    };
+  }, []);
+
+  // Cerrar menú móvil al cambiar de página
   useEffect(() => setOpen(false), [location.pathname]);
 
   if (location.pathname.startsWith("/admin")) return null;
 
-  // Pages that have a hero (home, project detail) should hide the nav while over it.
-  const hideNav = overHero;
+  // Ocultar nav sobre el hero o en fullscreen
+  const hideNav = overHero || isFullscreen;
 
-  const darkMode = theme === "dark";
-  // Once the nav appears (i.e., past the hero), letters depend only on theme.
-  const whiteText = darkMode;
+  // Texto blanco cuando:
+  // - estás sobre el hero
+  // - estás en fullscreen
+  // - o el tema es oscuro
+  const whiteText = hideNav || theme === "dark";
 
   const txt = whiteText ? "text-white" : "text-black";
   const muted = whiteText ? "text-white/70" : "text-neutral-500";
@@ -55,17 +70,15 @@ export const Nav = () => {
       isActive ? txt : inactive
     }`;
 
-  // Background bar state:
+  // Fondo del navbar cuando NO está sobre el hero
   let barBg;
-  if (darkMode) {
+  if (theme === "dark") {
     barBg = "bg-black/85 backdrop-blur-xl border-b border-white/10";
   } else {
     barBg = "bg-white/90 backdrop-blur-xl border-b border-black/10";
   }
 
   const logoUrl = content.site.logo_white;
-  // The provided logo file actually has BLACK letters on transparent bg, so we
-  // need to invert it on dark backgrounds (hero / dark mode) to make it white.
   const logoInverted = whiteText;
 
   return (
@@ -73,9 +86,9 @@ export const Nav = () => {
       data-testid="site-nav"
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         hideNav
-          ? "opacity-0 -translate-y-2 pointer-events-none"
-          : "opacity-100 translate-y-0 pointer-events-auto"
-      } ${barBg}`}
+          ? "opacity-100 translate-y-0 bg-transparent border-transparent"
+          : `opacity-100 translate-y-0 ${barBg}`
+      }`}
     >
       <div className="px-6 md:px-12 lg:px-16 py-5 md:py-6 flex items-center justify-between">
         <Link to="/" data-testid="nav-logo" className="flex items-center gap-3 leading-none">
@@ -112,6 +125,7 @@ export const Nav = () => {
           <NavLink to="/contact" className={linkClass} data-testid="nav-contact">
             {tr(T.nav.contact, lang)}
           </NavLink>
+
           <button
             data-testid="theme-toggle"
             onClick={toggleTheme}
@@ -119,8 +133,13 @@ export const Nav = () => {
             title="Toggle theme (Shift+D)"
             className={`p-1.5 transition-colors duration-500 ${inactive} hover:${txt}`}
           >
-            {darkMode ? <Sun className="w-[14px] h-[14px]" strokeWidth={1.5} /> : <Moon className="w-[14px] h-[14px]" strokeWidth={1.5} />}
+            {theme === "dark" ? (
+              <Sun className="w-[14px] h-[14px]" strokeWidth={1.5} />
+            ) : (
+              <Moon className="w-[14px] h-[14px]" strokeWidth={1.5} />
+            )}
           </button>
+
           <div className={`flex items-center gap-2 ml-2 pl-6 border-l transition-colors duration-500 ${divider}`}>
             <button
               data-testid="lang-es"
@@ -163,7 +182,7 @@ export const Nav = () => {
             <NavLink to="/about" className="text-[11px] tracking-[0.28em] uppercase text-black dark:text-white">{tr(T.nav.about, lang)}</NavLink>
             <NavLink to="/contact" className="text-[11px] tracking-[0.28em] uppercase text-black dark:text-white">{tr(T.nav.contact, lang)}</NavLink>
             <button onClick={toggleTheme} className="text-[11px] tracking-[0.28em] uppercase text-black dark:text-white text-left" data-testid="theme-toggle-mobile">
-              {darkMode ? "Light mode" : "Dark mode"}
+              {theme === "dark" ? "Light mode" : "Dark mode"}
             </button>
             <div className="flex items-center gap-3 pt-4 border-t border-black/10 dark:border-white/10">
               <button onClick={() => setLang("es")} className={`text-[11px] tracking-[0.2em] uppercase ${lang === "es" ? "text-black dark:text-white" : "text-neutral-400"}`}>ES</button>
