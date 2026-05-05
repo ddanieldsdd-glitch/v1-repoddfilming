@@ -1,6 +1,7 @@
 import { useLocation } from "react-router-dom";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
+import { formatPhoneDisplay, telHref } from "../lib/utils";
 
 export const Footer = () => {
   const content = useContent();
@@ -22,13 +23,24 @@ export const Footer = () => {
           <p className="text-[11px] tracking-[0.32em] uppercase text-neutral-500 dark:text-neutral-400 mb-6">
             {tr(T.contact.title, lang)}
           </p>
-          <a
-            href={`mailto:${s.email}`}
-            data-testid="footer-email"
-            className="block text-3xl md:text-5xl lg:text-6xl tracking-tight text-black dark:text-white hover:opacity-60 transition-opacity break-words"
-          >
-            {s.email}
-          </a>
+          <div className="flex flex-col gap-10 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-14 sm:gap-y-8">
+            <a
+              href={`mailto:${s.email}`}
+              data-testid="footer-email"
+              className="block text-3xl md:text-5xl lg:text-6xl tracking-tight text-black dark:text-white hover:opacity-60 transition-opacity break-words"
+            >
+              {s.email}
+            </a>
+            {s.phone && (
+              <a
+                href={telHref(s.phone)}
+                data-testid="footer-phone"
+                className="block text-3xl md:text-5xl lg:text-6xl tracking-tight text-black dark:text-white hover:opacity-60 transition-opacity whitespace-nowrap"
+              >
+                {formatPhoneDisplay(s.phone)}
+              </a>
+            )}
+          </div>
         </div>
         <div className="md:col-span-5 flex flex-col gap-3 md:items-end">
           <p className="text-[11px] tracking-[0.32em] uppercase text-neutral-500 dark:text-neutral-400 mb-4">

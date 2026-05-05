@@ -14,10 +14,12 @@ export const VimeoEmbed = ({
   autoplay = false,
   background = false,
   muted = false,
+  loop = false,
   className = "",
   testId,
   interactive = true,
   innerRef,
+  onIframeLoad,
 }) => {
   const vid = extractVimeoId(url);
   const yid = !vid ? extractYoutubeId(url) : null;
@@ -44,15 +46,22 @@ export const VimeoEmbed = ({
     if (autoplay) params.set("autoplay", "1");
     if (background) params.set("background", "1");
     if (muted || background) params.set("muted", "1");
+    if (loop || background) {
+      params.set("loop", "1");
+      params.set("autopause", "0");
+    }
+    params.set("playsinline", "1");
     src = `https://player.vimeo.com/video/${vid}?${params.toString()}`;
   } else {
     const params = new URLSearchParams({ rel: "0", modestbranding: "1" });
     if (autoplay) params.set("autoplay", "1");
     if (muted) params.set("mute", "1");
-    if (background) {
-      params.set("controls", "0");
+    if (loop || background) {
       params.set("loop", "1");
       params.set("playlist", yid);
+    }
+    if (background) {
+      params.set("controls", "0");
     }
     src = `https://www.youtube.com/embed/${yid}?${params.toString()}`;
   }
@@ -68,7 +77,8 @@ export const VimeoEmbed = ({
         title="Video player"
         allow="autoplay; fullscreen; picture-in-picture"
         allowFullScreen
-        className={`absolute inset-0 w-full h-full border-0 ${interactive ? "" : "pointer-events-none"}`}
+        onLoad={onIframeLoad}
+        className={`absolute inset-0 h-full w-full border-0 bg-black ${interactive ? "" : "pointer-events-none"}`}
       />
     </div>
   );

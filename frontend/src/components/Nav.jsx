@@ -96,7 +96,7 @@ export const Nav = () => {
             <img
               src={logoUrl}
               alt="DD"
-              className={`h-7 md:h-8 w-auto transition-all duration-500 ${
+              className={`h-9 w-auto md:h-11 lg:h-12 transition-all duration-500 ${
                 logoInverted ? "invert" : ""
               }`}
             />

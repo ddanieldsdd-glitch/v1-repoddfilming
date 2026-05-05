@@ -259,6 +259,14 @@ const SiteSection = ({ content, onSave }) => {
             onChange={(e) => updSocial("email", e.target.value)}
           />
         </Field>
+        <Field label="Teléfono (ej. +34647005955)">
+          <input
+            className={inputCls}
+            value={draft.site.social.phone || ""}
+            onChange={(e) => updSocial("phone", e.target.value)}
+            placeholder="+34647005955"
+          />
+        </Field>
         <Field label="Instagram URL">
           <input
             className={inputCls}

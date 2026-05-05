@@ -16,6 +16,7 @@ export default function ProjectDetail() {
   const [lang] = useLang();
   const [showBts, setShowBts] = useState(false);
   const [muted, setMuted] = useState(true);
+  const [heroMediaReady, setHeroMediaReady] = useState(false);
   const iframeRef = useRef(null);
 
   // LIGHTBOX
@@ -57,6 +58,22 @@ export default function ProjectDetail() {
   const idx = projects.findIndex((p) => p.slug === slug);
   const project = idx >= 0 ? projects[idx] : null;
 
+  const heroVideoUrl = project
+    ? (isVideoUrl(project.preview_url) && project.preview_url) ||
+      (isVideoUrl(project.cover) && project.cover) ||
+      ""
+    : "";
+
+  useEffect(() => {
+    setHeroMediaReady(false);
+  }, [slug]);
+
+  useEffect(() => {
+    if (!heroVideoUrl) return undefined;
+    const t = window.setTimeout(() => setHeroMediaReady(true), 6000);
+    return () => window.clearTimeout(t);
+  }, [slug, heroVideoUrl]);
+
   const next = useMemo(() => {
     if (idx < 0 || projects.length === 0) return null;
     return projects[(idx + 1) % projects.length];
@@ -80,11 +97,6 @@ export default function ProjectDetail() {
       </div>
     );
   }
-
-  const heroVideoUrl =
-    (isVideoUrl(project.preview_url) && project.preview_url) ||
-    (isVideoUrl(project.cover) && project.cover) ||
-    "";
 
   const isVimeo = /vimeo\.com/.test(heroVideoUrl);
   const isYoutube = /youtube\.com|youtu\.be/.test(heroVideoUrl);
@@ -122,39 +134,56 @@ export default function ProjectDetail() {
       data-testid="project-detail-page"
       className="bg-white dark:bg-black transition-colors duration-500"
     >
-      {/* HERO VIDEO */}
-      <section data-hero className="pt-24 md:pt-28">
-        <div className="relative bg-black">
+      {/* HERO: vídeo o imagen contenidos en viewport (sin recorte agresivo) */}
+      <section data-hero className="bg-black pt-24 md:pt-28">
+        <div className="relative flex min-h-[min(88svh,calc(100vw*9/16+6rem))] w-full items-center justify-center px-2 pb-4 md:min-h-[min(90svh,calc(100vw*9/16+7rem))] md:px-6 md:pb-6">
           {heroVideoUrl ? (
             <>
-              <VimeoEmbed
-                url={heroVideoUrl}
-                autoplay
-                muted
-                className="aspect-video w-full"
-                testId="project-hero-video"
-                innerRef={iframeRef}
-              />
-              <button
-                data-testid="project-mute-toggle"
-                onClick={toggleMuted}
-                aria-label={muted ? "Unmute" : "Mute"}
-                className="absolute top-4 right-4 md:top-6 md:right-6 z-10 w-10 h-10 md:w-11 md:h-11 flex items-center justify-center rounded-full bg-black/60 hover:bg-black text-white backdrop-blur transition"
-              >
-                {muted ? (
-                  <VolumeX className="w-4 h-4 md:w-5 md:h-5" strokeWidth={1.5} />
-                ) : (
-                  <Volume2 className="w-4 h-4 md:w-5 md:h-5" strokeWidth={1.5} />
-                )}
-              </button>
+              {project.cover && (
+                <img
+                  src={project.cover}
+                  alt=""
+                  aria-hidden
+                  className={`pointer-events-none absolute inset-0 z-[1] m-auto max-h-full max-w-full object-contain transition-opacity duration-700 ease-out ${heroMediaReady ? "opacity-0" : "opacity-100"}`}
+                />
+              )}
+              <div className="relative z-[2] flex h-full w-full max-h-[calc(100svh-5.5rem)] md:max-h-[calc(100svh-6.5rem)] items-center justify-center">
+                <div className="relative aspect-video w-full max-w-[min(100%,calc((100svh-6rem)*16/9))] overflow-hidden rounded-sm bg-black shadow-none md:max-w-[min(100%,calc((100svh-7rem)*16/9))]">
+                  <VimeoEmbed
+                    url={heroVideoUrl}
+                    autoplay
+                    muted
+                    loop
+                    className="aspect-video h-full w-full"
+                    testId="project-hero-video"
+                    innerRef={iframeRef}
+                    onIframeLoad={() => setHeroMediaReady(true)}
+                  />
+                  <button
+                    data-testid="project-mute-toggle"
+                    type="button"
+                    onClick={toggleMuted}
+                    aria-label={muted ? "Unmute" : "Mute"}
+                    className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition hover:bg-black md:right-4 md:top-4 md:h-11 md:w-11"
+                  >
+                    {muted ? (
+                      <VolumeX className="h-4 w-4 md:h-5 md:w-5" strokeWidth={1.5} />
+                    ) : (
+                      <Volume2 className="h-4 w-4 md:h-5 md:w-5" strokeWidth={1.5} />
+                    )}
+                  </button>
+                </div>
+              </div>
             </>
           ) : (
-            <img
-              src={project.cover}
-              alt={project.title}
-              data-testid="project-cover-image"
-              className="w-full h-[60vh] md:h-[80vh] object-cover"
-            />
+            <div className="flex max-h-[calc(100svh-5.5rem)] w-full items-center justify-center py-4 md:max-h-[calc(100svh-6.5rem)]">
+              <img
+                src={project.cover}
+                alt={project.title}
+                data-testid="project-cover-image"
+                className="max-h-[calc(100svh-6rem)] w-auto max-w-full object-contain"
+              />
+            </div>
           )}
         </div>
       </section>

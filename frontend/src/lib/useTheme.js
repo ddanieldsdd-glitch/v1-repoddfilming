@@ -12,8 +12,8 @@ const applyTheme = (t) => {
 
 export const useTheme = () => {
   const [theme, setThemeState] = useState(() => {
-    if (typeof window === "undefined") return "light";
-    return localStorage.getItem(THEME_KEY) || "light";
+    if (typeof window === "undefined") return "dark";
+    return localStorage.getItem(THEME_KEY) || "dark";
   });
 
   useEffect(() => {
@@ -45,6 +45,6 @@ export const useTheme = () => {
 if (typeof window !== "undefined") {
   try {
     const saved = localStorage.getItem(THEME_KEY);
-    if (saved) applyTheme(saved);
+    applyTheme(saved || "dark");
   } catch {}
 }

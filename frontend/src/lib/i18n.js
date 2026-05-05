@@ -39,6 +39,7 @@ export const T = {
       en: "For new projects, collaborations or technical references.",
     },
     email: { es: "Correo", en: "Email" },
+    phone: { es: "Teléfono", en: "Phone" },
     follow: { es: "Encuéntrame en", en: "Find me on" },
   },
   footer: {

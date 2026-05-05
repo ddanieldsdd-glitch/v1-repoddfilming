@@ -122,18 +122,33 @@ code {
   user-select: none !important;
 }
 
-.emergent-badge, #emergent-badge, [class*="emergent"], [id*="emergent"] {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  user-select: none !important;
+/* Textura tipo grano / película sobre toda la interfaz. */
+.film-grain-overlay {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.55'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  animation: film-grain-shift 0.7s steps(4) infinite;
 }
 
-.emergent-badge, #emergent-badge, [class*="emergent"], [id*="emergent"] {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  user-select: none !important;
+@keyframes film-grain-shift {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-1.2%, 1.5%);
+  }
+  50% {
+    transform: translate(1%, -1%);
+  }
+  75% {
+    transform: translate(-0.8%, -1.2%);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .film-grain-overlay {
+    animation: none;
+  }
 }
