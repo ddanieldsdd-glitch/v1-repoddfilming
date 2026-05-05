@@ -1,4 +1,4 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -113,7 +113,7 @@ code {
         border-bottom-color: inherit;
     }
 }
-/* TEMPORAL: ocultar badge emergent */
+
 .emergent-badge, #emergent-badge, [class*="emergent"], [id*="emergent"] {
   display: none !important;
   visibility: hidden !important;
@@ -121,7 +121,7 @@ code {
   pointer-events: none !important;
   user-select: none !important;
 }
-/* TEMPORAL: ocultar badge emergent */
+
 .emergent-badge, #emergent-badge, [class*="emergent"], [id*="emergent"] {
   display: none !important;
   visibility: hidden !important;
@@ -129,7 +129,7 @@ code {
   pointer-events: none !important;
   user-select: none !important;
 }
-/* TEMPORAL: ocultar badge emergent (refuerzo visual) */
+
 .emergent-badge, #emergent-badge, [class*="emergent"], [id*="emergent"] {
   display: none !important;
   visibility: hidden !important;
