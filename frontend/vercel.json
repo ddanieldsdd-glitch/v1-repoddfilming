@@ -1,5 +1,6 @@
 {
-  "buildCommand": "yarn predeploy",
+  "installCommand": "npm ci",
+  "buildCommand": "npm run predeploy",
   "outputDirectory": "build",
   "framework": "create-react-app",
   "rewrites": [
