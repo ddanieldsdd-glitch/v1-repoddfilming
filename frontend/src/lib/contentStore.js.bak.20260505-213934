@@ -86,4 +86,3 @@ export const slugify = (str) =>
 export const newProjectId = () =>
   "p-" + Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-3);
 
-

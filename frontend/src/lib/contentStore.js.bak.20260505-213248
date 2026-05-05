@@ -1,4 +1,4 @@
-﻿import defaultContent from "../data/content.json";
+import defaultContent from "../data/content.json";
 
 const STORAGE_KEY = "ddp_content_v7";
 const LANG_KEY = "ddp_lang";
@@ -6,7 +6,7 @@ const ADMIN_AUTH_KEY = "ddp_admin_auth";
 
 // Default admin password. Can be overridden via env var.
 export const ADMIN_PASSWORD =
-  process.env.ADMIN_PASSWORD || "";
+  process.env.REACT_APP_ADMIN_PASSWORD || "ddfilming2026";
 
 const listeners = new Set();
 
@@ -64,7 +64,7 @@ export const setAdminAuthed = (val) => {
 };
 
 export const CATEGORIES = [
-  { id: "fiction", es: "FicciÃ³n", en: "Fiction" },
+  { id: "fiction", es: "Ficción", en: "Fiction" },
   { id: "documentary", es: "Documental", en: "Documentary" },
   { id: "commercial", es: "Publicidad", en: "Commercials" },
   { id: "music-video", es: "Videoclips", en: "Music Videos" },
@@ -85,5 +85,3 @@ export const slugify = (str) =>
 
 export const newProjectId = () =>
   "p-" + Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-3);
-
-
