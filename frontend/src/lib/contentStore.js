@@ -4,9 +4,11 @@ const STORAGE_KEY = "ddp_content_v7";
 const LANG_KEY = "ddp_lang";
 const ADMIN_AUTH_KEY = "ddp_admin_auth";
 
-// Default admin password. Can be overridden via env var.
-export const ADMIN_PASSWORD =
-  process.env.ADMIN_PASSWORD || "";
+// CRA solo expone variables con prefijo REACT_APP_. Configura REACT_APP_ADMIN_PASSWORD en Vercel (.env local para desarrollo).
+export const ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD || "";
+
+export const isAdminLoginConfigured = () =>
+  typeof ADMIN_PASSWORD === "string" && ADMIN_PASSWORD.length > 0;
 
 const listeners = new Set();
 
@@ -64,7 +66,7 @@ export const setAdminAuthed = (val) => {
 };
 
 export const CATEGORIES = [
-  { id: "fiction", es: "FicciÃ³n", en: "Fiction" },
+  { id: "fiction", es: "Ficción", en: "Fiction" },
   { id: "documentary", es: "Documental", en: "Documentary" },
   { id: "commercial", es: "Publicidad", en: "Commercials" },
   { id: "music-video", es: "Videoclips", en: "Music Videos" },

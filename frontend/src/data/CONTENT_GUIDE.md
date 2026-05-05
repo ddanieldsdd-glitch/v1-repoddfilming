@@ -128,7 +128,7 @@ Las 4 categorías permitidas en el campo `"category"` son:
 
 Si prefieres no tocar el JSON a mano:
 
-1. Entra en la web → `/admin` (contraseña `ddfilming2026`).
+1. Configura `REACT_APP_ADMIN_PASSWORD` en Vercel (o en `.env.local`) y despliega; entra en `/admin` con esa contraseña.
 2. Añade / edita / elimina proyectos con la interfaz.
 3. Pulsa **Export** → descarga `content-FECHA.json`.
 4. Reemplaza `src/data/content.json` con el archivo descargado.

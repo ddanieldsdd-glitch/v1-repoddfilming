@@ -6,6 +6,7 @@ import {
   saveContent,
   resetContent,
   ADMIN_PASSWORD,
+  isAdminLoginConfigured,
   isAdminAuthed,
   setAdminAuthed,
   CATEGORIES,
@@ -334,42 +335,55 @@ export default function Admin() {
     setContent(next);
   };
 
+  const tryLogin = () => {
+    if (!isAdminLoginConfigured()) {
+      toast.error("Admin no configurado en este entorno");
+      return;
+    }
+    if (pwd === ADMIN_PASSWORD) {
+      setAdminAuthed(true);
+      setAuthed(true);
+    } else toast.error("Contraseña incorrecta");
+  };
+
   if (!authed) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center px-6">
         <div className="w-full max-w-sm" data-testid="admin-login">
           <Link to="/" className="text-[11px] tracking-[0.28em] uppercase text-neutral-500 mb-10 inline-block">
-            ← Back
+            ← Volver
           </Link>
           <h1 className="text-3xl tracking-tight mb-8 font-light">Admin</h1>
-          <input
-            type="password"
-            data-testid="admin-password"
-            value={pwd}
-            onChange={(e) => setPwd(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                if (pwd === ADMIN_PASSWORD) {
-                  setAdminAuthed(true);
-                  setAuthed(true);
-                } else toast.error("Invalid password");
-              }
-            }}
-            placeholder="Password"
-            className={inputCls}
-          />
-          <button
-            data-testid="admin-login-btn"
-            onClick={() => {
-              if (pwd === ADMIN_PASSWORD) {
-                setAdminAuthed(true);
-                setAuthed(true);
-              } else toast.error("Invalid password");
-            }}
-            className="mt-4 w-full border border-black px-5 py-3 text-[11px] tracking-[0.28em] uppercase hover:bg-black hover:text-white transition"
-          >
-            Sign in
-          </button>
+          {!isAdminLoginConfigured() ? (
+            <p className="text-sm text-neutral-600 leading-relaxed">
+              El panel no está activo en esta versión pública. Para usarlo en producción,
+              define la variable <code className="text-xs bg-neutral-100 px-1">REACT_APP_ADMIN_PASSWORD</code> en
+              Vercel y vuelve a desplegar.
+            </p>
+          ) : (
+            <>
+              <input
+                type="password"
+                data-testid="admin-password"
+                value={pwd}
+                onChange={(e) => setPwd(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") tryLogin();
+                }}
+                placeholder="Contraseña"
+                className={inputCls}
+                autoComplete="current-password"
+              />
+              <button
+                data-testid="admin-login-btn"
+                type="button"
+                onClick={tryLogin}
+                className="mt-4 w-full border border-black px-5 py-3 text-[11px] tracking-[0.28em] uppercase hover:bg-black hover:text-white transition"
+              >
+                Entrar
+              </button>
+            </>
+          )}
         </div>
       </div>
     );
@@ -608,9 +622,6 @@ export default function Admin() {
           </ul>
         </div>
 
-        <p className="mt-10 text-[11px] tracking-[0.28em] uppercase text-neutral-400">
-          Default password: ddfilming2026 — change via REACT_APP_ADMIN_PASSWORD
-        </p>
       </div>
     </div>
   );

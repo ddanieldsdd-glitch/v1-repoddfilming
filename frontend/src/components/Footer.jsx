@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 
@@ -50,9 +50,6 @@ export const Footer = () => {
       </div>
       <div className="mt-16 md:mt-24 pt-8 border-t border-black/10 dark:border-white/10 flex flex-col md:flex-row justify-between gap-3 text-[11px] tracking-[0.24em] uppercase text-neutral-500 dark:text-neutral-400">
         <span>© {year} {content.site.name}</span>
-        <Link to="/admin" className="hover:text-black dark:hover:text-white opacity-40 hover:opacity-100 transition" data-testid="footer-admin-link">
-          ·
-        </Link>
       </div>
     </footer>
   );
