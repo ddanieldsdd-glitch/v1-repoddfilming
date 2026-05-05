@@ -1,10 +1,10 @@
-import { useRef, useState, useMemo } from "react";
+import { useRef, useState, useMemo, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowUpRight, ArrowRight, Volume2, VolumeX } from "lucide-react";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 import { VimeoEmbed } from "../components/VimeoEmbed";
-import { CATEGORIES, getActiveCategories } from "../lib/contentStore";
+import { getActiveCategories } from "../lib/contentStore";
 
 const isVideoUrl = (url) =>
   /vimeo\.com|youtube\.com|youtu\.be/.test(String(url || ""));
@@ -18,6 +18,41 @@ export default function ProjectDetail() {
   const [muted, setMuted] = useState(true);
   const iframeRef = useRef(null);
 
+  // LIGHTBOX
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImages, setLightboxImages] = useState([]);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  const openLightbox = (images, index = 0) => {
+    if (!images || images.length === 0) return;
+    setLightboxImages(images);
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
+
+  const closeLightbox = () => {
+    setLightboxOpen(false);
+  };
+
+  const nextImage = () => {
+    setLightboxIndex((i) => (i + 1) % lightboxImages.length);
+  };
+
+  const prevImage = () => {
+    setLightboxIndex((i) => (i - 1 + lightboxImages.length) % lightboxImages.length);
+  };
+
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (!lightboxOpen) return;
+      if (e.key === "Escape") closeLightbox();
+      if (e.key === "ArrowRight") nextImage();
+      if (e.key === "ArrowLeft") prevImage();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [lightboxOpen, lightboxImages.length]);
+
   const projects = content.projects || [];
   const idx = projects.findIndex((p) => p.slug === slug);
   const project = idx >= 0 ? projects[idx] : null;
@@ -29,9 +64,17 @@ export default function ProjectDetail() {
 
   if (!project) {
     return (
-      <div className="pt-40 px-6 md:px-12 lg:px-16 min-h-[60vh] bg-white dark:bg-black" data-testid="project-not-found">
-        <p className="text-neutral-500 dark:text-neutral-400 mb-6">{tr(T.project.notFound, lang)}</p>
-        <Link to="/work" className="text-sm border-b border-black dark:border-white pb-1 text-black dark:text-white">
+      <div
+        className="pt-40 px-6 md:px-12 lg:px-16 min-h-[60vh] bg-white dark:bg-black"
+        data-testid="project-not-found"
+      >
+        <p className="text-neutral-500 dark:text-neutral-400 mb-6">
+          {tr(T.project.notFound, lang)}
+        </p>
+        <Link
+          to="/work"
+          className="text-sm border-b border-black dark:border-white pb-1 text-black dark:text-white"
+        >
           {tr(T.project.back, lang)}
         </Link>
       </div>
@@ -47,16 +90,16 @@ export default function ProjectDetail() {
   const isYoutube = /youtube\.com|youtu\.be/.test(heroVideoUrl);
 
   const toggleMuted = () => {
-    const next = !muted;
-    setMuted(next);
+    const nextMuted = !muted;
+    setMuted(nextMuted);
     const iframe = iframeRef.current;
     if (!iframe || !iframe.contentWindow) return;
     if (isVimeo) {
       iframe.contentWindow.postMessage(
-        JSON.stringify({ method: "setMuted", value: next }),
+        JSON.stringify({ method: "setMuted", value: nextMuted }),
         "*"
       );
-      if (!next) {
+      if (!nextMuted) {
         iframe.contentWindow.postMessage(
           JSON.stringify({ method: "setVolume", value: 1 }),
           "*"
@@ -66,7 +109,7 @@ export default function ProjectDetail() {
       iframe.contentWindow.postMessage(
         JSON.stringify({
           event: "command",
-          func: next ? "mute" : "unMute",
+          func: nextMuted ? "mute" : "unMute",
           args: [],
         }),
         "*"
@@ -75,8 +118,10 @@ export default function ProjectDetail() {
   };
 
   return (
-    <div data-testid="project-detail-page" className="bg-white dark:bg-black transition-colors duration-500">
-
+    <div
+      data-testid="project-detail-page"
+      className="bg-white dark:bg-black transition-colors duration-500"
+    >
       {/* HERO VIDEO */}
       <section data-hero className="pt-24 md:pt-28">
         <div className="relative bg-black">
@@ -96,7 +141,11 @@ export default function ProjectDetail() {
                 aria-label={muted ? "Unmute" : "Mute"}
                 className="absolute top-4 right-4 md:top-6 md:right-6 z-10 w-10 h-10 md:w-11 md:h-11 flex items-center justify-center rounded-full bg-black/60 hover:bg-black text-white backdrop-blur transition"
               >
-                {muted ? <VolumeX className="w-4 h-4 md:w-5 md:h-5" strokeWidth={1.5} /> : <Volume2 className="w-4 h-4 md:w-5 md:h-5" strokeWidth={1.5} />}
+                {muted ? (
+                  <VolumeX className="w-4 h-4 md:w-5 md:h-5" strokeWidth={1.5} />
+                ) : (
+                  <Volume2 className="w-4 h-4 md:w-5 md:h-5" strokeWidth={1.5} />
+                )}
               </button>
             </>
           ) : (
@@ -112,7 +161,10 @@ export default function ProjectDetail() {
 
       {/* CATEGORY NAV */}
       <section className="px-6 md:px-12 lg:px-16 pt-10 md:pt-14 border-b border-black/10 dark:border-white/10 pb-5">
-        <div className="flex flex-wrap gap-x-8 gap-y-3" data-testid="project-category-nav">
+        <div
+          className="flex flex-wrap gap-x-8 gap-y-3"
+          data-testid="project-category-nav"
+        >
           <Link
             to="/work"
             data-testid="project-cat-all"
@@ -137,19 +189,19 @@ export default function ProjectDetail() {
         </div>
       </section>
 
-      {/* META — 3 COLUMNAS EN DESKTOP */}
+      {/* META */}
       <section className="px-6 md:px-12 lg:px-16 py-12 md:py-20">
         <button
           onClick={() => navigate(-1)}
           data-testid="project-back-btn"
           className="inline-flex items-center gap-2 text-[11px] tracking-[0.28em] uppercase text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white mb-10"
         >
-          <ArrowLeft className="w-3.5 h-3.5" strokeWidth={1.5} /> {tr(T.project.back, lang)}
+          <ArrowLeft className="w-3.5 h-3.5" strokeWidth={1.5} />{" "}
+          {tr(T.project.back, lang)}
         </button>
 
-        {/* DESKTOP */}
+        {/* DESKTOP: POSTER | TEXTO | FICHA */}
         <div className="hidden md:grid grid-cols-12 gap-10 md:gap-12 items-start">
-
           {/* POSTER — 30% */}
           <aside className="col-span-3">
             {project.poster && (
@@ -159,7 +211,8 @@ export default function ProjectDetail() {
                   alt={`${project.title} poster`}
                   data-testid="project-poster"
                   loading="lazy"
-                  className="w-full h-auto object-cover"
+                  className="w-full h-auto object-cover cursor-zoom-in"
+                  onClick={() => openLightbox([project.poster], 0)}
                 />
               </div>
             )}
@@ -190,7 +243,11 @@ export default function ProjectDetail() {
                 data-testid="project-external-link"
                 className="mt-10 inline-flex items-center gap-2 border border-black dark:border-white px-6 py-3 text-[11px] tracking-[0.28em] uppercase text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors"
               >
-                {tr(T.project.external, lang)} <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={1.5} />
+                {tr(T.project.external, lang)}{" "}
+                <ArrowUpRight
+                  className="w-3.5 h-3.5"
+                  strokeWidth={1.5}
+                />
               </a>
             )}
           </div>
@@ -203,7 +260,9 @@ export default function ProjectDetail() {
                   <dt className="text-[10px] tracking-[0.32em] uppercase text-neutral-400 dark:text-neutral-500 mb-1">
                     {tr(T.project.director, lang)}
                   </dt>
-                  <dd className="text-black dark:text-white">{project.director}</dd>
+                  <dd className="text-black dark:text-white">
+                    {project.director}
+                  </dd>
                 </div>
               )}
 
@@ -211,21 +270,27 @@ export default function ProjectDetail() {
                 <dt className="text-[10px] tracking-[0.32em] uppercase text-neutral-400 dark:text-neutral-500 mb-1">
                   {tr(T.project.year, lang)}
                 </dt>
-                <dd className="text-black dark:text-white">{project.year}</dd>
+                <dd className="text-black dark:text-white">
+                  {project.year}
+                </dd>
               </div>
 
               <div>
                 <dt className="text-[10px] tracking-[0.32em] uppercase text-neutral-400 dark:text-neutral-500 mb-1">
                   {tr(T.project.type, lang)}
                 </dt>
-                <dd className="text-black dark:text-white">{tr(project.type, lang)}</dd>
+                <dd className="text-black dark:text-white">
+                  {tr(project.type, lang)}
+                </dd>
               </div>
 
               <div>
                 <dt className="text-[10px] tracking-[0.32em] uppercase text-neutral-400 dark:text-neutral-500 mb-1">
                   {tr(T.project.format, lang)}
                 </dt>
-                <dd className="text-black dark:text-white">{project.format}</dd>
+                <dd className="text-black dark:text-white">
+                  {project.format}
+                </dd>
               </div>
             </dl>
           </aside>
@@ -248,7 +313,8 @@ export default function ProjectDetail() {
               <img
                 src={project.poster}
                 alt={`${project.title} poster`}
-                className="w-full h-auto object-cover"
+                className="w-full h-auto object-cover cursor-zoom-in"
+                onClick={() => openLightbox([project.poster], 0)}
               />
             </div>
           )}
@@ -259,7 +325,9 @@ export default function ProjectDetail() {
                 <dt className="text-[10px] tracking-[0.32em] uppercase text-neutral-400 dark:text-neutral-500 mb-1">
                   {tr(T.project.director, lang)}
                 </dt>
-                <dd className="text-black dark:text-white">{project.director}</dd>
+                <dd className="text-black dark:text-white">
+                  {project.director}
+                </dd>
               </div>
             )}
 
@@ -267,21 +335,27 @@ export default function ProjectDetail() {
               <dt className="text-[10px] tracking-[0.32em] uppercase text-neutral-400 dark:text-neutral-500 mb-1">
                 {tr(T.project.year, lang)}
               </dt>
-              <dd className="text-black dark:text-white">{project.year}</dd>
+              <dd className="text-black dark:text-white">
+                {project.year}
+              </dd>
             </div>
 
             <div>
               <dt className="text-[10px] tracking-[0.32em] uppercase text-neutral-400 dark:text-neutral-500 mb-1">
                 {tr(T.project.type, lang)}
               </dt>
-              <dd className="text-black dark:text-white">{tr(project.type, lang)}</dd>
+              <dd className="text-black dark:text-white">
+                {tr(project.type, lang)}
+              </dd>
             </div>
 
             <div>
               <dt className="text-[10px] tracking-[0.32em] uppercase text-neutral-400 dark:text-neutral-500 mb-1">
                 {tr(T.project.format, lang)}
               </dt>
-              <dd className="text-black dark:text-white">{project.format}</dd>
+              <dd className="text-black dark:text-white">
+                {project.format}
+              </dd>
             </div>
           </dl>
         </div>
@@ -306,7 +380,8 @@ export default function ProjectDetail() {
                   src={src}
                   alt={`${project.title} still ${i + 1}`}
                   loading="lazy"
-                  className="w-full h-auto object-contain block"
+                  className="w-full h-auto object-contain block cursor-zoom-in"
+                  onClick={() => openLightbox(project.stills, i)}
                 />
               </div>
             ))}
@@ -326,7 +401,9 @@ export default function ProjectDetail() {
               {tr(T.project.bts, lang)} · {project.bts.length}
             </span>
             <span className="text-[11px] tracking-[0.28em] uppercase border-b border-black dark:border-white pb-0.5 text-black dark:text-white">
-              {showBts ? tr(T.project.hideBts, lang) : tr(T.project.showBts, lang)}
+              {showBts
+                ? tr(T.project.hideBts, lang)
+                : tr(T.project.showBts, lang)}
             </span>
           </button>
           {showBts && (
@@ -335,8 +412,17 @@ export default function ProjectDetail() {
               className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6"
             >
               {project.bts.map((src, i) => (
-                <div key={i} className="bg-neutral-100 dark:bg-neutral-900 overflow-hidden aspect-[4/5]">
-                  <img src={src} alt="BTS" loading="lazy" className="w-full h-full object-cover" />
+                <div
+                  key={i}
+                  className="bg-neutral-100 dark:bg-neutral-900 overflow-hidden aspect-[4/5]"
+                >
+                  <img
+                    src={src}
+                    alt="BTS"
+                    loading="lazy"
+                    className="w-full h-full object-cover cursor-zoom-in"
+                    onClick={() => openLightbox(project.bts, i)}
+                  />
                 </div>
               ))}
             </div>
@@ -360,9 +446,60 @@ export default function ProjectDetail() {
                 {next.title}
               </p>
             </div>
-            <ArrowRight className="w-6 h-6 md:w-8 md:h-8 text-black dark:text-white group-hover:translate-x-2 transition-transform" strokeWidth={1} />
+            <ArrowRight
+              className="w-6 h-6 md:w-8 md:h-8 text-black dark:text-white group-hover:translate-x-2 transition-transform"
+              strokeWidth={1}
+            />
           </Link>
         </section>
+      )}
+
+      {/* LIGHTBOX OVERLAY */}
+      {lightboxOpen && lightboxImages.length > 0 && (
+        <div
+          className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[9999] flex items-center justify-center"
+          onClick={closeLightbox}
+        >
+          <img
+            src={lightboxImages[lightboxIndex]}
+            alt="Fullscreen"
+            className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          {lightboxImages.length > 1 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  prevImage();
+                }}
+                className="absolute left-6 text-white text-4xl font-light select-none"
+              >
+                ‹
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  nextImage();
+                }}
+                className="absolute right-6 text-white text-4xl font-light select-none"
+              >
+                ›
+              </button>
+            </>
+          )}
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              closeLightbox();
+            }}
+            className="absolute top-6 right-6 text-white text-3xl"
+          >
+            ×
+          </button>
+        </div>
       )}
     </div>
   );
