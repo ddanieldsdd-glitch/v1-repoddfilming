@@ -1,13 +1,13 @@
 ﻿// EMERGENT CLEANER - TEMPORAL
 (function() {
   const SELECTORS = [
-    '.emergent-badge',
-    '#emergent-badge',
-    '[class*="emergent"]',
-    '[id*="emergent"]',
-    'script[src*="emergent"]',
-    'script[src*="dotenvx"]',
-    'script[src*="vestauth"]'
+    \'.emergent-badge\',
+    \'#emergent-badge\',
+    \'[class*="emergent"]\',
+    \'[id*="emergent"]\',
+    \'script[src*="emergent"]\',
+    \'script[src*="dotenvx"]\',
+    \'script[src*="vestauth"]\'
   ];
 
   function removeMatches(root = document) {
@@ -91,6 +91,5 @@ root.render(
     <App />
   </React.StrictMode>,
 );
-
 
 
