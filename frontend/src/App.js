@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Toaster } from "sonner";
 import { Nav } from "./components/Nav";
 import { Footer } from "./components/Footer";
@@ -19,10 +20,17 @@ const ScrollToTop = () => {
   return null;
 };
 
+/** Actualiza la ruta informada a Speed Insights en cada cambio del cliente (SPA). */
+const SpeedInsightsBridge = () => {
+  const { pathname } = useLocation();
+  return <SpeedInsights framework="react" route={pathname} />;
+};
+
 function App() {
   return (
     <div className="App bg-white dark:bg-black text-black dark:text-white antialiased transition-colors duration-500">
       <BrowserRouter>
+        <SpeedInsightsBridge />
         <ScrollToTop />
         <Nav />
         <main>
