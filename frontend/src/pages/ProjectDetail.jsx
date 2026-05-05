@@ -21,10 +21,11 @@ export default function ProjectDetail() {
   const projects = content.projects || [];
   const idx = projects.findIndex((p) => p.slug === slug);
   const project = idx >= 0 ? projects[idx] : null;
-const next = useMemo(() => {
-  if (idx < 0 || projects.length === 0) return null;
-  return projects[(idx + 1) % projects.length];
-}, [idx, projects.length]);
+
+  const next = useMemo(() => {
+    if (idx < 0 || projects.length === 0) return null;
+    return projects[(idx + 1) % projects.length];
+  }, [idx, projects.length]);
 
   if (!project) {
     return (
@@ -75,6 +76,7 @@ const next = useMemo(() => {
 
   return (
     <div data-testid="project-detail-page" className="bg-white dark:bg-black transition-colors duration-500">
+
       {/* HERO VIDEO */}
       <section data-hero className="pt-24 md:pt-28">
         <div className="relative bg-black">
@@ -135,7 +137,7 @@ const next = useMemo(() => {
         </div>
       </section>
 
-      {/* META */}
+      {/* META — 3 COLUMNAS EN DESKTOP */}
       <section className="px-6 md:px-12 lg:px-16 py-12 md:py-20">
         <button
           onClick={() => navigate(-1)}
@@ -145,18 +147,38 @@ const next = useMemo(() => {
           <ArrowLeft className="w-3.5 h-3.5" strokeWidth={1.5} /> {tr(T.project.back, lang)}
         </button>
 
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-12">
-          <div className="md:col-span-8">
+        {/* DESKTOP */}
+        <div className="hidden md:grid grid-cols-12 gap-10 md:gap-12 items-start">
+
+          {/* POSTER — 30% */}
+          <aside className="col-span-3">
+            {project.poster && (
+              <div className="bg-neutral-100 dark:bg-neutral-900 overflow-hidden rounded-lg">
+                <img
+                  src={project.poster}
+                  alt={`${project.title} poster`}
+                  data-testid="project-poster"
+                  loading="lazy"
+                  className="w-full h-auto object-cover"
+                />
+              </div>
+            )}
+          </aside>
+
+          {/* TÍTULO + SINOPSIS + EXTERNAL LINK — 50% */}
+          <div className="col-span-6">
             <p className="text-[11px] tracking-[0.32em] uppercase text-neutral-500 dark:text-neutral-400 mb-4">
               {tr(project.type, lang)} — {project.year}
             </p>
+
             <h1
               data-testid="project-title"
               className="text-4xl md:text-6xl lg:text-7xl font-light tracking-tight leading-[0.95] text-black dark:text-white"
             >
               {project.title}
             </h1>
-            <p className="mt-8 md:mt-10 text-base md:text-lg leading-relaxed text-neutral-700 dark:text-neutral-300 max-w-2xl whitespace-pre-line">
+
+            <p className="mt-8 md:mt-10 text-base md:text-lg leading-relaxed text-neutral-700 dark:text-neutral-300 max-w-prose whitespace-pre-line">
               {tr(project.synopsis, lang)}
             </p>
 
@@ -173,7 +195,8 @@ const next = useMemo(() => {
             )}
           </div>
 
-          <aside className="md:col-span-4 md:border-l md:border-black/10 dark:md:border-white/10 md:pl-10 pt-6 md:pt-2">
+          {/* FICHA TÉCNICA — 20% */}
+          <aside className="col-span-3 md:border-l md:border-black/10 dark:md:border-white/10 md:pl-10">
             <dl className="space-y-6 text-sm">
               {project.director && (
                 <div>
@@ -183,18 +206,21 @@ const next = useMemo(() => {
                   <dd className="text-black dark:text-white">{project.director}</dd>
                 </div>
               )}
+
               <div>
                 <dt className="text-[10px] tracking-[0.32em] uppercase text-neutral-400 dark:text-neutral-500 mb-1">
                   {tr(T.project.year, lang)}
                 </dt>
                 <dd className="text-black dark:text-white">{project.year}</dd>
               </div>
+
               <div>
                 <dt className="text-[10px] tracking-[0.32em] uppercase text-neutral-400 dark:text-neutral-500 mb-1">
                   {tr(T.project.type, lang)}
                 </dt>
                 <dd className="text-black dark:text-white">{tr(project.type, lang)}</dd>
               </div>
+
               <div>
                 <dt className="text-[10px] tracking-[0.32em] uppercase text-neutral-400 dark:text-neutral-500 mb-1">
                   {tr(T.project.format, lang)}
@@ -202,22 +228,66 @@ const next = useMemo(() => {
                 <dd className="text-black dark:text-white">{project.format}</dd>
               </div>
             </dl>
-            {project.poster && (
-              <div className="mt-10 bg-neutral-100 dark:bg-neutral-900 overflow-hidden">
-                <img
-                  src={project.poster}
-                  alt={`${project.title} poster`}
-                  data-testid="project-poster"
-                  loading="lazy"
-                  className="w-full h-auto object-cover"
-                />
+          </aside>
+        </div>
+
+        {/* MOBILE — layout original */}
+        <div className="md:hidden">
+          <p className="text-[11px] tracking-[0.32em] uppercase text-neutral-500 dark:text-neutral-400 mb-4">
+            {tr(project.type, lang)} — {project.year}
+          </p>
+          <h1 className="text-4xl font-light tracking-tight text-black dark:text-white">
+            {project.title}
+          </h1>
+          <p className="mt-6 text-base leading-relaxed text-neutral-700 dark:text-neutral-300 whitespace-pre-line">
+            {tr(project.synopsis, lang)}
+          </p>
+
+          {project.poster && (
+            <div className="mt-10 bg-neutral-100 dark:bg-neutral-900 overflow-hidden rounded-lg">
+              <img
+                src={project.poster}
+                alt={`${project.title} poster`}
+                className="w-full h-auto object-cover"
+              />
+            </div>
+          )}
+
+          <dl className="mt-10 space-y-6 text-sm">
+            {project.director && (
+              <div>
+                <dt className="text-[10px] tracking-[0.32em] uppercase text-neutral-400 dark:text-neutral-500 mb-1">
+                  {tr(T.project.director, lang)}
+                </dt>
+                <dd className="text-black dark:text-white">{project.director}</dd>
               </div>
             )}
-          </aside>
+
+            <div>
+              <dt className="text-[10px] tracking-[0.32em] uppercase text-neutral-400 dark:text-neutral-500 mb-1">
+                {tr(T.project.year, lang)}
+              </dt>
+              <dd className="text-black dark:text-white">{project.year}</dd>
+            </div>
+
+            <div>
+              <dt className="text-[10px] tracking-[0.32em] uppercase text-neutral-400 dark:text-neutral-500 mb-1">
+                {tr(T.project.type, lang)}
+              </dt>
+              <dd className="text-black dark:text-white">{tr(project.type, lang)}</dd>
+            </div>
+
+            <div>
+              <dt className="text-[10px] tracking-[0.32em] uppercase text-neutral-400 dark:text-neutral-500 mb-1">
+                {tr(T.project.format, lang)}
+              </dt>
+              <dd className="text-black dark:text-white">{project.format}</dd>
+            </div>
+          </dl>
         </div>
       </section>
 
-      {/* STILLS — keep natural aspect ratio, no crop. Just a clean 2-col flow. */}
+      {/* STILLS */}
       {project.stills && project.stills.length > 0 && (
         <section
           data-testid="project-stills"
