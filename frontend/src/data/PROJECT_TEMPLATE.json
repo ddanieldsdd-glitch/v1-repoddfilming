@@ -1,5 +1,5 @@
 {
-  "_INSTRUCCIONES": "Copia este bloque completo (sin las comillas externas), pega dentro del array 'projects' de content.json en la posición donde quieras que aparezca el nuevo proyecto, y rellena los campos. Acuérdate de cambiar 'id' y 'slug' a valores únicos. Lee también CONTENT_GUIDE.md.",
+  "_INSTRUCCIONES": "Copia este bloque completo, pega dentro del array 'projects' de content.json en la posición donde quieras que aparezca el nuevo proyecto, y rellena los campos. Cambia siempre 'id' y 'slug' a valores únicos. Lee también CONTENT_GUIDE.md.",
 
   "id": "p-CAMBIA-ESTO",
   "slug": "titulo-del-proyecto-en-kebab-case",
@@ -8,9 +8,16 @@
 
   "title": "Título del Proyecto",
   "year": 2025,
+  "_year_help": "Año de estreno o producción.",
+
   "type": { "es": "Cortometraje", "en": "Short Film" },
-  "director": "Nombre del Director",
+  "_type_help": "Tipo de proyecto. Ejemplos: Cortometraje / Short Film, Videoclip / Music Video, Publicidad / Commercial.",
+
+  "director": "Nombre del Director o Directores",
+  "_director_help": "Si hay varios directores, sepáralos con coma.",
+
   "format": "ARRI Alexa Mini LF · Cooke S4",
+  "_format_help": "Detalles técnicos: cámara, lentes, formato fotoquímico/digital u observaciones relevantes.",
 
   "synopsis": {
     "es": "Sinopsis en español, 2-3 frases.",
@@ -18,13 +25,13 @@
   },
 
   "cover": "https://res.cloudinary.com/.../cover.jpg",
-  "_cover_help": "Imagen estática que se muestra como miniatura en home y /work.",
+  "_cover_help": "Cover image. Imagen horizontal principal que se muestra como miniatura en home y /work.",
 
   "poster": "",
-  "_poster_help": "Cartel oficial vertical (opcional). Aparece en la barra lateral de la página de proyecto. Deja '' si no hay.",
+  "_poster_help": "Poster image. Cartel oficial vertical opcional. Aparece en la página de proyecto. Deja '' si no hay.",
 
   "preview_url": "https://vimeo.com/XXXXXXXXX",
-  "_preview_url_help": "Vídeo de Vimeo o YouTube. Se reproduce al pasar el ratón por la miniatura y autoplay al entrar al proyecto.",
+  "_preview_url_help": "Video embed. URL de Vimeo o YouTube. Se reproduce al pasar el ratón por la miniatura y como vídeo principal en la página de proyecto.",
 
   "stills": [
     "https://res.cloudinary.com/.../still1.jpg",

@@ -87,14 +87,14 @@ const ProjectForm = ({ value, onChange }) => {
           onChange={(e) => update({ year: parseInt(e.target.value, 10) || "" })}
         />
       </Field>
-      <Field label="Director">
+      <Field label="Director(s)">
         <input
           className={inputCls}
           value={value.director || ""}
           onChange={(e) => update({ director: e.target.value })}
         />
       </Field>
-      <Field label="Format (camera / lens)">
+      <Field label="Format details (camera / lens)">
         <input
           className={inputCls}
           value={value.format || ""}
@@ -115,7 +115,7 @@ const ProjectForm = ({ value, onChange }) => {
           onChange={(e) => updateI18n("type", "en", e.target.value)}
         />
       </Field>
-      <Field label="Cover URL (image or Vimeo/YouTube)">
+      <Field label="Cover image URL">
         <input
           data-testid="form-cover"
           className={inputCls}
@@ -123,13 +123,21 @@ const ProjectForm = ({ value, onChange }) => {
           onChange={(e) => update({ cover: e.target.value })}
         />
       </Field>
-      <Field label="Preview video URL (Vimeo — plays on hover)">
+      <Field label="Video embed / preview URL (Vimeo or YouTube)">
         <input
           data-testid="form-preview"
           className={inputCls}
           value={value.preview_url || ""}
           onChange={(e) => update({ preview_url: e.target.value })}
           placeholder="https://vimeo.com/..."
+        />
+      </Field>
+      <Field label="Poster image URL (optional)">
+        <input
+          data-testid="form-poster"
+          className={inputCls}
+          value={value.poster || ""}
+          onChange={(e) => update({ poster: e.target.value })}
         />
       </Field>
       <Field label="External link (optional)">

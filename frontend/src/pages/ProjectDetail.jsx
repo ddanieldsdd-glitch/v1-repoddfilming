@@ -23,6 +23,7 @@ export default function ProjectDetail() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxImages, setLightboxImages] = useState([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const touchStartRef = useRef({ x: 0, y: 0 });
 
   const openLightbox = (images, index = 0) => {
     if (!images || images.length === 0) return;
@@ -41,6 +42,23 @@ export default function ProjectDetail() {
 
   const prevImage = () => {
     setLightboxIndex((i) => (i - 1 + lightboxImages.length) % lightboxImages.length);
+  };
+
+  const handleLightboxTouchStart = (e) => {
+    const touch = e.touches?.[0];
+    if (!touch) return;
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleLightboxTouchEnd = (e) => {
+    if (lightboxImages.length <= 1) return;
+    const touch = e.changedTouches?.[0];
+    if (!touch) return;
+    const dx = touch.clientX - touchStartRef.current.x;
+    const dy = touch.clientY - touchStartRef.current.y;
+    if (Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+    if (dx < 0) nextImage();
+    else prevImage();
   };
 
   useEffect(() => {
@@ -139,32 +157,31 @@ export default function ProjectDetail() {
         <div className="relative flex min-h-[min(88svh,calc(100vw*9/16+6rem))] w-full items-center justify-center px-2 pb-4 md:min-h-[min(90svh,calc(100vw*9/16+7rem))] md:px-6 md:pb-6">
           {heroVideoUrl ? (
             <>
-              {project.cover && (
-                <img
-                  src={project.cover}
-                  alt=""
-                  aria-hidden
-                  className={`pointer-events-none absolute inset-0 z-[1] m-auto max-h-full max-w-full object-contain transition-opacity duration-700 ease-out ${heroMediaReady ? "opacity-0" : "opacity-100"}`}
-                />
-              )}
               <div className="relative z-[2] flex h-full w-full max-h-[calc(100svh-5.5rem)] md:max-h-[calc(100svh-6.5rem)] items-center justify-center">
                 <div className="relative aspect-video w-full max-w-[min(100%,calc((100svh-6rem)*16/9))] overflow-hidden rounded-sm bg-black shadow-none md:max-w-[min(100%,calc((100svh-7rem)*16/9))]">
-                  <VimeoEmbed
-                    url={heroVideoUrl}
-                    autoplay
-                    muted
-                    loop
-                    className="aspect-video h-full w-full"
-                    testId="project-hero-video"
-                    innerRef={iframeRef}
-                    onIframeLoad={() => setHeroMediaReady(true)}
-                  />
+                  <div className={`absolute inset-0 transition-opacity duration-1000 ease-out ${heroMediaReady ? "opacity-100" : "opacity-0"}`}>
+                    <VimeoEmbed
+                      url={heroVideoUrl}
+                      autoplay
+                      muted
+                      loop
+                      className="aspect-video h-full w-full"
+                      testId="project-hero-video"
+                      innerRef={iframeRef}
+                      onIframeLoad={() => {
+                        window.setTimeout(() => setHeroMediaReady(true), 450);
+                      }}
+                    />
+                  </div>
+                  {!heroMediaReady && (
+                    <div className="pointer-events-none absolute inset-0 z-[4] bg-black" />
+                  )}
                   <button
                     data-testid="project-mute-toggle"
                     type="button"
                     onClick={toggleMuted}
                     aria-label={muted ? "Unmute" : "Mute"}
-                    className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition hover:bg-black md:right-4 md:top-4 md:h-11 md:w-11"
+                    className={`absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition hover:bg-black md:right-4 md:top-4 md:h-11 md:w-11 ${heroMediaReady ? "opacity-100" : "opacity-0"}`}
                   >
                     {muted ? (
                       <VolumeX className="h-4 w-4 md:h-5 md:w-5" strokeWidth={1.5} />
@@ -486,15 +503,26 @@ export default function ProjectDetail() {
       {/* LIGHTBOX OVERLAY */}
       {lightboxOpen && lightboxImages.length > 0 && (
         <div
-          className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[9999] flex items-center justify-center"
+          className="fixed inset-0 bg-black/95 backdrop-blur-md z-[9999] flex items-center justify-center px-4 py-20 md:px-10"
           onClick={closeLightbox}
         >
-          <img
-            src={lightboxImages[lightboxIndex]}
-            alt="Fullscreen"
-            className="max-w-[90vw] max-h-[90vh] object-contain rounded-lg shadow-2xl"
+          <div className="absolute left-6 top-6 md:left-10 md:top-8 text-[10px] tracking-[0.32em] uppercase text-white/50">
+            {String(lightboxIndex + 1).padStart(2, "0")} / {String(lightboxImages.length).padStart(2, "0")}
+          </div>
+
+          <div
+            className="relative flex h-full w-full touch-pan-y items-center justify-center"
             onClick={(e) => e.stopPropagation()}
-          />
+            onTouchStart={handleLightboxTouchStart}
+            onTouchEnd={handleLightboxTouchEnd}
+          >
+            <img
+              key={lightboxImages[lightboxIndex]}
+              src={lightboxImages[lightboxIndex]}
+              alt="Fullscreen"
+              className="max-w-full max-h-full object-contain shadow-2xl animate-[ddpFadeUp_450ms_ease-out_both]"
+            />
+          </div>
 
           {lightboxImages.length > 1 && (
             <>
@@ -503,7 +531,8 @@ export default function ProjectDetail() {
                   e.stopPropagation();
                   prevImage();
                 }}
-                className="absolute left-6 text-white text-4xl font-light select-none"
+                className="absolute left-3 md:left-8 top-1/2 -translate-y-1/2 h-16 w-10 md:h-24 md:w-14 flex items-center justify-center text-white/60 hover:text-white border border-white/10 hover:border-white/40 bg-black/20 backdrop-blur-sm transition"
+                aria-label="Previous image"
               >
                 ‹
               </button>
@@ -512,11 +541,35 @@ export default function ProjectDetail() {
                   e.stopPropagation();
                   nextImage();
                 }}
-                className="absolute right-6 text-white text-4xl font-light select-none"
+                className="absolute right-3 md:right-8 top-1/2 -translate-y-1/2 h-16 w-10 md:h-24 md:w-14 flex items-center justify-center text-white/60 hover:text-white border border-white/10 hover:border-white/40 bg-black/20 backdrop-blur-sm transition"
+                aria-label="Next image"
               >
                 ›
               </button>
             </>
+          )}
+
+          {lightboxImages.length > 1 && (
+            <div
+              className="absolute bottom-5 left-1/2 flex max-w-[90vw] -translate-x-1/2 gap-2 overflow-x-auto px-2 py-1 md:bottom-7"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {lightboxImages.map((src, i) => (
+                <button
+                  key={src}
+                  type="button"
+                  onClick={() => setLightboxIndex(i)}
+                  aria-label={`Open image ${i + 1}`}
+                  className={`h-10 w-16 shrink-0 overflow-hidden border transition md:h-12 md:w-20 ${
+                    i === lightboxIndex
+                      ? "border-white opacity-100"
+                      : "border-white/10 opacity-45 hover:opacity-80 hover:border-white/40"
+                  }`}
+                >
+                  <img src={src} alt="" className="h-full w-full object-cover" />
+                </button>
+              ))}
+            </div>
           )}
 
           <button
@@ -524,7 +577,8 @@ export default function ProjectDetail() {
               e.stopPropagation();
               closeLightbox();
             }}
-            className="absolute top-6 right-6 text-white text-3xl"
+            className="absolute top-5 right-5 md:top-8 md:right-10 h-10 w-10 flex items-center justify-center border border-white/10 text-white/60 hover:text-white hover:border-white/40 transition"
+            aria-label="Close lightbox"
           >
             ×
           </button>

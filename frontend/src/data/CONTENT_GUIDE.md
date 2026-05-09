@@ -36,14 +36,14 @@ aquí es lo que se muestra.
   "title": "Título del Proyecto",
   "year": 2025,
   "type": { "es": "Cortometraje", "en": "Short Film" },
-  "director": "Nombre del Director",
+  "director": "Nombre del Director o Directores",
   "format": "ARRI Alexa Mini LF · Cooke S4",
   "synopsis": {
     "es": "Sinopsis en español (2-3 frases).",
     "en": "Synopsis in English (2-3 sentences)."
   },
   "cover": "https://res.cloudinary.com/.../cover.jpg",
-  "poster": "",
+  "poster": "https://res.cloudinary.com/.../poster.jpg",
   "preview_url": "https://vimeo.com/XXXXXXXXX",
   "stills": [
     "https://res.cloudinary.com/.../still1.jpg",
@@ -61,6 +61,23 @@ aquí es lo que se muestra.
    - Entre dos proyectos existentes = aparece en esa posición.
 4. Asegúrate de que **NO HAY COMA** después del último objeto del array.
 5. Guarda y haz `git push`. El proyecto aparece automáticamente.
+
+### Campos importantes
+
+| Campo | Qué contiene | Dónde aparece |
+|---|---|---|
+| `title` | Título del proyecto | Cards, detalle y navegación |
+| `year` | Año | Cards y ficha técnica |
+| `type` | Tipo ES/EN | Cards y ficha técnica |
+| `director` | Director o directores | Cards y ficha técnica |
+| `format` | Cámara, lentes o formato técnico | Ficha técnica |
+| `synopsis` | Sinopsis ES/EN | Página de proyecto |
+| `preview_url` | Video embed de Vimeo o YouTube | Hover de cards y hero del proyecto |
+| `cover` | Cover image horizontal | Miniatura en home y `/work`; fallback visual del vídeo |
+| `poster` | Poster image vertical opcional | Página de proyecto |
+| `stills` | Fotogramas | Galería del proyecto |
+| `bts` | Fotos behind-the-scenes | Sección BTS desplegable |
+| `external_link` | IMDb, web oficial u otro enlace | Botón “Ver proyecto” |
 
 ---
 

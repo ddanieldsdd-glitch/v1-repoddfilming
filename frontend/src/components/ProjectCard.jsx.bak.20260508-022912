@@ -7,8 +7,7 @@ const isVideoUrl = (url) =>
   /vimeo\.com|youtube\.com|youtu\.be/.test(String(url || ""));
 
 export const ProjectCard = ({ project, lang, eager = false, compact = false, index }) => {
-  const [previewActive, setPreviewActive] = useState(false);
-  const [previewReady, setPreviewReady] = useState(false);
+  const [hover, setHover] = useState(false);
   const timer = useRef(null);
 
   useEffect(() => () => timer.current && clearTimeout(timer.current), []);
@@ -21,15 +20,11 @@ export const ProjectCard = ({ project, lang, eager = false, compact = false, ind
 
   const onEnter = () => {
     if (!previewUrl) return;
-    timer.current = setTimeout(() => {
-      setPreviewReady(false);
-      setPreviewActive(true);
-    }, 1000);
+    timer.current = setTimeout(() => setHover(true), 150);
   };
   const onLeave = () => {
     if (timer.current) clearTimeout(timer.current);
-    setPreviewActive(false);
-    setPreviewReady(false);
+    setHover(false);
   };
 
   return (
@@ -46,27 +41,22 @@ export const ProjectCard = ({ project, lang, eager = false, compact = false, ind
             src={project.cover}
             alt={project.title}
             loading={eager ? "eager" : "lazy"}
-            className={`absolute inset-0 z-[2] w-full h-full object-cover transition-all duration-700 ease-out ${
-              previewReady ? "opacity-0 scale-[1.015]" : "opacity-100 scale-100"
+            className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out ${
+              hover ? "opacity-0 scale-[1.015]" : "opacity-100 scale-100"
             }`}
           />
         )}
-        {previewActive && previewUrl && (
+        {hover && previewUrl && (
           <VimeoEmbed
             url={previewUrl}
             autoplay
             background
             muted
             interactive={false}
-            onIframeLoad={() => {
-              window.setTimeout(() => setPreviewReady(true), 250);
-            }}
-            className={`absolute inset-0 z-[1] w-full h-full transition-opacity duration-500 ${
-              previewReady ? "opacity-100" : "opacity-0"
-            }`}
+            className="absolute inset-0 w-full h-full opacity-100"
           />
         )}
-        {!coverIsImage && !previewActive && previewUrl && (
+        {!coverIsImage && !hover && previewUrl && (
           <div className="absolute inset-0 flex items-center justify-center text-white/40 text-[11px] tracking-[0.3em] uppercase pointer-events-none">
             Hover to play
           </div>
