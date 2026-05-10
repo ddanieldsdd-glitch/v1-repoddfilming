@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
-import { CATEGORIES, getActiveCategories } from "../lib/contentStore";
+import { getActiveCategories } from "../lib/contentStore";
 import { ProjectCard } from "../components/ProjectCard";
 
 export default function Work() {
@@ -58,9 +58,9 @@ export default function Work() {
             {tr(T.work.none, lang)}
           </p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-5 md:gap-x-6 gap-y-10 md:gap-y-14 py-12 md:py-16">
+          <div className={`grid grid-cols-1 sm:grid-cols-2 ${active === "all" ? "lg:grid-cols-3" : "lg:grid-cols-4"} gap-x-5 md:gap-x-6 gap-y-10 md:gap-y-14 py-12 md:py-16`}>
             {list.map((p, i) => (
-              <ProjectCard key={p.id} project={p} lang={lang} eager={i < 3} compact />
+              <ProjectCard key={p.id} project={p} lang={lang} eager={i < 4} compact={active !== "all"} index={active !== "all" ? i : undefined} />
             ))}
           </div>
         )}

@@ -1,0 +1,11 @@
+{
+  "name": "v1-repoddfilming",
+  "private": true,
+  "scripts": {
+    "new-project": "npm --prefix frontend run new-project",
+    "new-project:paste": "node frontend/scripts/new-project.js --paste",
+    "start": "npm --prefix frontend start",
+    "build": "npm --prefix frontend run build",
+    "check:videos": "npm --prefix frontend run check:videos"
+  }
+}

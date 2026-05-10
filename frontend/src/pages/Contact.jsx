@@ -26,7 +26,7 @@ export default function Contact() {
         </p>
 
         <div className="mt-16 md:mt-24 grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-16">
-          <div className="md:col-span-7 space-y-12 md:space-y-14">
+          <div className="md:col-span-7 space-y-7 md:space-y-8">
             <div>
               <p className="text-[11px] tracking-[0.32em] uppercase text-neutral-500 dark:text-neutral-400 mb-4">
                 {tr(T.contact.email, lang)}
@@ -47,7 +47,7 @@ export default function Contact() {
                 <a
                   href={telHref(s.phone)}
                   data-testid="contact-phone-link"
-                  className="text-2xl md:text-4xl lg:text-5xl tracking-tight font-light text-black dark:text-white hover:opacity-60 transition inline-block whitespace-nowrap"
+                  className="text-base md:text-xl tracking-tight font-light text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white transition inline-block whitespace-nowrap"
                 >
                   {formatPhoneDisplay(s.phone)}
                 </a>

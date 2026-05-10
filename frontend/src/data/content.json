@@ -3,7 +3,6 @@
   "_HOW_TO_ADD_PROJECT": "Copia el objeto de PROJECT_TEMPLATE.json y pégalo dentro del array 'projects' de abajo, en la posición donde quieras que aparezca.",
   "_HOW_TO_REMOVE_PROJECT": "Borra el objeto entero del proyecto (incluida la coma).",
   "_HOW_TO_MODIFY_PROJECT": "Edita los campos del proyecto correspondiente.",
-
   "site": {
     "name": "Dani Díaz",
     "title": {
@@ -27,8 +26,8 @@
     }
   },
   "about": {
-    "es": "Director de Fotografía con base entre Madrid y Barcelona. Mi trabajo se mueve entre la ficción, el documental, los videoclips y la publicidad, donde la luz, el encuadre y el ritmo se convierten en herramientas narrativas.\n\nTrabajo indistintamente con cámara digital y formato analógico —16mm y 35mm Kodak— buscando una imagen sensorial, honesta, que respete la atmósfera de cada historia. Me interesan los rostros, los silencios y la textura de lo cotidiano: cine que mira de cerca y deja respirar al espectador.\n\nHe colaborado con directores y agencias en proyectos de ficción, piezas documentales, marcas internacionales y artistas musicales. Cada formato exige su propia gramática visual, y mi oficio consiste en encontrarla.",
-    "en": "Director of Photography based between Madrid and Barcelona. My work moves across fiction, documentary, music videos and commercials, where light, framing and rhythm become narrative tools.\n\nI work fluently with digital cameras and analog formats —16mm and 35mm Kodak— pursuing a sensorial, honest image that respects the atmosphere of every story. I'm drawn to faces, silences and the texture of the everyday: cinema that looks closely and lets the viewer breathe.\n\nI've collaborated with directors and agencies on fiction projects, documentary pieces, international brands and recording artists. Each format demands its own visual grammar, and my craft is to find it."
+    "es": "Director de Fotografía entre Sevilla y Barcelona. Formado en la ESCAC, donde cursó el Máster en Dirección de Fotografía, ha consolidado una trayectoria definida por una sólida sensibilidad visual y una constante exploración de la narrativa cinematográfica a través de la luz, el encuadre y el ritmo.\n\nA lo largo de los últimos años ha trabajado en proyectos de ficción, documental, videoclip y publicidad, colaborando con directores, productoras, agencias y artistas en producciones de diversa escala. Su trayectoria le ha permitido desarrollar una mirada versátil, capaz de adaptarse a distintos lenguajes audiovisuales sin perder una identidad visual propia.\n\nTrabaja indistintamente en digital y en formatos analógicos —16mm y 35mm Kodak— construyendo imágenes sensoriales, honestas y atmosféricas, con especial atención a los rostros, los silencios y la textura de lo cotidiano. Su aproximación visual parte de un cine cercano y orgánico, donde la atmósfera y la emoción ocupan un lugar central.\n\nSu trabajo ha sido reconocido con un Premio FUGAZ gracias al cortometraje Origami, proyectado también en el Festival de San Sebastián y nominado en el Notodofilmfest.\n\nActualmente continúa desarrollando proyectos entre Sevilla y Barcelona, combinando trabajos de carácter autoral con producciones comerciales y explorando nuevas posibilidades visuales dentro del cine contemporáneo.",
+    "en": "Director of Photography based between Seville and Barcelona. Trained at ESCAC, where he completed the Master's Degree in Cinematography, he has built a career defined by a strong visual sensitivity and a constant exploration of cinematic storytelling through light, framing and rhythm.\n\nOver the last few years, he has worked across fiction, documentary, music videos and commercials, collaborating with directors, production companies, agencies and artists on projects of different scales. This path has allowed him to develop a versatile eye, able to adapt to different audiovisual languages while preserving a distinct visual identity.\n\nHe works fluently with both digital and analog formats —16mm and 35mm Kodak— creating sensorial, honest and atmospheric images, with particular attention to faces, silences and the texture of everyday life. His visual approach is rooted in intimate, organic cinema, where atmosphere and emotion hold a central place.\n\nHis work has been recognized with a FUGAZ Award for the short film Origami, which was also screened at the San Sebastián Film Festival and nominated at Notodofilmfest.\n\nHe currently continues to develop projects between Seville and Barcelona, combining author-driven work with commercial productions and exploring new visual possibilities within contemporary cinema."
   },
   "projects": [
     {
@@ -37,7 +36,10 @@
       "category": "fiction",
       "title": "La Espantada",
       "year": 2025,
-      "type": { "es": "Cortometraje de Ficción", "en": "Fiction Short Film" },
+      "type": {
+        "es": "Cortometraje de Ficción",
+        "en": "Fiction Short Film"
+      },
       "director": "Guillermo Parrilla Sevilla, Ana Villa Zamorano",
       "format": "ARRI Alexa SXT & XT · Anamorphic ATLAS ORION",
       "synopsis": {
@@ -62,7 +64,8 @@
         "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777654310/Captura_de_pantalla_2026-04-29_a_las_1.02.32_qqohqa.png",
         "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777654308/Captura_de_pantalla_2026-04-29_a_las_1.02.19_u2m4xy.png"
       ],
-      "external_link": "https://www.imdb.com/es-es/title/tt35601689/"
+      "external_link": "https://www.imdb.com/es-es/title/tt35601689/",
+      "production_company": "Intersum Films"
     },
     {
       "id": "p-origami",
@@ -70,12 +73,15 @@
       "category": "fiction",
       "title": "Origami",
       "year": 2024,
-      "type": { "es": "Cortometraje de Ficción", "en": "Fiction Short Film" },
+      "type": {
+        "es": "Cortometraje de Ficción",
+        "en": "Fiction Short Film"
+      },
       "director": "Álvaro León",
       "format": "Sony FX6 & Canon FD",
       "synopsis": {
-        "es": "La felicidad de Lucía se quiebra cuando su padre inicia una discusión violenta. Un plano secuencia nos sumerge en la angustia emocional de una infancia marcada por el miedo y la violencia intrafamiliar.",
-        "en": "Lucía's happiness shatters when her father starts a violent argument. A single sequence shot immerses us in the emotional anguish of a childhood marked by fear and domestic violence."
+        "es": "Origami es un cortometraje del director cordobés Álvaro León, una ópera prima de ficción dramática producida por Saturno Films. Con una duración breve (alrededor de 3–4 minutos), la historia se centra en una niña que, en un entorno marcado por la violencia familiar, encuentra en el origami una vía de escape emocional.\n\nA través de una mirada sensible e íntima, el cortometraje utiliza la creación de figuras de papel como metáfora de la imaginación infantil y la resiliencia ante situaciones difíciles. Su narrativa destaca por el uso del simbolismo visual y un estilo poético que refuerza el contraste entre la inocencia de la infancia y la dureza del mundo adulto.\n\n“Origami” ha tenido un amplio recorrido en festivales de cine, obteniendo numerosos reconocimientos, entre ellos el Premio Fugaz a Mejor Cortometraje Breve, consolidándose como una obra destacada dentro del cine social español contemporáneo.",
+        "en": "Origami is a short film by Córdoba-born director Álvaro León, a dramatic fiction debut produced by Saturno Films. With a brief running time of around 3–4 minutes, the story centers on a young girl who, in an environment marked by domestic violence, finds in origami an emotional escape.\n\nThrough a sensitive and intimate gaze, the short film uses the creation of paper figures as a metaphor for childhood imagination and resilience in the face of difficult situations. Its narrative stands out for its use of visual symbolism and a poetic style that reinforces the contrast between the innocence of childhood and the harshness of the adult world.\n\n“Origami” has had an extensive festival run, receiving numerous recognitions, including the Fugaz Award for Best Brief Short Film, establishing itself as a notable work within contemporary Spanish social cinema."
       },
       "cover": "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777654136/1751032809861_qaqeld.jpg",
       "poster": "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777654137/POSTER-ORIGAMI2-scaled_r5mmum.jpg",
@@ -87,7 +93,8 @@
         "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777654134/1751032809662_rkr83u.jpg"
       ],
       "bts": [],
-      "external_link": "https://www.imdb.com/es-es/title/tt37457776/"
+      "external_link": "https://www.imdb.com/es-es/title/tt37457776/",
+      "production_company": "Saturno Films"
     },
     {
       "id": "p-ayer",
@@ -95,8 +102,11 @@
       "category": "music-video",
       "title": "Ayer",
       "year": 2024,
-      "type": { "es": "Videoclip", "en": "Music Video" },
-      "director": "",
+      "type": {
+        "es": "Videoclip",
+        "en": "Music Video"
+      },
+      "director": "Álvaro León, Dani Díaz y Ainhoa Carnicero",
       "format": "Sony FX6 & Canon FD",
       "synopsis": {
         "es": "Canción en colaboración entre Moreira y Antónimo.",
@@ -119,6 +129,39 @@
         "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777668444/Ayer-dia-2-5-copia-scaled-qzznugj0052q8lwerhe10wpnm1xqc2abd9ztyezc74_fnfypx.jpg",
         "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777668443/Ayer-dia-2-3-copia-scaled-qzzntvujtsaf56qg48g8i1xijkrnmq07yfn5ebu000_jhvkvy.jpg"
       ],
+      "external_link": "",
+      "production_company": "Saturno films"
+    },
+    {
+      "id": "p-v1",
+      "slug": "v1",
+      "category": "fiction",
+      "title": "V1",
+      "year": 2026,
+      "type": {
+        "es": "Cortometraje",
+        "en": "Short Film"
+      },
+      "director": "GERARD FARRÉS",
+      "format": "ARRIFLEX 435 · Cooke mini S4",
+      "synopsis": {
+        "es": "Una montadora navega entre revisiones interminables, notas contradictorias y jornadas que parecen no acabar nunca, intentando dar forma a una película que siempre se le escapa a su productor. Cuando finalmente le muestra un nuevo montaje, él guarda silencio por primera vez. Asiente, satisfecho. Ella apenas sonríe.",
+        "en": "An editor drifts through endless revisions, contradictory notes, and days that seem to fold endlessly into one another, trying to shape a film her producer can never quite grasp. When she finally presents a new cut, he falls silent for the first time. He nods, satisfied. She allows herself the faintest smile."
+      },
+      "cover": "https://res.cloudinary.com/dsphxo7mx/image/upload/v1778410541/1.6.1_1.6.1_obewhl.jpg",
+      "poster": "https://res.cloudinary.com/dsphxo7mx/image/upload/v1778411896/cartel_pignn7.jpg",
+      "preview_url": "",
+      "stills": [
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1778410541/1.2.1_1.2.1_kuieji.jpg",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1778410540/1.5.1_1.5.1_fms7zu.jpg",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1778410541/1.2.1_1.2.1_kuieji.jpg",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1778410541/1.6.1_1.6.1_obewhl.jpg",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1778410540/1.51.1_1.51.1_ca4iwz.jpg",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1778410540/1.44.1_1.44.1_iwotwm.jpg",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1778410540/1.1.1_1.1.1_j49k2r.jpg",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1778410540/1.3.1_1.3.1_vnzequ.jpg"
+      ],
+      "bts": [],
       "external_link": ""
     }
   ]

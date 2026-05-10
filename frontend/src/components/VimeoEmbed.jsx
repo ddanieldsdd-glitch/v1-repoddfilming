@@ -42,6 +42,8 @@ export const VimeoEmbed = ({
       byline: "0",
       portrait: "0",
       dnt: "1",
+      color: "000000",
+      transparent: "0",
     });
     if (autoplay) params.set("autoplay", "1");
     if (background) params.set("background", "1");
@@ -53,7 +55,7 @@ export const VimeoEmbed = ({
     params.set("playsinline", "1");
     src = `https://player.vimeo.com/video/${vid}?${params.toString()}`;
   } else {
-    const params = new URLSearchParams({ rel: "0", modestbranding: "1" });
+    const params = new URLSearchParams({ rel: "0", modestbranding: "1", enablejsapi: "1" });
     if (autoplay) params.set("autoplay", "1");
     if (muted) params.set("mute", "1");
     if (loop || background) {
@@ -68,7 +70,7 @@ export const VimeoEmbed = ({
 
   return (
     <div
-      className={`relative w-full ${className} ${interactive ? "" : "pointer-events-none"}`}
+      className={`relative w-full bg-black ${className} ${interactive ? "" : "pointer-events-none"}`}
       data-testid={testId}
     >
       <iframe
@@ -78,7 +80,7 @@ export const VimeoEmbed = ({
         allow="autoplay; fullscreen; picture-in-picture"
         allowFullScreen
         onLoad={onIframeLoad}
-        className={`absolute inset-0 h-full w-full border-0 bg-black ${interactive ? "" : "pointer-events-none"}`}
+        className={`absolute inset-0 h-full w-full border-0 bg-black [color-scheme:dark] ${interactive ? "" : "pointer-events-none"}`}
       />
     </div>
   );

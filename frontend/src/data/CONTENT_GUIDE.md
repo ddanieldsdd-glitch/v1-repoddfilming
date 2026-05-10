@@ -25,6 +25,138 @@ aquí es lo que se muestra.
 
 ## ➕ Cómo AÑADIR un proyecto
 
+### Opción recomendada: pegar una plantilla completa
+
+1. Rellena esta plantilla fuera de la terminal:
+
+```json
+{
+  "title": "Título del Proyecto",
+  "year": 2025,
+  "category": "fiction",
+  "type": { "es": "Cortometraje", "en": "Short Film" },
+  "director": "Nombre del Director o Directores",
+  "production_company": "Nombre de la Productora",
+  "format": "ARRI Alexa Mini LF · Cooke S4",
+  "synopsis": {
+    "es": "Sinopsis en español.",
+    "en": "Synopsis in English."
+  },
+  "cover": "https://res.cloudinary.com/.../cover.jpg",
+  "poster": "https://res.cloudinary.com/.../poster.jpg",
+  "preview_url": "https://vimeo.com/XXXXXXXXX",
+  "stills": [
+    "https://res.cloudinary.com/.../still1.jpg",
+    "https://res.cloudinary.com/.../still2.jpg"
+  ],
+  "bts": [
+    "https://res.cloudinary.com/.../bts1.jpg"
+  ],
+  "external_link": "https://www.imdb.com/...",
+  "position": "beginning"
+}
+```
+
+2. En PowerShell, ejecuta desde la raíz del proyecto:
+
+```powershell
+Set-Location "C:\Users\ddani\Documents\v1-repoddfilming"
+npm run new-project:paste
+```
+
+3. Cuando la terminal diga `Paste the completed project JSON below`, pega solo el JSON, sin copiar las líneas de Markdown ```json ni ```powershell.
+
+4. Al terminar, escribe `FIN` en una línea nueva y pulsa Enter.
+
+Ejemplo de final:
+
+```powershell
+}
+FIN
+```
+
+El script leerá el JSON pegado y añadirá el proyecto automáticamente a:
+
+```text
+frontend/src/data/content.json
+```
+
+Después de añadirlo, el asistente te ofrecerá:
+
+1. Ejecutar `npm run build` para validar que la web compila.
+2. Abrir un servidor local en una nueva ventana de PowerShell para revisar:
+   - `http://localhost:3000/work`
+   - `http://localhost:3000/project/slug-del-proyecto`
+3. Cuando confirmes que está bien, hacer `git add`, `git commit` y `git push` para que Vercel despliegue automáticamente desde GitHub.
+
+El `push` no se hace solo: el script te pregunta antes.
+
+Puedes usar `"position": "beginning"` para añadirlo al principio o `"position": "end"` para añadirlo al final.
+
+### Alternativa: asistente pregunta a pregunta
+
+Desde cualquier terminal, entra primero en la raíz del proyecto:
+
+```powershell
+Set-Location "C:\Users\ddani\Documents\v1-repoddfilming"
+```
+
+Después ejecuta:
+
+```powershell
+npm run new-project
+```
+
+El asistente te preguntará los datos del proyecto y lo añadirá automáticamente a:
+
+```text
+frontend/src/data/content.json
+```
+
+También puedes ejecutarlo desde cualquier ubicación sin cambiar de carpeta:
+
+```powershell
+npm --prefix "C:\Users\ddani\Documents\v1-repoddfilming\frontend" run new-project
+```
+
+El script genera automáticamente:
+
+- `id`
+- `slug`
+- URL final `/project/slug-del-proyecto`
+
+### Nota para futuras IAs o desarrolladores
+
+El flujo más cómodo y seguro para crear proyectos es pegar una plantilla JSON completa en el portapapeles y ejecutar:
+
+```powershell
+npm run new-project:paste
+```
+
+Si el usuario prefiere responder campo por campo, también existe:
+
+```powershell
+npm run new-project
+```
+
+Ambos comandos funcionan desde la raíz del repo gracias al `package.json` raíz, que delega en:
+
+```text
+frontend/scripts/new-project.js
+```
+
+Este script modifica únicamente:
+
+```text
+frontend/src/data/content.json
+```
+
+La fuente de verdad de la web sigue siendo `frontend/src/data/content.json`.
+No hay CMS ni base de datos. El panel `/admin` edita `localStorage`, por lo que
+para producción siempre debe quedar reflejado en `content.json`.
+
+### Opción manual
+
 1. Abre `src/data/content.json`.
 2. Copia este bloque:
 
@@ -37,6 +169,7 @@ aquí es lo que se muestra.
   "year": 2025,
   "type": { "es": "Cortometraje", "en": "Short Film" },
   "director": "Nombre del Director o Directores",
+  "production_company": "Nombre de la Productora",
   "format": "ARRI Alexa Mini LF · Cooke S4",
   "synopsis": {
     "es": "Sinopsis en español (2-3 frases).",

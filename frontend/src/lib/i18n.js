@@ -16,6 +16,7 @@ export const T = {
   },
   project: {
     director: { es: "Dirección", en: "Director" },
+    productionCompany: { es: "Productora", en: "Production Company" },
     year: { es: "Año", en: "Year" },
     type: { es: "Formato", en: "Type" },
     format: { es: "Captura", en: "Format" },

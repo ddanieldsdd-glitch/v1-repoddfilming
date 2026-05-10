@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Toaster } from "sonner";
 import { useTheme } from "./lib/useTheme";
@@ -50,6 +51,7 @@ function App() {
         </main>
         <Footer />
         <Toaster position="bottom-right" theme={theme === "dark" ? "dark" : "light"} />
+        <Analytics />
       </BrowserRouter>
     </div>
   );

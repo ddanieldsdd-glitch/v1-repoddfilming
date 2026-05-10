@@ -18,13 +18,12 @@ export const ProjectCard = ({ project, lang, eager = false, compact = false, ind
     (isVideoUrl(project.cover) ? project.cover : null);
 
   const coverIsImage = project.cover && !isVideoUrl(project.cover);
+  const fallbackImage = coverIsImage ? project.cover : project.poster;
 
   const onEnter = () => {
     if (!previewUrl) return;
-    timer.current = setTimeout(() => {
-      setPreviewReady(false);
-      setPreviewActive(true);
-    }, 1000);
+    setPreviewReady(false);
+    setPreviewActive(true);
   };
   const onLeave = () => {
     if (timer.current) clearTimeout(timer.current);
@@ -41,12 +40,13 @@ export const ProjectCard = ({ project, lang, eager = false, compact = false, ind
       onMouseLeave={onLeave}
     >
       <div className="relative overflow-hidden bg-black aspect-video w-full">
-        {coverIsImage && (
+        <div className="absolute inset-0 z-0 bg-black" />
+        {fallbackImage && (
           <img
-            src={project.cover}
+            src={fallbackImage}
             alt={project.title}
             loading={eager ? "eager" : "lazy"}
-            className={`absolute inset-0 z-[2] w-full h-full object-cover transition-all duration-700 ease-out ${
+            className={`absolute inset-0 z-[3] w-full h-full object-cover transition-all duration-700 ease-out ${
               previewReady ? "opacity-0 scale-[1.015]" : "opacity-100 scale-100"
             }`}
           />
@@ -59,15 +59,15 @@ export const ProjectCard = ({ project, lang, eager = false, compact = false, ind
             muted
             interactive={false}
             onIframeLoad={() => {
-              window.setTimeout(() => setPreviewReady(true), 250);
+              window.setTimeout(() => setPreviewReady(true), 550);
             }}
-            className={`absolute inset-0 z-[1] w-full h-full transition-opacity duration-500 ${
+            className={`absolute inset-0 z-[1] w-full h-full bg-black transition-opacity duration-700 ${
               previewReady ? "opacity-100" : "opacity-0"
             }`}
           />
         )}
-        {!coverIsImage && !previewActive && previewUrl && (
-          <div className="absolute inset-0 flex items-center justify-center text-white/40 text-[11px] tracking-[0.3em] uppercase pointer-events-none">
+        {!fallbackImage && previewUrl && (
+          <div className="absolute inset-0 z-[2] flex items-center justify-center bg-black text-white/40 text-[11px] tracking-[0.3em] uppercase pointer-events-none">
             Hover to play
           </div>
         )}

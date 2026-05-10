@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { ArrowUpRight, ChevronDown } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowUpRight, ChevronDown, X } from "lucide-react";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 import { VimeoEmbed } from "../components/VimeoEmbed";
@@ -9,8 +10,34 @@ import { CATEGORIES, getActiveCategories } from "../lib/contentStore";
 export default function Home() {
   const content = useContent();
   const [lang] = useLang();
+  const [showReelOpen, setShowReelOpen] = useState(false);
+  const [showReelClosing, setShowReelClosing] = useState(false);
+  const [heroReelReady, setHeroReelReady] = useState(false);
+  const [modalReelReady, setModalReelReady] = useState(false);
 
   const featured = (content.projects || []).slice(0, 6);
+
+  const openShowReel = () => {
+    setShowReelClosing(false);
+    setModalReelReady(false);
+    setShowReelOpen(true);
+  };
+
+  const closeShowReel = () => {
+    setShowReelClosing(true);
+    window.setTimeout(() => {
+      setShowReelOpen(false);
+      setShowReelClosing(false);
+    }, 260);
+  };
+
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === "Escape") closeShowReel();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, []);
 
   return (
     <div data-testid="home-page" className="bg-white dark:bg-black transition-colors duration-500">
@@ -21,10 +48,32 @@ export default function Home() {
           autoplay
           background
           muted
-          className="absolute inset-0 w-full h-full"
+          className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ${heroReelReady ? "opacity-100" : "opacity-0"}`}
           testId="hero-showreel"
           interactive={false}
+          onIframeLoad={() => {
+            window.setTimeout(() => setHeroReelReady(true), 500);
+          }}
         />
+        {!heroReelReady && (
+          <div className="pointer-events-none absolute inset-0 z-[1] bg-black" />
+        )}
+        <button
+          type="button"
+          onClick={openShowReel}
+          className="absolute inset-0 z-10 cursor-pointer"
+          aria-label={lang === "es" ? "Ver reel en grande" : "View reel fullscreen"}
+        >
+          <span className="sr-only">
+            {lang === "es" ? "Ver reel en grande" : "View reel fullscreen"}
+          </span>
+        </button>
+        <div className="absolute right-6 bottom-8 md:right-10 md:bottom-10 z-20 pointer-events-none">
+          <span className="inline-flex items-center gap-2 border border-white/30 bg-black/20 px-4 py-2 text-[10px] tracking-[0.28em] uppercase text-white/80 backdrop-blur-sm">
+            {lang === "es" ? "Ver reel" : "View reel"}
+            <ArrowUpRight className="h-3 w-3" strokeWidth={1.5} />
+          </span>
+        </div>
         <div className="absolute bottom-8 md:bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/70 text-[10px] tracking-[0.32em] uppercase pointer-events-none">
           <span>{tr(T.hero.scroll, lang)}</span>
           <ChevronDown className="w-4 h-4 animate-bounce" strokeWidth={1} />
@@ -36,6 +85,41 @@ export default function Home() {
           {tr(content.site.title, lang)}
         </p>
       </section>
+
+      {showReelOpen && (
+        <div
+          className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 px-2 py-10 backdrop-blur-md transition-opacity duration-300 md:px-6 md:py-12 ${showReelClosing ? "opacity-0" : "opacity-100 animate-[ddpFadeUp_320ms_ease-out_both]"}`}
+          onClick={closeShowReel}
+        >
+          <button
+            type="button"
+            onClick={closeShowReel}
+            className="absolute right-5 top-5 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 text-white/80 transition hover:border-white hover:text-white md:right-8 md:top-8"
+            aria-label="Close reel"
+          >
+            <X className="h-4 w-4" strokeWidth={1.5} />
+          </button>
+          <div
+            className={`relative aspect-video w-full max-w-[min(96vw,calc(92svh*16/9))] overflow-hidden bg-black shadow-2xl transition-transform duration-300 ease-out ${showReelClosing ? "scale-[0.985]" : "scale-100"}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <VimeoEmbed
+              url={content.site.showreel_url}
+              autoplay
+              muted={false}
+              className={`h-full w-full transition-opacity duration-700 ${modalReelReady ? "opacity-100" : "opacity-0"}`}
+              testId="hero-showreel-fullscreen"
+              interactive
+              onIframeLoad={() => {
+                window.setTimeout(() => setModalReelReady(true), 350);
+              }}
+            />
+            {!modalReelReady && (
+              <div className="pointer-events-none absolute inset-0 bg-black" />
+            )}
+          </div>
+        </div>
+      )}
 
       {/* SELECTED WORK */}
       <section

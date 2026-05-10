@@ -94,6 +94,13 @@ const ProjectForm = ({ value, onChange }) => {
           onChange={(e) => update({ director: e.target.value })}
         />
       </Field>
+      <Field label="Production company">
+        <input
+          className={inputCls}
+          value={value.production_company || ""}
+          onChange={(e) => update({ production_company: e.target.value })}
+        />
+      </Field>
       <Field label="Format details (camera / lens)">
         <input
           className={inputCls}
@@ -419,6 +426,7 @@ export default function Admin() {
       year: new Date().getFullYear(),
       type: { es: "", en: "" },
       director: "",
+      production_company: "",
       format: "",
       synopsis: { es: "", en: "" },
       cover: "",

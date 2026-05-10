@@ -16,6 +16,9 @@
   "director": "Nombre del Director o Directores",
   "_director_help": "Si hay varios directores, sepáralos con coma.",
 
+  "production_company": "Nombre de la Productora",
+  "_production_company_help": "Productora o compañía responsable de la producción. Deja '' si no aplica.",
+
   "format": "ARRI Alexa Mini LF · Cooke S4",
   "_format_help": "Detalles técnicos: cámara, lentes, formato fotoquímico/digital u observaciones relevantes.",
 
