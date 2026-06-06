@@ -31,7 +31,6 @@ export const VideoPlayer = ({
   const iframeRef = useRef(null);
   const playerRef = useRef(null);
   const [ready, setReady] = useState(false);
-  const initialMounted = useRef(true);
 
   const vimeoId = extractVimeoId(url);
   const ytId = !vimeoId ? extractYoutubeId(url) : null;
@@ -44,7 +43,6 @@ export const VideoPlayer = ({
   // — Init Vimeo Player via SDK, attached to the React-owned iframe —
   useEffect(() => {
     if (!vimeoId || !iframeRef.current) return undefined;
-    initialMounted.current = true;
 
     const iframe = iframeRef.current;
     const player = new Player(iframe);
@@ -52,7 +50,7 @@ export const VideoPlayer = ({
 
     player.ready()
       .then(() => {
-        if (!initialMounted.current) return;
+        if (playerRef.current !== player) return;
 
         if (background || getGlobalMuted() || muted) {
           player.setMuted(true).catch(() => {});
@@ -87,13 +85,12 @@ export const VideoPlayer = ({
     player.on("error", onErrorEvent);
 
     return () => {
-      initialMounted.current = false;
+      playerRef.current = null;
       try {
         player.pause().catch(() => {});
         player.setMuted(true).catch(() => {});
       } catch {}
       unregisterPlayer(playerKey);
-      playerRef.current = null;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vimeoId, playerKey]);
