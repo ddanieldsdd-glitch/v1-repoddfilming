@@ -42,10 +42,16 @@ export default function Home() {
 
   // Keep the hero showreel permanently muted, even if global unmute is toggled
   useEffect(() => {
+    // Immediately mute on mount
+    const hero = getPlayer("hero-showreel");
+    if (hero) {
+      try { hero.setMuted(true).catch(() => {}); } catch {}
+    }
+    // Re-mute whenever global mute state changes
     const unsubscribe = subscribeGlobalMuted(() => {
-      const hero = getPlayer("hero-showreel");
-      if (hero) {
-        try { hero.setMuted(true).catch(() => {}); } catch {}
+      const h = getPlayer("hero-showreel");
+      if (h) {
+        try { h.setMuted(true).catch(() => {}); } catch {}
       }
     });
     return unsubscribe;
