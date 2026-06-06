@@ -164,8 +164,8 @@ const buildVimeoSrc = (id, { autoplay, background, muted, loop }) => {
   });
   if (autoplay) params.set("autoplay", "1");
   if (background) params.set("background", "1");
-  if (background || getGlobalMuted()) params.set("muted", "1");
-  else if (muted) params.set("muted", "1");
+  // Always force muted=1 when the muted prop is true or in background mode
+  if (background || muted || getGlobalMuted()) params.set("muted", "1");
   if (loop || background) {
     params.set("loop", "1");
     params.set("autopause", "0");
