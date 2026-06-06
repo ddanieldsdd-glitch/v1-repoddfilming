@@ -9,9 +9,6 @@ import {
 /**
  * Reliable video player using @vimeo/player SDK.
  * Supports Vimeo and YouTube (via native iframe for YouTube).
- *
- * The iframe is rendered by React (not created via document.createElement)
- * to avoid React reconciliation conflicts with player.destroy().
  */
 export const VideoPlayer = ({
   url,
@@ -27,26 +24,39 @@ export const VideoPlayer = ({
   onPlay,
   onPause,
   onError,
+  onRef,
 }) => {
   const iframeRef = useRef(null);
   const playerRef = useRef(null);
   const [ready, setReady] = useState(false);
+  const readyCalledRef = useRef(false);
 
   const vimeoId = extractVimeoId(url);
   const ytId = !vimeoId ? extractYoutubeId(url) : null;
 
   const handleReady = useCallback(() => {
+    if (readyCalledRef.current) return;
+    readyCalledRef.current = true;
     setReady(true);
     onReady?.();
   }, [onReady]);
 
-  // — Init Vimeo Player via SDK, attached to the React-owned iframe —
+  // — Init Vimeo Player via SDK —
   useEffect(() => {
     if (!vimeoId || !iframeRef.current) return undefined;
+
+    // Reset ready state for new player
+    readyCalledRef.current = false;
+    setReady(false);
 
     const iframe = iframeRef.current;
     const player = new Player(iframe);
     playerRef.current = player;
+
+    // Safety timeout: force ready after 4s even if SDK hangs
+    const safetyTimer = setTimeout(() => {
+      handleReady();
+    }, 4000);
 
     player.ready()
       .then(() => {
@@ -60,6 +70,7 @@ export const VideoPlayer = ({
         }
 
         registerPlayer(playerKey, player);
+        onRef?.(player, iframe);
 
         if (autoplay || background) {
           player.play().then(handleReady).catch(() => {
@@ -85,6 +96,8 @@ export const VideoPlayer = ({
     player.on("error", onErrorEvent);
 
     return () => {
+      clearTimeout(safetyTimer);
+      onRef?.(null, null);
       playerRef.current = null;
       try {
         player.pause().catch(() => {});
@@ -159,7 +172,6 @@ const buildVimeoSrc = (id, { autoplay, background, muted, loop }) => {
   });
   if (autoplay) params.set("autoplay", "1");
   if (background) params.set("background", "1");
-  // Always force muted=1 for background mode (hero showreel) and when muted prop is true
   if (background || muted) params.set("muted", "1");
   else if (getGlobalMuted()) params.set("muted", "1");
   if (loop || background) {

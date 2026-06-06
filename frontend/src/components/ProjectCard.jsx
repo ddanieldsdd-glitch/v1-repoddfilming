@@ -11,6 +11,7 @@ export const ProjectCard = ({ project, lang, eager = false, compact = false, ind
   const [previewActive, setPreviewActive] = useState(false);
   const [previewReady, setPreviewReady] = useState(false);
   const timer = useRef(null);
+  const iframeRef = useRef(null);
 
   const previewKey = `card-preview-${project.slug}`;
   const heroKey = "hero-showreel";
@@ -34,7 +35,15 @@ export const ProjectCard = ({ project, lang, eager = false, compact = false, ind
 
   const onLeave = () => {
     if (timer.current) clearTimeout(timer.current);
-    // Pause the preview player before unmounting
+    // Force-stop the preview by blanking the iframe src
+    // This works even if the SDK player hasn't registered yet
+    if (iframeRef.current) {
+      try {
+        iframeRef.current.src = "about:blank";
+      } catch {}
+      iframeRef.current = null;
+    }
+    // Also try SDK pause as backup
     const previewPlayer = getPlayer(previewKey);
     if (previewPlayer) {
       try {
@@ -79,9 +88,10 @@ export const ProjectCard = ({ project, lang, eager = false, compact = false, ind
             }`}
             testId={`card-preview-${project.slug}`}
             interactive={false}
-            onReady={() => {
-              window.setTimeout(() => setPreviewReady(true), 300);
+            onRef={(player, iframe) => {
+              if (iframe) iframeRef.current = iframe;
             }}
+            onReady={() => setPreviewReady(true)}
           />
         )}
         {!fallbackImage && !previewActive && previewUrl && (
