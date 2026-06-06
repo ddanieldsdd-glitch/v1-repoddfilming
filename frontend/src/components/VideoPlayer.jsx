@@ -127,7 +127,6 @@ export const VideoPlayer = ({
         title="Video player"
         allow="autoplay; fullscreen; picture-in-picture"
         allowFullScreen
-        loading="eager"
         onLoad={vimeoId ? undefined : handleReady}
         className={`absolute inset-0 h-full w-full border-0 bg-black [color-scheme:dark] ${interactive ? "" : "pointer-events-none"}`}
       />
@@ -163,8 +162,9 @@ const buildVimeoSrc = (id, { autoplay, background, muted, loop }) => {
   });
   if (autoplay) params.set("autoplay", "1");
   if (background) params.set("background", "1");
-  // Always force muted=1 when the muted prop is true or in background mode
-  if (background || muted || getGlobalMuted()) params.set("muted", "1");
+  // Always force muted=1 for background mode (hero showreel) and when muted prop is true
+  if (background || muted) params.set("muted", "1");
+  else if (getGlobalMuted()) params.set("muted", "1");
   if (loop || background) {
     params.set("loop", "1");
     params.set("autopause", "0");
