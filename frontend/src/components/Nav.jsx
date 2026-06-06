@@ -1,19 +1,25 @@
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Sun, Moon } from "lucide-react";
 import { useContent, useLang } from "../lib/useContent";
-import { useTheme } from "../lib/useTheme";
 import { T, tr } from "../lib/i18n";
 
 export const Nav = () => {
   const content = useContent();
   const [lang, setLang] = useLang();
-  const [theme, toggleTheme] = useTheme();
   const location = useLocation();
 
   const [overHero, setOverHero] = useState(true);
   const [open, setOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detectar viewport
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   // Detectar scroll sobre el hero
   useEffect(() => {
@@ -49,37 +55,21 @@ export const Nav = () => {
 
   if (location.pathname.startsWith("/admin")) return null;
 
-  // Ocultar nav sobre el hero o en fullscreen
-  const hideNav = overHero || isFullscreen;
+  // En móvil el nav NUNCA se oculta para que la hamburguesa sea usable
+  // En desktop se oculta sobre el hero o en fullscreen
+  const hideNav = !isMobile && (overHero || isFullscreen);
 
-  // Texto blanco cuando:
-  // - estás sobre el hero
-  // - estás en fullscreen
-  // - o el tema es oscuro
-  const whiteText = hideNav || theme === "dark";
-
-  const txt = whiteText ? "text-white" : "text-black";
-  const muted = whiteText ? "text-white/70" : "text-neutral-500";
-  const divider = whiteText ? "border-white/25" : "border-black/15";
-  const inactive = whiteText
-    ? "text-white/70 hover:text-white"
-    : "text-neutral-500 hover:text-black";
+  // Siempre usamos texto blanco (dark mode permanente)
+  const txt = "text-white";
+  const muted = "text-white/70";
+  const inactive = "text-white/70 hover:text-white";
 
   const linkClass = ({ isActive }) =>
     `text-[11px] tracking-[0.28em] uppercase transition-colors duration-500 ${
       isActive ? txt : inactive
     }`;
 
-  // Fondo del navbar cuando NO está sobre el hero
-  let barBg;
-  if (theme === "dark") {
-    barBg = "bg-black/85 backdrop-blur-xl border-b border-white/10";
-  } else {
-    barBg = "bg-white/90 backdrop-blur-xl border-b border-black/10";
-  }
-
   const logoUrl = content.site.logo_white;
-  const logoInverted = whiteText;
 
   return (
     <header
@@ -87,7 +77,7 @@ export const Nav = () => {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         hideNav
           ? "opacity-100 translate-y-0 bg-transparent border-transparent"
-          : `opacity-100 translate-y-0 ${barBg}`
+          : "opacity-100 translate-y-0 bg-black/85 backdrop-blur-xl border-b border-white/10"
       }`}
     >
       <div className="px-6 md:px-12 lg:px-16 py-5 md:py-6 flex items-center justify-between">
@@ -96,9 +86,7 @@ export const Nav = () => {
             <img
               src={logoUrl}
               alt="DD"
-              className={`h-9 w-auto md:h-11 lg:h-12 transition-all duration-500 ${
-                logoInverted ? "invert" : ""
-              }`}
+              className="h-9 w-auto md:h-11 lg:h-12 transition-all duration-500 invert"
             />
           )}
           <span className="hidden sm:flex flex-col">
@@ -126,21 +114,7 @@ export const Nav = () => {
             {tr(T.nav.contact, lang)}
           </NavLink>
 
-          <button
-            data-testid="theme-toggle"
-            onClick={toggleTheme}
-            aria-label="Toggle theme"
-            title="Toggle theme (Shift+D)"
-            className={`p-1.5 transition-colors duration-500 ${inactive} hover:${txt}`}
-          >
-            {theme === "dark" ? (
-              <Sun className="w-[14px] h-[14px]" strokeWidth={1.5} />
-            ) : (
-              <Moon className="w-[14px] h-[14px]" strokeWidth={1.5} />
-            )}
-          </button>
-
-          <div className={`flex items-center gap-2 ml-2 pl-6 border-l transition-colors duration-500 ${divider}`}>
+          <div className="flex items-center gap-2 ml-2 pl-6 border-l border-white/25 transition-colors duration-500">
             <button
               data-testid="lang-es"
               onClick={() => setLang("es")}
@@ -150,7 +124,7 @@ export const Nav = () => {
             >
               ES
             </button>
-            <span className={whiteText ? "text-white/40" : "text-neutral-300"}>/</span>
+            <span className="text-white/40">/</span>
             <button
               data-testid="lang-en"
               onClick={() => setLang("en")}
@@ -169,25 +143,22 @@ export const Nav = () => {
           onClick={() => setOpen((v) => !v)}
           aria-label="Menu"
         >
-          <span className={`block w-5 h-px transition-all ${whiteText ? "bg-white" : "bg-black"} ${open ? "translate-y-[6px] rotate-45" : ""}`} />
-          <span className={`block w-5 h-px transition-all ${whiteText ? "bg-white" : "bg-black"} ${open ? "opacity-0" : "opacity-100"}`} />
-          <span className={`block w-5 h-px transition-all ${whiteText ? "bg-white" : "bg-black"} ${open ? "-translate-y-[6px] -rotate-45" : ""}`} />
+          <span className={`block w-5 h-px transition-all bg-white ${open ? "translate-y-[6px] rotate-45" : ""}`} />
+          <span className={`block w-5 h-px transition-all bg-white ${open ? "opacity-0" : "opacity-100"}`} />
+          <span className={`block w-5 h-px transition-all bg-white ${open ? "-translate-y-[6px] -rotate-45" : ""}`} />
         </button>
       </div>
 
       {open && (
-        <div className="md:hidden bg-white dark:bg-black border-t border-black/10 dark:border-white/10" data-testid="nav-mobile-menu">
+        <div className="md:hidden bg-black border-t border-white/10" data-testid="nav-mobile-menu">
           <div className="px-6 py-8 flex flex-col gap-6">
-            <NavLink to="/work" className="text-[11px] tracking-[0.28em] uppercase text-black dark:text-white">{tr(T.nav.work, lang)}</NavLink>
-            <NavLink to="/about" className="text-[11px] tracking-[0.28em] uppercase text-black dark:text-white">{tr(T.nav.about, lang)}</NavLink>
-            <NavLink to="/contact" className="text-[11px] tracking-[0.28em] uppercase text-black dark:text-white">{tr(T.nav.contact, lang)}</NavLink>
-            <button onClick={toggleTheme} className="text-[11px] tracking-[0.28em] uppercase text-black dark:text-white text-left" data-testid="theme-toggle-mobile">
-              {theme === "dark" ? "Light mode" : "Dark mode"}
-            </button>
-            <div className="flex items-center gap-3 pt-4 border-t border-black/10 dark:border-white/10">
-              <button onClick={() => setLang("es")} className={`text-[11px] tracking-[0.2em] uppercase ${lang === "es" ? "text-black dark:text-white" : "text-neutral-400"}`}>ES</button>
+            <NavLink to="/work" className="text-[11px] tracking-[0.28em] uppercase text-white">{tr(T.nav.work, lang)}</NavLink>
+            <NavLink to="/about" className="text-[11px] tracking-[0.28em] uppercase text-white">{tr(T.nav.about, lang)}</NavLink>
+            <NavLink to="/contact" className="text-[11px] tracking-[0.28em] uppercase text-white">{tr(T.nav.contact, lang)}</NavLink>
+            <div className="flex items-center gap-3 pt-4 border-t border-white/10">
+              <button onClick={() => setLang("es")} className={`text-[11px] tracking-[0.2em] uppercase ${lang === "es" ? "text-white" : "text-neutral-400"}`}>ES</button>
               <span className="text-neutral-300">/</span>
-              <button onClick={() => setLang("en")} className={`text-[11px] tracking-[0.2em] uppercase ${lang === "en" ? "text-black dark:text-white" : "text-neutral-400"}`}>EN</button>
+              <button onClick={() => setLang("en")} className={`text-[11px] tracking-[0.2em] uppercase ${lang === "en" ? "text-white" : "text-neutral-400"}`}>EN</button>
             </div>
           </div>
         </div>

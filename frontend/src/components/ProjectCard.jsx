@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { tr } from "../lib/i18n";
-import { VimeoEmbed } from "./VimeoEmbed";
+import { VideoPlayer } from "./VideoPlayer";
+import { pauseAllExcept, resumePlayer, mutePlayer } from "../lib/videoStore";
 
 const isVideoUrl = (url) =>
   /vimeo\.com|youtube\.com|youtu\.be/.test(String(url || ""));
@@ -10,6 +11,9 @@ export const ProjectCard = ({ project, lang, eager = false, compact = false, ind
   const [previewActive, setPreviewActive] = useState(false);
   const [previewReady, setPreviewReady] = useState(false);
   const timer = useRef(null);
+
+  const previewKey = `card-preview-${project.slug}`;
+  const heroKey = "hero-showreel";
 
   useEffect(() => () => timer.current && clearTimeout(timer.current), []);
 
@@ -22,13 +26,20 @@ export const ProjectCard = ({ project, lang, eager = false, compact = false, ind
 
   const onEnter = () => {
     if (!previewUrl) return;
-    setPreviewReady(false);
     setPreviewActive(true);
+    timer.current = window.setTimeout(() => setPreviewReady(true), 50);
+    // Pause the hero showreel so audio doesn't overlap
+    pauseAllExcept(previewKey);
   };
+
   const onLeave = () => {
     if (timer.current) clearTimeout(timer.current);
     setPreviewActive(false);
     setPreviewReady(false);
+    // Resume the hero showreel (play + unmute)
+    resumePlayer(heroKey);
+    // Mute the preview so it stops making sound
+    mutePlayer(previewKey);
   };
 
   return (
@@ -46,27 +57,28 @@ export const ProjectCard = ({ project, lang, eager = false, compact = false, ind
             src={fallbackImage}
             alt={project.title}
             loading={eager ? "eager" : "lazy"}
-            className={`absolute inset-0 z-[3] w-full h-full object-cover transition-all duration-700 ease-out ${
+            className={`absolute inset-0 z-[3] w-full h-full object-cover transition-all duration-500 ease-out ${
               previewReady ? "opacity-0 scale-[1.015]" : "opacity-100 scale-100"
             }`}
           />
         )}
         {previewActive && previewUrl && (
-          <VimeoEmbed
+          <VideoPlayer
             url={previewUrl}
+            playerKey={`card-preview-${project.slug}`}
             autoplay
             background
-            muted
-            interactive={false}
-            onIframeLoad={() => {
-              window.setTimeout(() => setPreviewReady(true), 550);
-            }}
-            className={`absolute inset-0 z-[1] w-full h-full bg-black transition-opacity duration-700 ${
+            className={`absolute inset-0 z-[1] w-full h-full bg-black transition-opacity duration-500 ${
               previewReady ? "opacity-100" : "opacity-0"
             }`}
+            testId={`card-preview-${project.slug}`}
+            interactive={false}
+            onReady={() => {
+              window.setTimeout(() => setPreviewReady(true), 300);
+            }}
           />
         )}
-        {!fallbackImage && previewUrl && (
+        {!fallbackImage && !previewActive && previewUrl && (
           <div className="absolute inset-0 z-[2] flex items-center justify-center bg-black text-white/40 text-[11px] tracking-[0.3em] uppercase pointer-events-none">
             Hover to play
           </div>

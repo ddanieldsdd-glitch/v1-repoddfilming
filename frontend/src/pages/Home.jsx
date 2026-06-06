@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { ArrowUpRight, ChevronDown, X } from "lucide-react";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
-import { VimeoEmbed } from "../components/VimeoEmbed";
+import { VideoPlayer } from "../components/VideoPlayer";
 import { ProjectCard } from "../components/ProjectCard";
 import { CATEGORIES, getActiveCategories } from "../lib/contentStore";
 
@@ -43,18 +43,20 @@ export default function Home() {
     <div data-testid="home-page" className="bg-white dark:bg-black transition-colors duration-500">
       {/* FULLSCREEN HERO */}
       <section data-hero className="relative w-full h-screen bg-black overflow-hidden hero-fullscreen">
-        <VimeoEmbed
-          url={content.site.showreel_url}
-          autoplay
-          background
-          muted
-          className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ${heroReelReady ? "opacity-100" : "opacity-0"}`}
-          testId="hero-showreel"
-          interactive={false}
-          onIframeLoad={() => {
-            window.setTimeout(() => setHeroReelReady(true), 500);
-          }}
-        />
+        <div className="absolute inset-0 pointer-events-none">
+          <VideoPlayer
+            url={content.site.showreel_url}
+            playerKey="hero-showreel"
+            autoplay
+            background
+            className={`w-full h-full transition-opacity duration-1000 ${heroReelReady ? "opacity-100" : "opacity-0"}`}
+            testId="hero-showreel"
+            interactive={false}
+            onReady={() => {
+              window.setTimeout(() => setHeroReelReady(true), 500);
+            }}
+          />
+        </div>
         {!heroReelReady && (
           <div className="pointer-events-none absolute inset-0 z-[1] bg-black" />
         )}
@@ -103,14 +105,14 @@ export default function Home() {
             className={`relative aspect-video w-full max-w-[min(96vw,calc(92svh*16/9))] overflow-hidden bg-black shadow-2xl transition-transform duration-300 ease-out ${showReelClosing ? "scale-[0.985]" : "scale-100"}`}
             onClick={(e) => e.stopPropagation()}
           >
-            <VimeoEmbed
+            <VideoPlayer
               url={content.site.showreel_url}
+              playerKey="hero-showreel-modal"
               autoplay
-              muted={false}
               className={`h-full w-full transition-opacity duration-700 ${modalReelReady ? "opacity-100" : "opacity-0"}`}
               testId="hero-showreel-fullscreen"
               interactive
-              onIframeLoad={() => {
+              onReady={() => {
                 window.setTimeout(() => setModalReelReady(true), 350);
               }}
             />

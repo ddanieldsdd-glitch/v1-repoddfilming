@@ -3,8 +3,10 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowUpRight, ArrowRight } from "lucide-react";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
-import { VimeoEmbed } from "../components/VimeoEmbed";
+import { VideoPlayer } from "../components/VideoPlayer";
+import { TransitionOverlay } from "../components/TransitionOverlay";
 import { getActiveCategories } from "../lib/contentStore";
+import { pauseAll } from "../lib/videoStore";
 
 const isVideoUrl = (url) =>
   /vimeo\.com|youtube\.com|youtu\.be/.test(String(url || ""));
@@ -16,8 +18,6 @@ export default function ProjectDetail() {
   const [lang] = useLang();
   const [heroMediaReady, setHeroMediaReady] = useState(false);
   const [inlineMediaReady, setInlineMediaReady] = useState({});
-  const iframeRef = useRef(null);
-  const inlineIframeRefs = useRef({});
   const inlineRefs = useRef({});
   const inlineSectionRef = useRef(null);
   const activeInlineSlugRef = useRef("");
@@ -56,27 +56,6 @@ export default function ProjectDetail() {
     setLightboxIndex((i) => (i - 1 + lightboxImages.length) % lightboxImages.length);
   };
 
-  const postVideoCommand = (iframe, command) => {
-    if (!iframe?.contentWindow) return;
-    try {
-      iframe.contentWindow.postMessage(JSON.stringify(command.vimeo), "*");
-      iframe.contentWindow.postMessage(command.youtube, "*");
-    } catch (error) {
-      return undefined;
-    }
-  };
-
-  const silenceVideo = (iframe) => {
-    postVideoCommand(iframe, {
-      vimeo: { method: "setMuted", value: true },
-      youtube: JSON.stringify({ event: "command", func: "mute", args: [] }),
-    });
-    postVideoCommand(iframe, {
-      vimeo: { method: "pause" },
-      youtube: JSON.stringify({ event: "command", func: "pauseVideo", args: [] }),
-    });
-  };
-
   const activateInlineProject = (nextSlug) => {
     if (nextSlug === activeInlineSlugRef.current) return;
     activeInlineSlugRef.current = nextSlug;
@@ -85,8 +64,8 @@ export default function ProjectDetail() {
     if (nextSlug) {
       setInlineMediaReady((ready) => ({ ...ready, [nextSlug]: false }));
     }
-    silenceVideo(iframeRef.current);
-    Object.values(inlineIframeRefs.current).forEach(silenceVideo);
+    // Pause all players via global store; the active inline will autoplay
+    pauseAll();
     setActiveInlineSlug(nextSlug);
     if (nextSlug) {
       activeVideoTimerRef.current = window.setTimeout(() => {
@@ -200,8 +179,8 @@ export default function ProjectDetail() {
         if (slug) activateInlineProject(slug);
       },
       {
-        threshold: [0.45],
-        rootMargin: "-24% 0px -24% 0px",
+        threshold: [0.2],
+        rootMargin: "-10% 0px -10% 0px",
       }
     );
 
@@ -209,15 +188,8 @@ export default function ProjectDetail() {
     return () => observer.disconnect();
   }, [sameCategoryProjects]);
 
-  useEffect(() => {
-    Object.entries(inlineIframeRefs.current).forEach(([inlineSlug, iframe]) => {
-      if (inlineSlug !== activeInlineSlug) silenceVideo(iframe);
-    });
-
-    if (activeInlineSlug) {
-      silenceVideo(iframeRef.current);
-    }
-  }, [activeInlineSlug]);
+  // The videoStore handles pausing all non-active players automatically
+  // via pauseAll() in activateInlineProject
 
   if (!project) {
     return (
@@ -251,15 +223,15 @@ export default function ProjectDetail() {
               <div className="relative z-[2] flex h-full w-full max-h-[calc(100svh-5.5rem)] md:max-h-[calc(100svh-6.5rem)] items-center justify-center">
                 <div className="relative aspect-video w-full max-w-[min(100%,calc((100svh-6rem)*16/9))] overflow-hidden rounded-sm bg-black shadow-none md:max-w-[min(100%,calc((100svh-7rem)*16/9))]">
                   <div className={`absolute inset-0 transition-opacity duration-1000 ease-out ${heroMediaReady ? "opacity-100" : "opacity-0"}`}>
-                    <VimeoEmbed
+                    <VideoPlayer
                       url={heroVideoUrl}
+                      playerKey={`hero-${slug}`}
                       autoplay
-                      muted={false}
                       loop
                       className="aspect-video h-full w-full"
                       testId="project-hero-video"
-                      innerRef={iframeRef}
-                      onIframeLoad={() => {
+                      interactive
+                      onReady={() => {
                         window.setTimeout(() => setHeroMediaReady(true), 450);
                       }}
                     />
@@ -291,36 +263,6 @@ export default function ProjectDetail() {
           ) : (
             <div className="h-[60svh] w-full bg-black" />
           )}
-        </div>
-      </section>
-
-      {/* CATEGORY NAV */}
-      <section className="px-6 md:px-12 lg:px-16 pt-10 md:pt-14 border-b border-black/10 dark:border-white/10 pb-5">
-        <div
-          className="flex flex-wrap gap-x-8 gap-y-3"
-          data-testid="project-category-nav"
-        >
-          <Link
-            to="/work"
-            data-testid="project-cat-all"
-            className="text-[11px] tracking-[0.28em] uppercase text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white border-b border-transparent pb-1"
-          >
-            {tr(T.work.all, lang)}
-          </Link>
-          {getActiveCategories(projects).map((c) => (
-            <Link
-              key={c.id}
-              to={`/work/${c.id}`}
-              data-testid={`project-cat-${c.id}`}
-              className={`text-[11px] tracking-[0.28em] uppercase pb-1 transition-colors ${
-                project.category === c.id
-                  ? "text-black dark:text-white border-b border-black dark:border-white"
-                  : "text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white border-b border-transparent"
-              }`}
-            >
-              {c[lang]}
-            </Link>
-          ))}
         </div>
       </section>
 
@@ -566,8 +508,40 @@ export default function ProjectDetail() {
       </section>
 
       {sameCategoryProjects.length > 0 && (
-        <section ref={inlineSectionRef} className="border-t border-black/10 dark:border-white/10 bg-neutral-100/70 py-10 dark:bg-neutral-950 md:py-16">
-          <div className="space-y-16 md:space-y-24">
+        <section ref={inlineSectionRef} className="border-t border-black/10 dark:border-white/10 bg-neutral-100/70 py-8 dark:bg-neutral-950 md:py-12">
+          {/* CATEGORY NAV — encabezando los siguientes proyectos */}
+          <div className="px-6 md:px-12 lg:px-16 mb-10 md:mb-16">
+            <p className="text-[10px] tracking-[0.32em] uppercase text-neutral-500 dark:text-neutral-400 mb-4">
+              {lang === "es" ? "Siguientes proyectos" : "Next projects"}
+            </p>
+            <div
+              className="flex flex-wrap gap-x-8 gap-y-3"
+              data-testid="project-category-nav"
+            >
+              <Link
+                to="/work"
+                data-testid="project-cat-all"
+                className="text-[11px] tracking-[0.28em] uppercase text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white border-b border-transparent pb-1"
+              >
+                {tr(T.work.all, lang)}
+              </Link>
+              {getActiveCategories(projects).map((c) => (
+                <Link
+                  key={c.id}
+                  to={`/work/${c.id}`}
+                  data-testid={`project-cat-${c.id}`}
+                  className={`text-[11px] tracking-[0.28em] uppercase pb-1 transition-colors ${
+                    project.category === c.id
+                      ? "text-black dark:text-white border-b border-black dark:border-white"
+                      : "text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white border-b border-transparent"
+                  }`}
+                >
+                  {c[lang]}
+                </Link>
+              ))}
+            </div>
+          </div>
+          <div className="space-y-10 md:space-y-16">
             {sameCategoryProjects.map((p, i) => {
               const mediaUrl =
                 (isVideoUrl(p.preview_url) && p.preview_url) ||
@@ -589,7 +563,7 @@ export default function ProjectDetail() {
                       : "translate-y-3 scale-[0.992] border-black/5 opacity-65 dark:border-white/5"
                   }`}
                 >
-                  <div className="px-4 pt-5 md:px-6 md:pt-6">
+                  <div className="px-4 pt-3 md:px-6 md:pt-4">
                     <p className={`text-[10px] tracking-[0.32em] uppercase transition-colors duration-700 ${
                       isActive || !hasVideo
                         ? "text-neutral-700 dark:text-neutral-300"
@@ -598,8 +572,8 @@ export default function ProjectDetail() {
                       {String(i + 1).padStart(2, "0")} / {String(sameCategoryProjects.length).padStart(2, "0")}
                     </p>
                   </div>
-                  <section className="bg-black pt-5 md:pt-6">
-                    <div className="relative flex min-h-[min(88svh,calc(100vw*9/16+6rem))] w-full items-center justify-center px-2 pb-4 md:min-h-[min(90svh,calc(100vw*9/16+7rem))] md:px-6 md:pb-6">
+                  <section className="bg-black pt-3 md:pt-4">
+                    <div className="relative flex min-h-[min(60svh,calc(100vw*9/16+3rem))] w-full items-center justify-center px-2 pb-2 md:min-h-[min(65svh,calc(100vw*9/16+4rem))] md:px-6 md:pb-4">
                       {mediaUrl ? (
                         <div className="relative z-[2] flex h-full w-full max-h-[calc(100svh-5.5rem)] md:max-h-[calc(100svh-6.5rem)] items-center justify-center">
                           <div className={`relative aspect-video w-full max-w-[min(100%,calc((100svh-6rem)*16/9))] overflow-hidden rounded-sm bg-black shadow-none transition-[opacity,transform] duration-700 ease-out md:max-w-[min(100%,calc((100svh-7rem)*16/9))] ${
@@ -609,22 +583,18 @@ export default function ProjectDetail() {
                           }`}>
                             {activeVideoSlug === p.slug ? (
                               <>
-                                <VimeoEmbed
+                                <VideoPlayer
                                   key={`${p.slug}-active`}
                                   url={mediaUrl}
+                                  playerKey={`inline-${p.slug}`}
                                   autoplay
-                                  muted={false}
                                   loop
                                   interactive
                                   className={`aspect-video h-full w-full transition-all duration-1000 ease-out ${
                                     inlineMediaReady[p.slug] ? "opacity-100" : "opacity-0"
                                   }`}
                                   testId={`project-inline-video-${p.slug}`}
-                                  innerRef={(node) => {
-                                    if (node) inlineIframeRefs.current[p.slug] = node;
-                                    else delete inlineIframeRefs.current[p.slug];
-                                  }}
-                                  onIframeLoad={() => {
+                                  onReady={() => {
                                     window.setTimeout(() => {
                                       setInlineMediaReady((ready) => ({ ...ready, [p.slug]: true }));
                                     }, 700);
@@ -693,7 +663,7 @@ export default function ProjectDetail() {
                     </div>
                   </section>
 
-                  <section className="px-6 md:px-12 lg:px-16 py-12 md:py-20">
+                  <section className="px-6 md:px-12 lg:px-16 py-8 md:py-14">
                     <div className="hidden md:grid grid-cols-12 gap-10 md:gap-14 items-start">
                       <aside className="col-span-3 sticky top-28">
                         {p.poster && (
