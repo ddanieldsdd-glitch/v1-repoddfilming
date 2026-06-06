@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { tr } from "../lib/i18n";
 import { VideoPlayer } from "./VideoPlayer";
-import { pauseAllExcept, resumePlayer, mutePlayer } from "../lib/videoStore";
+import { pauseAllExcept, resumePlayer, getPlayer } from "../lib/videoStore";
 
 const isVideoUrl = (url) =>
   /vimeo\.com|youtube\.com|youtu\.be/.test(String(url || ""));
@@ -34,12 +34,18 @@ export const ProjectCard = ({ project, lang, eager = false, compact = false, ind
 
   const onLeave = () => {
     if (timer.current) clearTimeout(timer.current);
+    // Pause the preview player before unmounting
+    const previewPlayer = getPlayer(previewKey);
+    if (previewPlayer) {
+      try {
+        previewPlayer.pause().catch(() => {});
+        previewPlayer.setMuted(true).catch(() => {});
+      } catch {}
+    }
     setPreviewActive(false);
     setPreviewReady(false);
     // Resume the hero showreel (play + unmute)
     resumePlayer(heroKey);
-    // Mute the preview so it stops making sound
-    mutePlayer(previewKey);
   };
 
   return (

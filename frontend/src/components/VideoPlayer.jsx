@@ -88,9 +88,13 @@ export const VideoPlayer = ({
 
     return () => {
       initialMounted.current = false;
+      try {
+        player.pause().catch(() => {});
+        player.setMuted(true).catch(() => {});
+        player.destroy().catch(() => {});
+      } catch {}
       unregisterPlayer(playerKey);
       playerRef.current = null;
-      // DO NOT call player.destroy() — React owns the iframe lifecycle.
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vimeoId, playerKey]);

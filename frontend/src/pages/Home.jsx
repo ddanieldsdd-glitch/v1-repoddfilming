@@ -6,6 +6,7 @@ import { T, tr } from "../lib/i18n";
 import { VideoPlayer } from "../components/VideoPlayer";
 import { ProjectCard } from "../components/ProjectCard";
 import { CATEGORIES, getActiveCategories } from "../lib/contentStore";
+import { getPlayer, subscribeGlobalMuted } from "../lib/videoStore";
 
 export default function Home() {
   const content = useContent();
@@ -39,6 +40,17 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
+  // Keep the hero showreel permanently muted, even if global unmute is toggled
+  useEffect(() => {
+    const unsubscribe = subscribeGlobalMuted(() => {
+      const hero = getPlayer("hero-showreel");
+      if (hero) {
+        try { hero.setMuted(true).catch(() => {}); } catch {}
+      }
+    });
+    return unsubscribe;
+  }, []);
+
   return (
     <div data-testid="home-page" className="bg-white dark:bg-black transition-colors duration-500">
       {/* FULLSCREEN HERO */}
@@ -49,6 +61,7 @@ export default function Home() {
             playerKey="hero-showreel"
             autoplay
             background
+            muted={true}
             className={`w-full h-full transition-opacity duration-1000 ${heroReelReady ? "opacity-100" : "opacity-0"}`}
             testId="hero-showreel"
             interactive={false}

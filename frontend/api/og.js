@@ -77,7 +77,7 @@ function generateOGHTML(project, baseUrl, isProjectPage = false) {
 export default async function handler(request) {
   const url = new URL(request.url);
   const path = url.pathname;
-  const baseUrl = "https://ddfilming.com"; // Update with your actual domain
+  const baseUrl = "https://ddanidiaz.com";
 
   // Check if it's a project page
   const projectMatch = path.match(/^\/project\/([^/]+)/);
@@ -101,9 +101,66 @@ export default async function handler(request) {
   const userAgent = request.headers.get("user-agent") || "";
   const isBot = /bot|crawler|spider|facebook|twitter|linkedin|whatsapp|telegram|slack|discord/i.test(userAgent);
   
-  // If it's a bot requesting the root, serve the most viewed project (Origami)
+  // If it's a bot requesting the root, serve the site logo (not a project)
   if (isBot && (path === "/" || path === "/index.html")) {
-    const html = generateOGHTML(defaultProject, baseUrl, false);
+    const logoImage = "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777731841/DD_BLANCO_l8xqal.png";
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="Dani Díaz — Cinematographer. Trabajos seleccionados en ficción, documental, publicidad y videoclips." />
+    <meta name="robots" content="index, follow" />
+    <link rel="icon" type="image/png" href="${logoImage}" />
+    <link rel="apple-touch-icon" href="${logoImage}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap" rel="stylesheet" />
+    <title>Dani Díaz — Cinematographer</title>
+
+    <!-- Open Graph / Social Sharing -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Dani Díaz — Cinematographer" />
+    <meta property="og:title" content="Dani Díaz — Cinematographer" />
+    <meta property="og:description" content="La luz como narrativa. La imagen como memoria. Trabajos seleccionados en ficción, documental, publicidad y videoclips." />
+    <meta property="og:image" content="${logoImage}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="${baseUrl}/" />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:locale:alternate" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@ddani_00" />
+    <meta name="twitter:title" content="Dani Díaz — Cinematographer" />
+    <meta name="twitter:description" content="La luz como narrativa. La imagen como memoria. Trabajos seleccionados en ficción, documental, publicidad y videoclips." />
+    <meta name="twitter:image" content="${logoImage}" />
+
+    <script>
+        window.addEventListener(
+            "error",
+            function (e) {
+                if (
+                    e.error instanceof DOMException &&
+                    e.error.name === "DataCloneError" &&
+                    e.message &&
+                    e.message.includes("PerformanceServerTiming")
+                ) {
+                    e.stopImmediatePropagation();
+                    e.preventDefault();
+                }
+            },
+            true,
+        );
+    </script>
+</head>
+<body style="background:#000000;">
+    <noscript>Necesitas habilitar JavaScript para ver esta web.</noscript>
+    <div id="root"></div>
+</body>
+</html>`;
     return new Response(html, {
       headers: {
         "Content-Type": "text/html; charset=utf-8",
