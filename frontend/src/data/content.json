@@ -31,6 +31,38 @@
   },
   "projects": [
     {
+      "id": "p-que-comen-los-dragones",
+      "slug": "que-comen-los-dragones",
+      "category": "fiction",
+      "title": "¿Qué Comen los Dragones?",
+      "year": 2025,
+      "type": {
+        "es": "Cortometraje",
+        "en": "Short Film"
+      },
+      "director": "Álvaro León",
+      "production_company": "Saturno Films",
+      "format": "Blackmagic Pyxis · Schneider Xenon",
+      "synopsis": {
+        "es": "Una leyenda familiar lleva a Bernabé a adentrarse en las montañas en busca de un dragón que se enfrenta al hambre y al olvido.",
+        "en": "A family legend sends Bernabé deep into the mountains, where a dragon struggles against hunger and oblivion."
+      },
+      "cover": "https://res.cloudinary.com/dsphxo7mx/image/upload/v1780764334/7d3f5de1-2bc8-4918-a08b-e112a97864f6.png",
+      "poster": "https://res.cloudinary.com/dsphxo7mx/image/upload/v1780758031/cartel_2_quecomen_los_dragones_d2ag65.jpg",
+      "preview_url": "https://vimeo.com/1199033747",
+      "stills": [
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1780760507/FRAME_5_nmj2z4.png",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1780760507/FRAME_8_szru1w.png",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1780760509/FRAME_2_pwghkq.png",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1780760509/FRAME_7_tsyqmq.png",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1780760510/FRAME_9_rkkrki.png",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1780760520/FRAME_11_cqyi9f.png",
+        "https://res.cloudinary.com/dsphxo7mx/image/upload/v1780764334/7d3f5de1-2bc8-4918-a08b-e112a97864f6.png"
+      ],
+      "bts": [],
+      "external_link": "https://www.imdb.com/es-es/title/tt38190250/"
+    },
+    {
       "id": "p-la-espantada",
       "slug": "la-espantada",
       "category": "fiction",
