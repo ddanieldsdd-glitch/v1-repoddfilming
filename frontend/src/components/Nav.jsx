@@ -86,17 +86,17 @@ export const Nav = () => {
             <img
               src={logoUrl}
               alt="DD"
-              className="h-9 w-auto md:h-11 lg:h-12 transition-all duration-500 invert"
+              className="h-8 w-auto md:h-10 lg:h-11 transition-all duration-500 invert"
             />
           )}
-          <span className="hidden sm:flex flex-col">
+          <span className="flex flex-col">
             <span
-              className={`font-medium text-[15px] md:text-base tracking-[0.04em] transition-colors duration-500 ${txt}`}
+              className={`font-medium text-[14px] md:text-base tracking-[0.04em] transition-colors duration-500 ${txt}`}
             >
               {content.site.name}
             </span>
             <span
-              className={`text-[10px] md:text-[11px] tracking-[0.32em] uppercase mt-1 transition-colors duration-500 ${muted}`}
+              className={`text-[9px] md:text-[10px] tracking-[0.32em] uppercase mt-0.5 transition-colors duration-500 ${muted}`}
             >
               {tr(content.site.title, lang)}
             </span>
