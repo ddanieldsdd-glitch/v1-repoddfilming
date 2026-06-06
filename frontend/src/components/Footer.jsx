@@ -35,7 +35,7 @@ export const Footer = () => {
               <a
                 href={telHref(s.phone)}
                 data-testid="footer-phone"
-                className="block text-xl md:text-2xl lg:text-3xl tracking-tight text-black dark:text-white hover:opacity-60 transition-opacity whitespace-nowrap"
+                className="block text-sm md:text-base lg:text-lg tracking-tight text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white transition-opacity whitespace-nowrap"
               >
                 {formatPhoneDisplay(s.phone)}
               </a>

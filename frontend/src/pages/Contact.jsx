@@ -47,7 +47,7 @@ export default function Contact() {
                 <a
                   href={telHref(s.phone)}
                   data-testid="contact-phone-link"
-                  className="text-base md:text-xl tracking-tight font-light text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white transition inline-block whitespace-nowrap"
+                  className="text-sm md:text-base tracking-tight font-light text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white transition inline-block whitespace-nowrap"
                 >
                   {formatPhoneDisplay(s.phone)}
                 </a>
