@@ -62,12 +62,10 @@ export default function Home() {
             autoplay
             background
             muted={true}
-            className={`w-full h-full transition-opacity duration-1000 ${heroReelReady ? "opacity-100" : "opacity-0"}`}
+            className={`w-full h-full transition-opacity duration-300 ${heroReelReady ? "opacity-100" : "opacity-0"}`}
             testId="hero-showreel"
             interactive={false}
-            onReady={() => {
-              window.setTimeout(() => setHeroReelReady(true), 500);
-            }}
+            onReady={() => setHeroReelReady(true)}
           />
         </div>
         {!heroReelReady && (
@@ -125,9 +123,7 @@ export default function Home() {
               className={`h-full w-full transition-opacity duration-700 ${modalReelReady ? "opacity-100" : "opacity-0"}`}
               testId="hero-showreel-fullscreen"
               interactive
-              onReady={() => {
-                window.setTimeout(() => setModalReelReady(true), 350);
-              }}
+              onReady={() => setModalReelReady(true)}
             />
             {!modalReelReady && (
               <div className="pointer-events-none absolute inset-0 bg-black" />

@@ -128,6 +128,7 @@ export const VideoPlayer = ({
         title="Video player"
         allow="autoplay; fullscreen; picture-in-picture"
         allowFullScreen
+        loading="eager"
         onLoad={vimeoId ? undefined : handleReady}
         className={`absolute inset-0 h-full w-full border-0 bg-black [color-scheme:dark] ${interactive ? "" : "pointer-events-none"}`}
       />
