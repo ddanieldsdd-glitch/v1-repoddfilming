@@ -91,7 +91,6 @@ export const VideoPlayer = ({
       try {
         player.pause().catch(() => {});
         player.setMuted(true).catch(() => {});
-        player.destroy().catch(() => {});
       } catch {}
       unregisterPlayer(playerKey);
       playerRef.current = null;
