@@ -1,17 +1,11 @@
-import defaultContent from "../../src/data/content.json";
+import { projects, defaultProject } from "./projects-data.js";
 
 export const config = {
   runtime: "edge",
 };
 
-function getProjectBySlug(projects, slug) {
+function getProjectBySlug(slug) {
   return projects.find((p) => p.slug === slug) || null;
-}
-
-function getMostViewedProject(projects) {
-  // For now, return the first project (Origami - award winning)
-  // In a real scenario, you'd track views in a database
-  return projects[0] || null;
 }
 
 function generateOGHTML(project, baseUrl, isProjectPage = false) {
@@ -90,7 +84,7 @@ export default async function handler(request) {
   
   if (projectMatch) {
     const slug = projectMatch[1];
-    const project = getProjectBySlug(defaultContent.projects, slug);
+    const project = getProjectBySlug(slug);
     
     if (project) {
       const html = generateOGHTML(project, baseUrl, true);
@@ -107,18 +101,15 @@ export default async function handler(request) {
   const userAgent = request.headers.get("user-agent") || "";
   const isBot = /bot|crawler|spider|facebook|twitter|linkedin|whatsapp|telegram|slack|discord/i.test(userAgent);
   
-  // If it's a bot requesting the root, serve the most viewed project
+  // If it's a bot requesting the root, serve the most viewed project (Origami)
   if (isBot && (path === "/" || path === "/index.html")) {
-    const project = getMostViewedProject(defaultContent.projects);
-    if (project) {
-      const html = generateOGHTML(project, baseUrl, false);
-      return new Response(html, {
-        headers: {
-          "Content-Type": "text/html; charset=utf-8",
-          "Cache-Control": "public, max-age=3600, s-maxage=86400",
-        },
-      });
-    }
+    const html = generateOGHTML(defaultProject, baseUrl, false);
+    return new Response(html, {
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "public, max-age=3600, s-maxage=86400",
+      },
+    });
   }
 
   // For all other requests, let the SPA handle it
