@@ -7,69 +7,99 @@ import { pauseAllExcept, resumePlayer } from "../lib/videoStore";
 const isVideoUrl = (url) =>
   /vimeo\.com|youtube\.com|youtu\.be/.test(String(url || ""));
 
-export const ProjectCard = ({ project, lang, eager = false, compact = false, index }) => {
-  const [inView, setInView] = useState(false);
-  const [hovered, setHovered] = useState(false);
+export const ProjectCard = ({
+  project,
+  lang,
+  eager = false,
+  compact = false,
+  index,
+  aspectClass = "aspect-video",
+  // fill: la tarjeta rellena la altura del contenedor padre (para layout editorial)
+  fill = false,
+  // alwaysPlay: el vídeo arranca en cuanto la tarjeta entra en viewport
+  alwaysPlay = false,
+}) => {
+  const [inView, setInView]           = useState(false);
+  const [playInView, setPlayInView]   = useState(false);
+  const [hovered, setHovered]         = useState(false);
   const [previewVisible, setPreviewVisible] = useState(false);
-  const cardRef = useRef(null);
-  const touchActiveRef = useRef(false);
+  const cardRef      = useRef(null);
+  const touchActive  = useRef(false);
 
   const previewKey = `card-preview-${project.slug}`;
-  const heroKey = "hero-showreel";
+  const heroKey    = "hero-showreel";
 
   const previewUrl =
     project.preview_url ||
     (isVideoUrl(project.cover) ? project.cover : null);
 
-  const coverIsImage = project.cover && !isVideoUrl(project.cover);
+  const coverIsImage  = project.cover && !isVideoUrl(project.cover);
   const fallbackImage = coverIsImage ? project.cover : project.poster;
 
-  const shouldPreload = Boolean(previewUrl && (inView || hovered));
-  const shouldPlay = Boolean(previewUrl && hovered);
-
+  // Observer 1: preloading (wide margin — carga antes de entrar en pantalla)
   useEffect(() => {
     const el = cardRef.current;
     if (!el || !previewUrl) return undefined;
-    const observer = new IntersectionObserver(
-      ([entry]) => setInView(entry.isIntersecting),
+    const obs = new IntersectionObserver(
+      ([e]) => setInView(e.isIntersecting),
       { rootMargin: "320px 0px", threshold: 0.01 },
     );
-    observer.observe(el);
-    return () => observer.disconnect();
+    obs.observe(el);
+    return () => obs.disconnect();
   }, [previewUrl]);
 
-  // Hover siempre activo, independientemente de si hay video
+  // Observer 2: autoplay (solo cuando la tarjeta es realmente visible)
+  useEffect(() => {
+    if (!alwaysPlay || !previewUrl) return undefined;
+    const el = cardRef.current;
+    if (!el) return undefined;
+    const obs = new IntersectionObserver(
+      ([e]) => setPlayInView(e.isIntersecting),
+      { threshold: 0.25 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [alwaysPlay, previewUrl]);
+
+  const shouldPreload = Boolean(previewUrl && (inView || hovered));
+  const shouldPlay    = Boolean(previewUrl && (hovered || (alwaysPlay && playInView)));
+
   const onMouseEnter = () => {
     setHovered(true);
-    if (previewUrl) pauseAllExcept(previewKey);
+    if (previewUrl && !alwaysPlay) pauseAllExcept(previewKey);
   };
 
   const onMouseLeave = () => {
-    if (touchActiveRef.current) return;
+    if (touchActive.current) return;
     setHovered(false);
-    setPreviewVisible(false);
-    if (previewUrl) resumePlayer(heroKey);
+    if (!alwaysPlay) {
+      setPreviewVisible(false);
+      if (previewUrl) resumePlayer(heroKey);
+    }
   };
 
   const onTouchStart = () => {
-    touchActiveRef.current = true;
+    touchActive.current = true;
     setHovered(true);
-    if (previewUrl) pauseAllExcept(previewKey);
+    if (previewUrl && !alwaysPlay) pauseAllExcept(previewKey);
   };
 
   const onTouchEnd = () => {
-    touchActiveRef.current = false;
+    touchActive.current = false;
     window.setTimeout(() => {
-      if (!touchActiveRef.current) {
+      if (!touchActive.current) {
         setHovered(false);
-        setPreviewVisible(false);
-        if (previewUrl) resumePlayer(heroKey);
+        if (!alwaysPlay) {
+          setPreviewVisible(false);
+          if (previewUrl) resumePlayer(heroKey);
+        }
       }
     }, 120);
   };
 
-  const shapeSeed =
-    typeof index === "number" ? index : project.slug.length + project.title.length;
+  const shapeSeed = typeof index === "number"
+    ? index
+    : project.slug.length + project.title.length;
   const organicRadius = compact
     ? "rounded-[1.35rem] md:rounded-[1.65rem]"
     : shapeSeed % 3 === 0
@@ -78,12 +108,17 @@ export const ProjectCard = ({ project, lang, eager = false, compact = false, ind
         ? "rounded-[1.5rem] md:rounded-[2rem]"
         : "rounded-[1.65rem] md:rounded-[2.1rem]";
 
+  // fill=true: en móvil usa aspect-video normal; en desktop rellena el contenedor
+  const sizeClass = fill
+    ? `aspect-video md:aspect-auto md:h-full`
+    : aspectClass;
+
   return (
     <Link
       ref={cardRef}
       to={`/project/${project.slug}`}
       data-testid={`project-card-${project.slug}`}
-      className="group block cursor-pointer apple-tv-card"
+      className={`group block cursor-pointer apple-tv-card ${fill ? "md:h-full" : ""}`}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onTouchStart={onTouchStart}
@@ -91,7 +126,7 @@ export const ProjectCard = ({ project, lang, eager = false, compact = false, ind
       onTouchCancel={onTouchEnd}
     >
       <div
-        className={`relative overflow-hidden bg-neutral-950 aspect-video w-full shadow-[0_18px_50px_-28px_rgba(0,0,0,0.85)] ring-1 ring-white/10 transition-all duration-500 ease-out group-hover:scale-[1.02] group-hover:shadow-[0_28px_70px_-24px_rgba(0,0,0,0.9)] group-hover:ring-white/20 group-active:scale-[0.99] ${organicRadius}`}
+        className={`relative overflow-hidden bg-neutral-950 ${sizeClass} w-full shadow-[0_18px_50px_-28px_rgba(0,0,0,0.85)] ring-1 ring-white/10 transition-all duration-500 ease-out group-hover:scale-[1.02] group-hover:shadow-[0_28px_70px_-24px_rgba(0,0,0,0.9)] group-hover:ring-white/20 group-active:scale-[0.99] ${organicRadius}`}
       >
         <div className="absolute inset-0 z-0 bg-neutral-950" />
 
@@ -123,10 +158,10 @@ export const ProjectCard = ({ project, lang, eager = false, compact = false, ind
           />
         )}
 
-        {/* Gradiente siempre presente para legibilidad */}
+        {/* Gradiente permanente para legibilidad de la info */}
         <div className="pointer-events-none absolute inset-0 z-[4] bg-gradient-to-t from-black/90 via-black/15 to-transparent" />
 
-        {/* Info overlay: opacidad 0 en reposo → visible en hover */}
+        {/* Info overlay: aparece en hover */}
         <div
           className={`pointer-events-none absolute inset-x-0 bottom-0 z-[5] p-4 md:p-5 transition-all duration-300 ease-out ${
             hovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"

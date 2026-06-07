@@ -59,50 +59,63 @@ export default function Home() {
 
   return (
     <div data-testid="home-page" className="bg-white dark:bg-black transition-colors duration-500">
-      {/* FULLSCREEN HERO */}
-      <section data-hero className="relative w-full h-screen bg-black overflow-hidden hero-fullscreen">
-        <div className="absolute inset-0 pointer-events-none">
-          <VideoPlayer
-            url={content.site.showreel_url}
-            playerKey="hero-showreel"
-            autoplay
-            background
-            muted={true}
-            className={`w-full h-full transition-opacity duration-300 ${heroReelReady ? "opacity-100" : "opacity-0"}`}
-            testId="hero-showreel"
-            interactive={false}
-            onReady={() => setHeroReelReady(true)}
-          />
+      {/* HERO — tarjeta Apple TV grande */}
+      <section
+        data-hero
+        className="relative bg-black"
+        style={{ height: "100svh", padding: "8px 8px 0" }}
+      >
+        {/* Tarjeta redondeada que ocupa casi toda la pantalla */}
+        <div className="relative w-full h-full rounded-[1.75rem] sm:rounded-[2rem] md:rounded-[2.5rem] overflow-hidden bg-neutral-950 hero-fullscreen shadow-[0_40px_120px_-20px_rgba(0,0,0,1)]">
+          <div className="absolute inset-0 pointer-events-none">
+            <VideoPlayer
+              url={content.site.showreel_url}
+              playerKey="hero-showreel"
+              autoplay
+              background
+              muted={true}
+              className={`w-full h-full transition-opacity duration-500 ${heroReelReady ? "opacity-100" : "opacity-0"}`}
+              testId="hero-showreel"
+              interactive={false}
+              onReady={() => setHeroReelReady(true)}
+            />
+          </div>
+          {!heroReelReady && (
+            <div className="pointer-events-none absolute inset-0 z-[1] bg-neutral-950" />
+          )}
+
+          {/* Gradiente inferior para legibilidad */}
+          <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+          {/* Botón invisible que abre el reel */}
+          <button
+            type="button"
+            onClick={openShowReel}
+            className="absolute inset-0 z-10 cursor-pointer"
+            aria-label={lang === "es" ? "Ver reel en grande" : "View reel fullscreen"}
+          >
+            <span className="sr-only">
+              {lang === "es" ? "Ver reel en grande" : "View reel fullscreen"}
+            </span>
+          </button>
+
+          {/* Etiqueta "Ver reel" — pill estilo Apple TV */}
+          <div className="absolute right-5 bottom-6 sm:right-7 sm:bottom-8 md:right-9 md:bottom-10 z-20 pointer-events-none">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 px-4 py-2 text-[10px] tracking-[0.24em] uppercase text-white/90">
+              {lang === "es" ? "Ver reel" : "View reel"}
+              <ArrowUpRight className="h-3 w-3" strokeWidth={1.5} />
+            </span>
+          </div>
+
+          {/* Scroll indicator */}
+          <div className="absolute bottom-6 sm:bottom-8 md:bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/50 text-[9px] tracking-[0.32em] uppercase pointer-events-none z-20">
+            <span>{tr(T.hero.scroll, lang)}</span>
+            <ChevronDown className="w-3.5 h-3.5 animate-bounce" strokeWidth={1} />
+          </div>
+
+          <h1 data-testid="hero-name" className="sr-only">{content.site.name}</h1>
+          <p data-testid="hero-title" className="sr-only">{tr(content.site.title, lang)}</p>
         </div>
-        {!heroReelReady && (
-          <div className="pointer-events-none absolute inset-0 z-[1] bg-black" />
-        )}
-        <button
-          type="button"
-          onClick={openShowReel}
-          className="absolute inset-0 z-10 cursor-pointer"
-          aria-label={lang === "es" ? "Ver reel en grande" : "View reel fullscreen"}
-        >
-          <span className="sr-only">
-            {lang === "es" ? "Ver reel en grande" : "View reel fullscreen"}
-          </span>
-        </button>
-        <div className="absolute right-6 bottom-8 md:right-10 md:bottom-10 z-20 pointer-events-none">
-          <span className="inline-flex items-center gap-2 border border-white/30 bg-black/20 px-4 py-2 text-[10px] tracking-[0.28em] uppercase text-white/80 backdrop-blur-sm">
-            {lang === "es" ? "Ver reel" : "View reel"}
-            <ArrowUpRight className="h-3 w-3" strokeWidth={1.5} />
-          </span>
-        </div>
-        <div className="absolute bottom-8 md:bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/70 text-[10px] tracking-[0.32em] uppercase pointer-events-none">
-          <span>{tr(T.hero.scroll, lang)}</span>
-          <ChevronDown className="w-4 h-4 animate-bounce" strokeWidth={1} />
-        </div>
-        <h1 data-testid="hero-name" className="sr-only">
-          {content.site.name}
-        </h1>
-        <p data-testid="hero-title" className="sr-only">
-          {tr(content.site.title, lang)}
-        </p>
       </section>
 
       {showReelOpen && (
@@ -161,24 +174,125 @@ export default function Home() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-x-4 sm:gap-x-6 md:gap-x-8 gap-y-10 sm:gap-y-12 md:gap-y-16 items-start">
-          {featured.map((p, i) => (
-            <div
-              key={p.id}
-              className={
-                i === 0
-                  ? "md:col-span-8"
-                  : i === 1
-                    ? "md:col-span-4 md:pt-24"
-                    : i % 3 === 2
-                      ? "md:col-span-5"
-                      : "md:col-span-7"
-              }
-            >
-              <ProjectCard project={p} lang={lang} eager={i < 2} index={i} />
+        {/* Layout alternante: 1 grande + 2 pequeños / 2 pequeños + 1 grande */}
+        {(() => {
+          const GAP = "gap-3 sm:gap-4 md:gap-5";
+          const groups = [];
+          for (let i = 0; i < featured.length; i += 3) {
+            groups.push(featured.slice(i, Math.min(i + 3, featured.length)));
+          }
+          return (
+            <div className={`flex flex-col ${GAP}`}>
+              {groups.map((group, gi) => {
+                const baseIdx = gi * 3;
+                const eager   = (i) => baseIdx + i < 2;
+
+                // Grupo de 1 sola tarjeta → ancho completo
+                if (group.length === 1) {
+                  return (
+                    <ProjectCard
+                      key={group[0].id}
+                      project={group[0]}
+                      lang={lang}
+                      eager={eager(0)}
+                      index={baseIdx}
+                      aspectClass="aspect-video"
+                    />
+                  );
+                }
+
+                // Grupo de 2 tarjetas → grid 2 columnas iguales
+                if (group.length === 2) {
+                  return (
+                    <div key={group[0].id} className={`grid grid-cols-2 ${GAP}`}>
+                      {group.map((p, j) => (
+                        <ProjectCard
+                          key={p.id}
+                          project={p}
+                          lang={lang}
+                          eager={eager(j)}
+                          index={baseIdx + j}
+                          aspectClass="aspect-video"
+                        />
+                      ))}
+                    </div>
+                  );
+                }
+
+                // Grupo de 3: alterna grande-izq/peq-der ↔ peq-izq/grande-der
+                const isEven = gi % 2 === 0;
+                return (
+                  <div
+                    key={group[0].id}
+                    className={`grid grid-cols-1 md:grid-cols-12 ${GAP} md:items-stretch`}
+                  >
+                    {isEven ? (
+                      <>
+                        {/* GRANDE izquierda */}
+                        <div className="md:col-span-7 md:flex md:flex-col">
+                          <ProjectCard
+                            project={group[0]}
+                            lang={lang}
+                            eager={eager(0)}
+                            index={baseIdx}
+                            fill
+                          />
+                        </div>
+                        {/* 2 PEQUEÑOS derecha */}
+                        <div className={`md:col-span-5 flex flex-col ${GAP}`}>
+                          <ProjectCard
+                            project={group[1]}
+                            lang={lang}
+                            eager={eager(1)}
+                            index={baseIdx + 1}
+                            aspectClass="aspect-video"
+                          />
+                          <ProjectCard
+                            project={group[2]}
+                            lang={lang}
+                            eager={eager(2)}
+                            index={baseIdx + 2}
+                            aspectClass="aspect-video"
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {/* 2 PEQUEÑOS izquierda */}
+                        <div className={`md:col-span-5 flex flex-col ${GAP}`}>
+                          <ProjectCard
+                            project={group[0]}
+                            lang={lang}
+                            eager={eager(0)}
+                            index={baseIdx}
+                            aspectClass="aspect-video"
+                          />
+                          <ProjectCard
+                            project={group[1]}
+                            lang={lang}
+                            eager={eager(1)}
+                            index={baseIdx + 1}
+                            aspectClass="aspect-video"
+                          />
+                        </div>
+                        {/* GRANDE derecha */}
+                        <div className="md:col-span-7 md:flex md:flex-col">
+                          <ProjectCard
+                            project={group[2]}
+                            lang={lang}
+                            eager={eager(2)}
+                            index={baseIdx + 2}
+                            fill
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
+          );
+        })()}
 
         <div className="mt-10 md:hidden">
           <Link

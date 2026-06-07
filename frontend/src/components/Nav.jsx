@@ -13,7 +13,6 @@ export const Nav = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Detectar viewport
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
@@ -21,7 +20,6 @@ export const Nav = () => {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  // Detectar scroll sobre el hero
   useEffect(() => {
     const onScroll = () => {
       const y = window.scrollY;
@@ -39,71 +37,63 @@ export const Nav = () => {
     };
   }, [location.pathname]);
 
-  // Detectar fullscreen real del navegador
   useEffect(() => {
-    const onFsChange = () => {
-      setIsFullscreen(Boolean(document.fullscreenElement));
-    };
+    const onFsChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
     document.addEventListener("fullscreenchange", onFsChange);
-    return () => {
-      document.removeEventListener("fullscreenchange", onFsChange);
-    };
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
   }, []);
 
-  // Cerrar menú móvil al cambiar de página
   useEffect(() => setOpen(false), [location.pathname]);
 
   if (location.pathname.startsWith("/admin")) return null;
 
-  // En móvil el nav NUNCA se oculta para que la hamburguesa sea usable
-  // En desktop se oculta sobre el hero o en fullscreen
-  const hideNav = !isMobile && (overHero || isFullscreen);
-
-  // Siempre usamos texto blanco (dark mode permanente)
-  const txt = "text-white";
-  const muted = "text-white/70";
-  const inactive = "text-white/70 hover:text-white";
-
-  const linkClass = ({ isActive }) =>
-    `text-[11px] tracking-[0.28em] uppercase transition-colors duration-500 ${
-      isActive ? txt : inactive
-    }`;
+  // El nav es siempre visible. Transparente sobre el hero, glass al hacer scroll.
+  const isTransparent = overHero && !open;
+  const isHidden      = isFullscreen;
 
   const logoUrl = content.site.logo_white;
+
+  const linkClass = ({ isActive }) =>
+    `text-[11px] tracking-[0.24em] uppercase transition-all duration-300 px-3 py-1.5 rounded-full ${
+      isActive
+        ? "text-white bg-white/12"
+        : "text-white/60 hover:text-white hover:bg-white/8"
+    }`;
 
   return (
     <header
       data-testid="site-nav"
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        hideNav
-          ? "opacity-100 translate-y-0 bg-transparent border-transparent"
-          : "opacity-100 translate-y-0 bg-black/85 backdrop-blur-xl border-b border-white/10"
+        isHidden
+          ? "opacity-0 pointer-events-none"
+          : isTransparent
+            ? "bg-transparent backdrop-blur-none"
+            : "bg-black/60 backdrop-blur-3xl"
       }`}
     >
-      <div className="px-6 md:px-12 lg:px-16 py-5 md:py-6 flex items-center justify-between">
-        <Link to="/" data-testid="nav-logo" className="flex items-center gap-3 leading-none">
+      <div className="px-4 sm:px-6 md:px-10 lg:px-14 py-3 md:py-4 flex items-center justify-between gap-4">
+
+        {/* Logo */}
+        <Link to="/" data-testid="nav-logo" className="flex items-center gap-2.5 leading-none shrink-0">
           {logoUrl && (
             <img
               src={logoUrl}
               alt="DD"
-              className="h-8 w-auto md:h-10 lg:h-11 transition-all duration-500 invert"
+              className="h-7 w-auto md:h-9 transition-all duration-500 invert"
             />
           )}
           <span className="flex flex-col">
-            <span
-              className={`font-medium text-[14px] md:text-base tracking-[0.04em] transition-colors duration-500 ${txt}`}
-            >
+            <span className="font-medium text-[13px] md:text-sm tracking-[0.04em] text-white">
               {content.site.name}
             </span>
-            <span
-              className={`text-[9px] md:text-[10px] tracking-[0.32em] uppercase mt-0.5 transition-colors duration-500 ${muted}`}
-            >
+            <span className="text-[8px] md:text-[9px] tracking-[0.32em] uppercase mt-0.5 text-white/55">
               {tr(content.site.title, lang)}
             </span>
           </span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-10">
+        {/* Desktop nav */}
+        <nav className="hidden md:flex items-center gap-1">
           <NavLink to="/work" className={linkClass} data-testid="nav-work">
             {tr(T.nav.work, lang)}
           </NavLink>
@@ -114,22 +104,22 @@ export const Nav = () => {
             {tr(T.nav.contact, lang)}
           </NavLink>
 
-          <div className="flex items-center gap-2 ml-2 pl-6 border-l border-white/25 transition-colors duration-500">
+          {/* Idioma — pill compacta */}
+          <div className="ml-3 flex items-center gap-0.5 rounded-full bg-white/8 border border-white/10 p-1">
             <button
               data-testid="lang-es"
               onClick={() => setLang("es")}
-              className={`text-[11px] tracking-[0.2em] uppercase transition-colors duration-500 ${
-                lang === "es" ? txt : inactive
+              className={`px-2.5 py-1 rounded-full text-[10px] tracking-[0.18em] uppercase transition-all duration-300 ${
+                lang === "es" ? "bg-white/15 text-white" : "text-white/50 hover:text-white"
               }`}
             >
               ES
             </button>
-            <span className="text-white/40">/</span>
             <button
               data-testid="lang-en"
               onClick={() => setLang("en")}
-              className={`text-[11px] tracking-[0.2em] uppercase transition-colors duration-500 ${
-                lang === "en" ? txt : inactive
+              className={`px-2.5 py-1 rounded-full text-[10px] tracking-[0.18em] uppercase transition-all duration-300 ${
+                lang === "en" ? "bg-white/15 text-white" : "text-white/50 hover:text-white"
               }`}
             >
               EN
@@ -137,9 +127,10 @@ export const Nav = () => {
           </div>
         </nav>
 
+        {/* Hamburguesa móvil */}
         <button
           data-testid="nav-mobile-toggle"
-          className="md:hidden flex flex-col gap-[5px] p-2"
+          className="md:hidden flex flex-col gap-[5px] p-2 rounded-full hover:bg-white/8 transition"
           onClick={() => setOpen((v) => !v)}
           aria-label="Menu"
         >
@@ -149,16 +140,61 @@ export const Nav = () => {
         </button>
       </div>
 
+      {/* Menú móvil — glass panel */}
       {open && (
-        <div className="md:hidden bg-black border-t border-white/10" data-testid="nav-mobile-menu">
-          <div className="px-6 py-8 flex flex-col gap-6">
-            <NavLink to="/work" className="text-[11px] tracking-[0.28em] uppercase text-white">{tr(T.nav.work, lang)}</NavLink>
-            <NavLink to="/about" className="text-[11px] tracking-[0.28em] uppercase text-white">{tr(T.nav.about, lang)}</NavLink>
-            <NavLink to="/contact" className="text-[11px] tracking-[0.28em] uppercase text-white">{tr(T.nav.contact, lang)}</NavLink>
-            <div className="flex items-center gap-3 pt-4 border-t border-white/10">
-              <button onClick={() => setLang("es")} className={`text-[11px] tracking-[0.2em] uppercase ${lang === "es" ? "text-white" : "text-neutral-400"}`}>ES</button>
-              <span className="text-neutral-300">/</span>
-              <button onClick={() => setLang("en")} className={`text-[11px] tracking-[0.2em] uppercase ${lang === "en" ? "text-white" : "text-neutral-400"}`}>EN</button>
+        <div
+          className="md:hidden mx-2 mb-2 rounded-2xl bg-black/70 backdrop-blur-2xl border border-white/10 overflow-hidden"
+          data-testid="nav-mobile-menu"
+        >
+          <div className="px-5 py-6 flex flex-col gap-1">
+            <NavLink
+              to="/work"
+              className={({ isActive }) =>
+                `px-4 py-2.5 rounded-xl text-[12px] tracking-[0.24em] uppercase transition-all ${
+                  isActive ? "text-white bg-white/10" : "text-white/65 hover:text-white hover:bg-white/8"
+                }`
+              }
+            >
+              {tr(T.nav.work, lang)}
+            </NavLink>
+            <NavLink
+              to="/about"
+              className={({ isActive }) =>
+                `px-4 py-2.5 rounded-xl text-[12px] tracking-[0.24em] uppercase transition-all ${
+                  isActive ? "text-white bg-white/10" : "text-white/65 hover:text-white hover:bg-white/8"
+                }`
+              }
+            >
+              {tr(T.nav.about, lang)}
+            </NavLink>
+            <NavLink
+              to="/contact"
+              className={({ isActive }) =>
+                `px-4 py-2.5 rounded-xl text-[12px] tracking-[0.24em] uppercase transition-all ${
+                  isActive ? "text-white bg-white/10" : "text-white/65 hover:text-white hover:bg-white/8"
+                }`
+              }
+            >
+              {tr(T.nav.contact, lang)}
+            </NavLink>
+
+            <div className="mt-3 pt-4 border-t border-white/8 flex items-center gap-2">
+              <button
+                onClick={() => setLang("es")}
+                className={`flex-1 py-2 rounded-xl text-[11px] tracking-[0.2em] uppercase transition-all ${
+                  lang === "es" ? "bg-white/12 text-white" : "text-white/45 hover:bg-white/6 hover:text-white"
+                }`}
+              >
+                ES
+              </button>
+              <button
+                onClick={() => setLang("en")}
+                className={`flex-1 py-2 rounded-xl text-[11px] tracking-[0.2em] uppercase transition-all ${
+                  lang === "en" ? "bg-white/12 text-white" : "text-white/45 hover:bg-white/6 hover:text-white"
+                }`}
+              >
+                EN
+              </button>
             </div>
           </div>
         </div>

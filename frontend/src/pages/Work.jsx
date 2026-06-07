@@ -18,7 +18,7 @@ export default function Work() {
   }, [active, content.projects]);
 
   const linkBase =
-    "text-[11px] tracking-[0.28em] uppercase pb-1 transition-colors";
+    "text-[11px] tracking-[0.28em] uppercase pb-1 transition-colors whitespace-nowrap";
 
   return (
     <div data-testid="work-page" className="bg-white dark:bg-black pt-24 sm:pt-32 md:pt-40 transition-colors duration-500">
@@ -31,12 +31,16 @@ export default function Work() {
           {tr(T.work.title, lang)}
         </h1>
 
-        {/* FILTERS */}
+        {/* FILTROS */}
         <div className="mt-8 sm:mt-10 md:mt-14 flex flex-nowrap sm:flex-wrap gap-x-5 sm:gap-x-8 gap-y-3 border-t border-b border-black/10 dark:border-white/10 py-4 sm:py-5 -mx-1 px-1 overflow-x-auto">
           <Link
             to="/work"
             data-testid="filter-all"
-            className={`${linkBase} ${active === "all" ? "text-black dark:text-white border-b border-black dark:border-white" : "text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white border-b border-transparent"}`}
+            className={`${linkBase} ${
+              active === "all"
+                ? "text-black dark:text-white border-b border-black dark:border-white"
+                : "text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white border-b border-transparent"
+            }`}
           >
             {tr(T.work.all, lang)}
           </Link>
@@ -45,22 +49,34 @@ export default function Work() {
               key={c.id}
               to={`/work/${c.id}`}
               data-testid={`filter-${c.id}`}
-              className={`${linkBase} ${active === c.id ? "text-black dark:text-white border-b border-black dark:border-white" : "text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white border-b border-transparent"}`}
+              className={`${linkBase} ${
+                active === c.id
+                  ? "text-black dark:text-white border-b border-black dark:border-white"
+                  : "text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white border-b border-transparent"
+              }`}
             >
               {c[lang]}
             </Link>
           ))}
         </div>
 
-        {/* COMPACT GRID */}
+        {/* GRID UNIFORME — todas las tarjetas aspect-video sin huecos */}
         {list.length === 0 ? (
           <p className="py-32 text-neutral-500 dark:text-neutral-400" data-testid="work-empty">
             {tr(T.work.none, lang)}
           </p>
         ) : (
-          <div className={`grid grid-cols-1 sm:grid-cols-2 ${active === "all" ? "lg:grid-cols-3" : "lg:grid-cols-4"} gap-x-3 sm:gap-x-5 md:gap-x-6 gap-y-8 sm:gap-y-10 md:gap-y-14 py-10 sm:py-12 md:py-16`}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-5 py-10 sm:py-12 md:py-16">
             {list.map((p, i) => (
-              <ProjectCard key={p.id} project={p} lang={lang} eager={i < 4} compact={active !== "all"} index={active !== "all" ? i : undefined} />
+              <ProjectCard
+                key={p.id}
+                project={p}
+                lang={lang}
+                eager={i < 4}
+                index={i}
+                aspectClass="aspect-video"
+                alwaysPlay
+              />
             ))}
           </div>
         )}
