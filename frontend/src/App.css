@@ -125,6 +125,33 @@ a:focus-visible {
   }
 }
 
+/* Scroll-reveal: el elemento empieza invisible y sube al entrar en viewport */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Stagger para grids (se aplica con --delay inline) */
+.reveal-stagger {
+  opacity: 0;
+  transform: translateY(28px) scale(0.985);
+  transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--delay, 0ms);
+}
+
+.reveal-stagger.revealed {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
 /* Fullscreen hero: make the Vimeo iframe COVER the viewport without letterbox */
 .hero-fullscreen iframe {
   position: absolute !important;

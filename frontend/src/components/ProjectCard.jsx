@@ -38,29 +38,33 @@ export const ProjectCard = ({ project, lang, eager = false, compact = false, ind
     return () => observer.disconnect();
   }, [previewUrl]);
 
-  const activatePreview = () => {
-    if (!previewUrl) return;
+  // Hover siempre activo, independientemente de si hay video
+  const onMouseEnter = () => {
     setHovered(true);
-    pauseAllExcept(previewKey);
+    if (previewUrl) pauseAllExcept(previewKey);
   };
 
-  const deactivatePreview = () => {
+  const onMouseLeave = () => {
     if (touchActiveRef.current) return;
     setHovered(false);
     setPreviewVisible(false);
-    resumePlayer(heroKey);
+    if (previewUrl) resumePlayer(heroKey);
   };
 
   const onTouchStart = () => {
-    if (!previewUrl) return;
     touchActiveRef.current = true;
-    activatePreview();
+    setHovered(true);
+    if (previewUrl) pauseAllExcept(previewKey);
   };
 
   const onTouchEnd = () => {
     touchActiveRef.current = false;
     window.setTimeout(() => {
-      if (!touchActiveRef.current) deactivatePreview();
+      if (!touchActiveRef.current) {
+        setHovered(false);
+        setPreviewVisible(false);
+        if (previewUrl) resumePlayer(heroKey);
+      }
     }, 120);
   };
 
@@ -80,8 +84,8 @@ export const ProjectCard = ({ project, lang, eager = false, compact = false, ind
       to={`/project/${project.slug}`}
       data-testid={`project-card-${project.slug}`}
       className="group block cursor-pointer apple-tv-card"
-      onMouseEnter={activatePreview}
-      onMouseLeave={deactivatePreview}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
       onTouchCancel={onTouchEnd}
@@ -119,40 +123,36 @@ export const ProjectCard = ({ project, lang, eager = false, compact = false, ind
           />
         )}
 
-        {/* Gradient permanente para que la info se lea siempre */}
-        <div className="pointer-events-none absolute inset-0 z-[4] bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+        {/* Gradiente siempre presente para legibilidad */}
+        <div className="pointer-events-none absolute inset-0 z-[4] bg-gradient-to-t from-black/90 via-black/15 to-transparent" />
 
-        {/* Info overlay — solo visible en hover */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] p-4 md:p-5">
-          <div
-            className={`transition-all duration-400 ease-out ${
-              hovered
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-2"
-            }`}
-          >
-            <div className="flex items-end justify-between gap-3">
-              <div className="min-w-0">
-                {typeof index === "number" && (
-                  <span className="block mb-1 text-[10px] tracking-[0.28em] uppercase text-white/50">
-                    {String(index + 1).padStart(3, "0")}
-                  </span>
-                )}
-                <h3
-                  className={`${
-                    compact ? "text-sm md:text-base" : "text-base md:text-lg lg:text-xl"
-                  } font-light tracking-tight text-white leading-tight truncate`}
-                >
-                  {project.title}
-                </h3>
-                <p className="text-[9px] md:text-[10px] tracking-[0.22em] uppercase text-white/60 mt-1 truncate">
-                  {project.director ? `${project.director} · ` : ""}{tr(project.type, lang)}
-                </p>
-              </div>
-              <span className="mb-0.5 shrink-0 text-[10px] md:text-[11px] tracking-[0.24em] uppercase text-white/55">
-                {project.year}
-              </span>
+        {/* Info overlay: opacidad 0 en reposo → visible en hover */}
+        <div
+          className={`pointer-events-none absolute inset-x-0 bottom-0 z-[5] p-4 md:p-5 transition-all duration-300 ease-out ${
+            hovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+          }`}
+        >
+          <div className="flex items-end justify-between gap-3">
+            <div className="min-w-0">
+              {typeof index === "number" && (
+                <span className="block mb-1 text-[10px] tracking-[0.28em] uppercase text-white/50">
+                  {String(index + 1).padStart(3, "0")}
+                </span>
+              )}
+              <h3
+                className={`${
+                  compact ? "text-sm md:text-base" : "text-base md:text-lg lg:text-xl"
+                } font-light tracking-tight text-white leading-tight truncate`}
+              >
+                {project.title}
+              </h3>
+              <p className="text-[9px] md:text-[10px] tracking-[0.22em] uppercase text-white/60 mt-1 truncate">
+                {project.director ? `${project.director} · ` : ""}{tr(project.type, lang)}
+              </p>
             </div>
+            <span className="mb-0.5 shrink-0 text-[10px] md:text-[11px] tracking-[0.24em] uppercase text-white/55">
+              {project.year}
+            </span>
           </div>
         </div>
       </div>

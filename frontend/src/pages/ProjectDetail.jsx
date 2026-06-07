@@ -1,4 +1,4 @@
-import { useRef, useState, useMemo, useEffect } from "react";
+import { useRef, useState, useMemo, useEffect, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowUpRight, ArrowRight } from "lucide-react";
 import { useContent, useLang } from "../lib/useContent";
@@ -11,6 +11,60 @@ import { ProjectCard } from "../components/ProjectCard";
 
 const isVideoUrl = (url) =>
   /vimeo\.com|youtube\.com|youtu\.be/.test(String(url || ""));
+
+/** Hook que añade la clase "revealed" cuando el elemento entra en viewport */
+function useReveal(deps = []) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    // Reset para re-animar al cambiar de proyecto
+    el.classList.remove("revealed");
+    const raf = requestAnimationFrame(() => {
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("revealed");
+            observer.disconnect();
+          }
+        },
+        { threshold: 0.08, rootMargin: "0px 0px -40px 0px" },
+      );
+      observer.observe(el);
+      return () => observer.disconnect();
+    });
+    return () => cancelAnimationFrame(raf);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+  return ref;
+}
+
+/** Aplica reveal a un array de elementos hijos con stagger */
+function useRevealGrid(deps = []) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const container = ref.current;
+    if (!container) return undefined;
+    const items = Array.from(container.querySelectorAll(".reveal-stagger"));
+    items.forEach((el) => el.classList.remove("revealed"));
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("revealed");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.06, rootMargin: "0px 0px -30px 0px" },
+    );
+    items.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+  return ref;
+}
 
 export default function ProjectDetail() {
   const { slug } = useParams();
@@ -105,19 +159,19 @@ export default function ProjectDetail() {
     return getActiveCategories(projects).filter((c) => c.id !== project.category);
   }, [project, projects]);
 
+  // Scroll-reveal refs
+  const metaRef = useReveal([slug]);
+  const relatedRef = useRevealGrid([slug, relatedProjects.length]);
+  const exploreRef = useReveal([slug]);
+
   if (!project) {
     return (
       <div
         className="pt-40 px-6 md:px-12 lg:px-16 min-h-[60vh] bg-black"
         data-testid="project-not-found"
       >
-        <p className="text-neutral-500 mb-6">
-          {tr(T.project.notFound, lang)}
-        </p>
-        <Link
-          to="/work"
-          className="text-sm border-b border-white pb-1 text-white"
-        >
+        <p className="text-neutral-500 mb-6">{tr(T.project.notFound, lang)}</p>
+        <Link to="/work" className="text-sm border-b border-white pb-1 text-white">
           {tr(T.project.back, lang)}
         </Link>
       </div>
@@ -125,32 +179,53 @@ export default function ProjectDetail() {
   }
 
   return (
-    <div
-      data-testid="project-detail-page"
-      className="bg-black min-h-screen"
-    >
+    <div data-testid="project-detail-page" className="bg-black min-h-screen">
+
       {/* ── HERO ──────────────────────────────────────────────── */}
-      <section data-hero className="bg-black pt-20 md:pt-24 px-3 sm:px-5 md:px-8 lg:px-12">
-        <div className="relative overflow-hidden rounded-[1.75rem] md:rounded-[2.25rem] bg-neutral-950 shadow-[0_32px_80px_-20px_rgba(0,0,0,1)]"
-          style={{ maxHeight: "68svh" }}
+      {/* Padding mínimo en móvil para que el video ocupe casi toda la pantalla */}
+      <section
+        data-hero
+        className="bg-black pt-16 md:pt-22 px-1.5 sm:px-4 md:px-8 lg:px-12"
+      >
+        <div
+          className="relative overflow-hidden rounded-[1.5rem] sm:rounded-[1.75rem] md:rounded-[2.25rem] bg-neutral-950 shadow-[0_32px_80px_-20px_rgba(0,0,0,1)]"
         >
           {heroVideoUrl ? (
-            <div
-              className={`w-full aspect-video transition-opacity duration-700 ${heroMediaReady ? "opacity-100" : "opacity-0"}`}
-            >
-              <VideoPlayer
-                url={heroVideoUrl}
-                playerKey={`hero-${slug}`}
-                autoplay
-                loop
-                className="aspect-video w-full h-full"
-                testId="project-hero-video"
-                interactive
-                onReady={() => {
-                  window.setTimeout(() => setHeroMediaReady(true), 400);
-                }}
-              />
-            </div>
+            <>
+              <div
+                className={`w-full aspect-video transition-opacity duration-700 ${
+                  heroMediaReady ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                <VideoPlayer
+                  url={heroVideoUrl}
+                  playerKey={`hero-${slug}`}
+                  autoplay
+                  loop
+                  className="aspect-video w-full h-full"
+                  testId="project-hero-video"
+                  interactive
+                  onReady={() => {
+                    window.setTimeout(() => setHeroMediaReady(true), 400);
+                  }}
+                />
+              </div>
+              {!heroMediaReady && (
+                <div className="pointer-events-none absolute inset-0 z-10 bg-neutral-950">
+                  {(project.cover && !isVideoUrl(project.cover)) || project.poster ? (
+                    <img
+                      src={
+                        project.cover && !isVideoUrl(project.cover)
+                          ? project.cover
+                          : project.poster
+                      }
+                      alt=""
+                      className="w-full h-full object-cover opacity-60"
+                    />
+                  ) : null}
+                </div>
+              )}
+            </>
           ) : project.cover && !isVideoUrl(project.cover) ? (
             <img
               src={project.cover}
@@ -169,39 +244,27 @@ export default function ProjectDetail() {
             <div className="w-full aspect-video bg-neutral-950" />
           )}
 
-          {!heroMediaReady && heroVideoUrl && (
-            <div className="pointer-events-none absolute inset-0 z-10 bg-neutral-950">
-              {(project.cover && !isVideoUrl(project.cover)) || project.poster ? (
-                <img
-                  src={project.cover && !isVideoUrl(project.cover) ? project.cover : project.poster}
-                  alt=""
-                  className="w-full h-full object-cover opacity-60"
-                />
-              ) : null}
-            </div>
-          )}
-
           {/* Back button flotante */}
           <button
             onClick={() => navigate(-1)}
             data-testid="project-back-btn"
-            className="absolute left-4 top-4 z-20 md:left-5 md:top-5 inline-flex items-center gap-2 rounded-full bg-black/40 backdrop-blur-md px-4 py-2 text-[10px] tracking-[0.24em] uppercase text-white/80 hover:text-white hover:bg-black/60 transition border border-white/10"
+            className="absolute left-3 top-3 z-20 md:left-5 md:top-5 inline-flex items-center gap-2 rounded-full bg-black/45 backdrop-blur-md px-3.5 py-2 text-[10px] tracking-[0.22em] uppercase text-white/80 hover:text-white hover:bg-black/65 transition border border-white/10"
           >
             <ArrowLeft className="w-3 h-3" strokeWidth={2} />
-            {tr(T.project.back, lang)}
+            <span className="hidden sm:inline">{tr(T.project.back, lang)}</span>
           </button>
         </div>
       </section>
 
-      {/* ── META ──────────────────────────────────────────────── */}
-      <section className="px-4 sm:px-6 md:px-10 lg:px-14 pt-8 pb-12 md:pt-10 md:pb-16">
-
-        {/* Tipo + año — supratítulo */}
+      {/* ── META (entra desde abajo al hacer scroll) ───────────── */}
+      <section
+        ref={metaRef}
+        className="reveal px-4 sm:px-6 md:px-10 lg:px-14 pt-7 pb-12 md:pt-10 md:pb-16"
+      >
         <p className="text-[10px] tracking-[0.34em] uppercase text-neutral-500 mb-3">
           {tr(project.type, lang)} — {project.year}
         </p>
 
-        {/* Título */}
         <h1
           data-testid="project-title"
           className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light tracking-tight leading-[0.95] text-white mb-6 md:mb-8"
@@ -209,16 +272,14 @@ export default function ProjectDetail() {
           {project.title}
         </h1>
 
-        {/* Cuerpo: synopsis + ficha lateral + poster */}
         <div className="flex flex-col md:flex-row gap-8 md:gap-12 lg:gap-16 items-start">
-
           {/* Sinopsis + acciones */}
           <div className="flex-1 min-w-0">
             <p className="text-sm md:text-base leading-relaxed text-neutral-400 max-w-[42rem] whitespace-pre-line">
               {tr(project.synopsis, lang)}
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-3 md:gap-4">
+            <div className="mt-7 flex flex-wrap gap-3 md:gap-4">
               {project.stills && project.stills.length > 0 && (
                 <button
                   type="button"
@@ -252,38 +313,47 @@ export default function ProjectDetail() {
             </div>
           </div>
 
-          {/* Panel de ficha técnica — glass pill */}
-          <div className="w-full md:w-auto md:min-w-[220px] shrink-0">
+          {/* Ficha técnica glass + poster */}
+          <div className="w-full md:w-auto md:min-w-[200px] shrink-0">
             <div className="rounded-2xl bg-white/5 ring-1 ring-white/10 px-5 py-4 space-y-4">
               {project.director && (
                 <div>
-                  <dt className="text-[9px] tracking-[0.3em] uppercase text-neutral-600 mb-1">{tr(T.project.director, lang)}</dt>
+                  <dt className="text-[9px] tracking-[0.3em] uppercase text-neutral-600 mb-1">
+                    {tr(T.project.director, lang)}
+                  </dt>
                   <dd className="text-sm text-neutral-200 leading-snug">{project.director}</dd>
                 </div>
               )}
               {project.production_company && (
                 <div>
-                  <dt className="text-[9px] tracking-[0.3em] uppercase text-neutral-600 mb-1">{tr(T.project.productionCompany, lang)}</dt>
+                  <dt className="text-[9px] tracking-[0.3em] uppercase text-neutral-600 mb-1">
+                    {tr(T.project.productionCompany, lang)}
+                  </dt>
                   <dd className="text-sm text-neutral-200 leading-snug">{project.production_company}</dd>
                 </div>
               )}
               <div>
-                <dt className="text-[9px] tracking-[0.3em] uppercase text-neutral-600 mb-1">{tr(T.project.year, lang)}</dt>
+                <dt className="text-[9px] tracking-[0.3em] uppercase text-neutral-600 mb-1">
+                  {tr(T.project.year, lang)}
+                </dt>
                 <dd className="text-sm text-neutral-200">{project.year}</dd>
               </div>
               <div>
-                <dt className="text-[9px] tracking-[0.3em] uppercase text-neutral-600 mb-1">{tr(T.project.type, lang)}</dt>
+                <dt className="text-[9px] tracking-[0.3em] uppercase text-neutral-600 mb-1">
+                  {tr(T.project.type, lang)}
+                </dt>
                 <dd className="text-sm text-neutral-200">{tr(project.type, lang)}</dd>
               </div>
               {project.format && (
                 <div>
-                  <dt className="text-[9px] tracking-[0.3em] uppercase text-neutral-600 mb-1">{tr(T.project.format, lang)}</dt>
+                  <dt className="text-[9px] tracking-[0.3em] uppercase text-neutral-600 mb-1">
+                    {tr(T.project.format, lang)}
+                  </dt>
                   <dd className="text-sm text-neutral-200 leading-snug">{project.format}</dd>
                 </div>
               )}
             </div>
 
-            {/* Poster — miniatura clicable */}
             {project.poster && (
               <button
                 type="button"
@@ -303,22 +373,34 @@ export default function ProjectDetail() {
         </div>
       </section>
 
-      {/* ── PROYECTOS RELACIONADOS ─────────────────────────────── */}
+      {/* ── PROYECTOS RELACIONADOS (stagger al hacer scroll) ───── */}
       {relatedProjects.length > 0 && (
         <section className="border-t border-white/8 px-4 sm:px-5 md:px-8 lg:px-12 pt-12 pb-16 md:pt-16 md:pb-24">
-          <p className="text-[10px] tracking-[0.34em] uppercase text-neutral-600 mb-8 md:mb-10 px-0.5">
+          <p className="reveal text-[10px] tracking-[0.34em] uppercase text-neutral-600 mb-8 md:mb-10 px-0.5">
             {lang === "es" ? "Más proyectos" : "More projects"}
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+          <div
+            ref={relatedRef}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6"
+          >
             {relatedProjects.map((p, i) => (
-              <ProjectCard key={p.id} project={p} lang={lang} eager={i < 3} compact index={i} />
+              <div
+                key={p.id}
+                className="reveal-stagger"
+                style={{ "--delay": `${i * 80}ms` }}
+              >
+                <ProjectCard project={p} lang={lang} eager={i < 3} compact index={i} />
+              </div>
             ))}
           </div>
         </section>
       )}
 
       {otherCategories.length > 0 && (
-        <section className="border-t border-white/8 px-4 sm:px-6 md:px-10 lg:px-14 py-12 md:py-16">
+        <section
+          ref={exploreRef}
+          className="reveal border-t border-white/8 px-4 sm:px-6 md:px-10 lg:px-14 py-12 md:py-16"
+        >
           <p className="text-[10px] tracking-[0.34em] uppercase text-neutral-600 mb-8">
             {lang === "es" ? "Explorar" : "Explore"}
           </p>
@@ -330,7 +412,10 @@ export default function ProjectDetail() {
                 className="group inline-flex items-center gap-2 rounded-full border border-white/12 px-5 py-2.5 text-sm text-neutral-400 hover:text-white hover:border-white/35 transition"
               >
                 {c[lang]}
-                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" strokeWidth={1.5} />
+                <ArrowRight
+                  className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1"
+                  strokeWidth={1.5}
+                />
               </Link>
             ))}
           </div>
@@ -340,11 +425,14 @@ export default function ProjectDetail() {
       {/* ── LIGHTBOX ──────────────────────────────────────────── */}
       {lightboxOpen && lightboxImages.length > 0 && (
         <div
-          className={`fixed inset-0 bg-black/96 backdrop-blur-md z-[9999] flex cursor-zoom-out items-center justify-center px-4 py-20 transition-opacity duration-300 md:px-10 ${lightboxClosing ? "opacity-0" : "opacity-100"}`}
+          className={`fixed inset-0 bg-black/96 backdrop-blur-md z-[9999] flex cursor-zoom-out items-center justify-center px-4 py-20 transition-opacity duration-300 md:px-10 ${
+            lightboxClosing ? "opacity-0" : "opacity-100"
+          }`}
           onClick={closeLightbox}
         >
           <div className="absolute left-6 top-6 md:left-10 md:top-8 text-[10px] tracking-[0.32em] uppercase text-white/40">
-            {String(lightboxIndex + 1).padStart(2, "0")} / {String(lightboxImages.length).padStart(2, "0")}
+            {String(lightboxIndex + 1).padStart(2, "0")} /{" "}
+            {String(lightboxImages.length).padStart(2, "0")}
           </div>
           <div
             className="relative flex h-full w-full touch-pan-y items-center justify-center"
@@ -356,7 +444,11 @@ export default function ProjectDetail() {
               key={lightboxImages[lightboxIndex]}
               src={lightboxImages[lightboxIndex]}
               alt="Fullscreen"
-              className={`max-w-full max-h-full cursor-default object-contain shadow-2xl transition duration-300 ease-out rounded-lg ${lightboxClosing ? "scale-[0.985] opacity-0" : "scale-100 opacity-100 animate-[ddpFadeUp_450ms_ease-out_both]"}`}
+              className={`max-w-full max-h-full cursor-default object-contain shadow-2xl transition duration-300 ease-out rounded-lg ${
+                lightboxClosing
+                  ? "scale-[0.985] opacity-0"
+                  : "scale-100 opacity-100 animate-[ddpFadeUp_450ms_ease-out_both]"
+              }`}
             />
           </div>
 
