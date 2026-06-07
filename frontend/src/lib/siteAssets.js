@@ -11,4 +11,4 @@ export const SITE_APPLE_TOUCH_ICON =
   `https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_180,h_180,c_pad,b_rgb:000000,q_auto,f_png/${LOGO_ID}.png`;
 
 export const SITE_OG_LOGO =
-  `https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_900,h_500,c_pad,b_rgb:000000,w_1200,h_630,c_pad,b_rgb:000000,q_auto,f_png/${LOGO_ID}.png`;
+  `https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_1200,h_630,c_pad,b_rgb:000000,q_auto,f_png/${LOGO_ID}.png`;
