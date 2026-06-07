@@ -141,7 +141,7 @@ export default function Home() {
       {/* SELECTED WORK */}
       <section
         data-testid="home-selected-section"
-        className="px-6 md:px-12 lg:px-16 pt-20 pb-16 md:pt-28 md:pb-24 border-t border-black/10 dark:border-white/10"
+        className="px-4 sm:px-6 md:px-12 lg:px-16 pt-16 pb-14 sm:pt-20 sm:pb-16 md:pt-28 md:pb-24 border-t border-black/10 dark:border-white/10"
       >
         <div className="flex items-end justify-between gap-8 mb-12 md:mb-16">
           <div>
@@ -161,7 +161,7 @@ export default function Home() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-x-6 md:gap-x-8 gap-y-12 md:gap-y-16 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-x-4 sm:gap-x-6 md:gap-x-8 gap-y-10 sm:gap-y-12 md:gap-y-16 items-start">
           {featured.map((p, i) => (
             <div
               key={p.id}

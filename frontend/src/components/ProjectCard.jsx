@@ -2,21 +2,20 @@ import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { tr } from "../lib/i18n";
 import { VideoPlayer } from "./VideoPlayer";
-import { pauseAllExcept, resumePlayer, getPlayer } from "../lib/videoStore";
+import { pauseAllExcept, resumePlayer } from "../lib/videoStore";
 
 const isVideoUrl = (url) =>
   /vimeo\.com|youtube\.com|youtu\.be/.test(String(url || ""));
 
 export const ProjectCard = ({ project, lang, eager = false, compact = false, index }) => {
-  const [previewActive, setPreviewActive] = useState(false);
-  const [previewReady, setPreviewReady] = useState(false);
-  const timer = useRef(null);
-  const iframeRef = useRef(null);
+  const [inView, setInView] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const cardRef = useRef(null);
+  const touchActiveRef = useRef(false);
 
   const previewKey = `card-preview-${project.slug}`;
   const heroKey = "hero-showreel";
-
-  useEffect(() => () => timer.current && clearTimeout(timer.current), []);
 
   const previewUrl =
     project.preview_url ||
@@ -25,107 +24,137 @@ export const ProjectCard = ({ project, lang, eager = false, compact = false, ind
   const coverIsImage = project.cover && !isVideoUrl(project.cover);
   const fallbackImage = coverIsImage ? project.cover : project.poster;
 
-  const onEnter = () => {
+  const shouldPreload = Boolean(previewUrl && (inView || hovered));
+  const shouldPlay = Boolean(previewUrl && hovered);
+
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el || !previewUrl) return undefined;
+    const observer = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      { rootMargin: "320px 0px", threshold: 0.01 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [previewUrl]);
+
+  const activatePreview = () => {
     if (!previewUrl) return;
-    setPreviewActive(true);
-    timer.current = window.setTimeout(() => setPreviewReady(true), 50);
-    // Pause the hero showreel so audio doesn't overlap
+    setHovered(true);
     pauseAllExcept(previewKey);
   };
 
-  const onLeave = () => {
-    if (timer.current) clearTimeout(timer.current);
-    // Force-stop the preview by blanking the iframe src
-    // This works even if the SDK player hasn't registered yet
-    if (iframeRef.current) {
-      try {
-        iframeRef.current.src = "about:blank";
-      } catch {}
-      iframeRef.current = null;
-    }
-    // Also try SDK pause as backup
-    const previewPlayer = getPlayer(previewKey);
-    if (previewPlayer) {
-      try {
-        previewPlayer.pause().catch(() => {});
-        previewPlayer.setMuted(true).catch(() => {});
-      } catch {}
-    }
-    setPreviewActive(false);
-    setPreviewReady(false);
-    // Resume the hero showreel (play + unmute)
+  const deactivatePreview = () => {
+    if (touchActiveRef.current) return;
+    setHovered(false);
+    setPreviewVisible(false);
     resumePlayer(heroKey);
   };
 
+  const onTouchStart = () => {
+    if (!previewUrl) return;
+    touchActiveRef.current = true;
+    activatePreview();
+  };
+
+  const onTouchEnd = () => {
+    touchActiveRef.current = false;
+    window.setTimeout(() => {
+      if (!touchActiveRef.current) deactivatePreview();
+    }, 120);
+  };
+
+  const shapeSeed =
+    typeof index === "number" ? index : project.slug.length + project.title.length;
+  const organicRadius = compact
+    ? "rounded-[1.35rem] md:rounded-[1.65rem]"
+    : shapeSeed % 3 === 0
+      ? "rounded-[1.75rem] md:rounded-[2.25rem]"
+      : shapeSeed % 3 === 1
+        ? "rounded-[1.5rem] md:rounded-[2rem]"
+        : "rounded-[1.65rem] md:rounded-[2.1rem]";
+
   return (
     <Link
+      ref={cardRef}
       to={`/project/${project.slug}`}
       data-testid={`project-card-${project.slug}`}
-      className="group block cursor-pointer"
-      onMouseEnter={onEnter}
-      onMouseLeave={onLeave}
+      className="group block cursor-pointer apple-tv-card"
+      onMouseEnter={activatePreview}
+      onMouseLeave={deactivatePreview}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+      onTouchCancel={onTouchEnd}
     >
-      <div className="relative overflow-hidden bg-black aspect-video w-full">
-        <div className="absolute inset-0 z-0 bg-black" />
+      <div
+        className={`relative overflow-hidden bg-neutral-950 aspect-video w-full shadow-[0_18px_50px_-28px_rgba(0,0,0,0.85)] ring-1 ring-white/10 transition-all duration-500 ease-out group-hover:scale-[1.02] group-hover:shadow-[0_28px_70px_-24px_rgba(0,0,0,0.9)] group-hover:ring-white/20 group-active:scale-[0.99] ${organicRadius}`}
+      >
+        <div className="absolute inset-0 z-0 bg-neutral-950" />
+
         {fallbackImage && (
           <img
             src={fallbackImage}
             alt={project.title}
             loading={eager ? "eager" : "lazy"}
-            className={`absolute inset-0 z-[3] w-full h-full object-cover transition-all duration-500 ease-out ${
-              previewReady ? "opacity-0 scale-[1.015]" : "opacity-100 scale-100"
+            className={`absolute inset-0 z-[3] w-full h-full object-cover transition-all duration-300 ease-out ${
+              previewVisible ? "opacity-0 scale-[1.03]" : "opacity-100 scale-100"
             }`}
           />
         )}
-        {previewActive && previewUrl && (
+
+        {shouldPreload && previewUrl && (
           <VideoPlayer
             url={previewUrl}
-            playerKey={`card-preview-${project.slug}`}
-            autoplay
+            playerKey={previewKey}
             background
-            className={`absolute inset-0 z-[1] w-full h-full bg-black transition-opacity duration-500 ${
-              previewReady ? "opacity-100" : "opacity-0"
+            muted
+            playing={shouldPlay}
+            loop
+            className={`absolute inset-0 z-[1] w-full h-full bg-black transition-opacity duration-300 ${
+              previewVisible ? "opacity-100" : "opacity-0"
             }`}
             testId={`card-preview-${project.slug}`}
             interactive={false}
-            onRef={(player, iframe) => {
-              if (iframe) iframeRef.current = iframe;
-            }}
-            onReady={() => setPreviewReady(true)}
+            onPlay={() => setPreviewVisible(true)}
           />
         )}
-        {!fallbackImage && !previewActive && previewUrl && (
-          <div className="absolute inset-0 z-[2] flex items-center justify-center bg-black text-white/40 text-[11px] tracking-[0.3em] uppercase pointer-events-none">
-            Hover to play
-          </div>
-        )}
-        <div className="pointer-events-none absolute inset-0 bg-black/0 transition-colors duration-500 group-hover:bg-black/10" />
-        {typeof index === "number" && (
-          <span className="pointer-events-none absolute left-4 top-4 text-[10px] tracking-[0.28em] uppercase text-white/0 transition-colors duration-500 group-hover:text-white/70">
-            {String(index + 1).padStart(3, "0")}
-          </span>
-        )}
-      </div>
 
-      <div className={`mt-4 md:mt-5 flex items-baseline justify-between gap-6 px-1 transition-transform duration-500 group-hover:translate-y-[-2px] ${compact ? "" : ""}`}>
-        <div className="min-w-0">
-          <div className="flex items-baseline gap-3">
-            {typeof index === "number" && (
-              <span className="text-[10px] tracking-[0.26em] uppercase text-neutral-400 dark:text-neutral-600 shrink-0">
-                {String(index + 1).padStart(3, "0")}
+        {/* Gradient permanente para que la info se lea siempre */}
+        <div className="pointer-events-none absolute inset-0 z-[4] bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+
+        {/* Info overlay — solo visible en hover */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] p-4 md:p-5">
+          <div
+            className={`transition-all duration-400 ease-out ${
+              hovered
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-2"
+            }`}
+          >
+            <div className="flex items-end justify-between gap-3">
+              <div className="min-w-0">
+                {typeof index === "number" && (
+                  <span className="block mb-1 text-[10px] tracking-[0.28em] uppercase text-white/50">
+                    {String(index + 1).padStart(3, "0")}
+                  </span>
+                )}
+                <h3
+                  className={`${
+                    compact ? "text-sm md:text-base" : "text-base md:text-lg lg:text-xl"
+                  } font-light tracking-tight text-white leading-tight truncate`}
+                >
+                  {project.title}
+                </h3>
+                <p className="text-[9px] md:text-[10px] tracking-[0.22em] uppercase text-white/60 mt-1 truncate">
+                  {project.director ? `${project.director} · ` : ""}{tr(project.type, lang)}
+                </p>
+              </div>
+              <span className="mb-0.5 shrink-0 text-[10px] md:text-[11px] tracking-[0.24em] uppercase text-white/55">
+                {project.year}
               </span>
-            )}
-            <h3 className={`${compact ? "text-base md:text-lg" : "text-xl md:text-2xl lg:text-3xl"} tracking-tight font-light text-black dark:text-white leading-tight truncate`}>
-              {project.title}
-            </h3>
+            </div>
           </div>
-          <p className="text-[10px] md:text-[11px] tracking-[0.22em] uppercase text-neutral-500 dark:text-neutral-400 mt-1.5">
-            {project.director ? `${project.director} · ` : ""}{tr(project.type, lang)}
-          </p>
         </div>
-        <span className="text-[11px] tracking-[0.24em] uppercase text-neutral-500 dark:text-neutral-400 shrink-0">
-          {project.year}
-        </span>
       </div>
     </Link>
   );

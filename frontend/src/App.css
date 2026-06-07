@@ -110,6 +110,21 @@ a:focus-visible {
   animation: ddpFadeUp 700ms ease-out both;
 }
 
+/* Apple TV–style project tiles */
+.apple-tv-card {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.apple-tv-card iframe {
+  border-radius: inherit;
+}
+
+@media (max-width: 767px) {
+  .apple-tv-card:active .aspect-video {
+    transform: scale(0.985);
+  }
+}
+
 /* Fullscreen hero: make the Vimeo iframe COVER the viewport without letterbox */
 .hero-fullscreen iframe {
   position: absolute !important;

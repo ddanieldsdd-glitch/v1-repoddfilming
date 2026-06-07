@@ -21,18 +21,18 @@ export default function Work() {
     "text-[11px] tracking-[0.28em] uppercase pb-1 transition-colors";
 
   return (
-    <div data-testid="work-page" className="bg-white dark:bg-black pt-32 md:pt-40 transition-colors duration-500">
-      <div className="px-6 md:px-12 lg:px-16">
+    <div data-testid="work-page" className="bg-white dark:bg-black pt-24 sm:pt-32 md:pt-40 transition-colors duration-500">
+      <div className="px-4 sm:px-6 md:px-12 lg:px-16">
         <p className="text-[11px] tracking-[0.32em] uppercase text-neutral-500 dark:text-neutral-400 mb-4">
           {String((content.projects || []).length).padStart(2, "0")} —{" "}
           {tr(T.work.title, lang)}
         </p>
-        <h1 className="text-4xl md:text-6xl lg:text-7xl tracking-tight font-light max-w-4xl text-black dark:text-white">
+        <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl tracking-tight font-light max-w-4xl text-black dark:text-white">
           {tr(T.work.title, lang)}
         </h1>
 
         {/* FILTERS */}
-        <div className="mt-10 md:mt-14 flex flex-wrap gap-x-8 gap-y-3 border-t border-b border-black/10 dark:border-white/10 py-5">
+        <div className="mt-8 sm:mt-10 md:mt-14 flex flex-nowrap sm:flex-wrap gap-x-5 sm:gap-x-8 gap-y-3 border-t border-b border-black/10 dark:border-white/10 py-4 sm:py-5 -mx-1 px-1 overflow-x-auto">
           <Link
             to="/work"
             data-testid="filter-all"
@@ -58,7 +58,7 @@ export default function Work() {
             {tr(T.work.none, lang)}
           </p>
         ) : (
-          <div className={`grid grid-cols-1 sm:grid-cols-2 ${active === "all" ? "lg:grid-cols-3" : "lg:grid-cols-4"} gap-x-5 md:gap-x-6 gap-y-10 md:gap-y-14 py-12 md:py-16`}>
+          <div className={`grid grid-cols-1 sm:grid-cols-2 ${active === "all" ? "lg:grid-cols-3" : "lg:grid-cols-4"} gap-x-3 sm:gap-x-5 md:gap-x-6 gap-y-8 sm:gap-y-10 md:gap-y-14 py-10 sm:py-12 md:py-16`}>
             {list.map((p, i) => (
               <ProjectCard key={p.id} project={p} lang={lang} eager={i < 4} compact={active !== "all"} index={active !== "all" ? i : undefined} />
             ))}

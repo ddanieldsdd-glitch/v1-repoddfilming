@@ -17,6 +17,7 @@ export const VideoPlayer = ({
   background = false,
   muted = false,
   loop = false,
+  playing,
   className = "",
   testId,
   interactive = true,
@@ -53,10 +54,9 @@ export const VideoPlayer = ({
     const player = new Player(iframe);
     playerRef.current = player;
 
-    // Safety timeout: force ready after 4s even if SDK hangs
     const safetyTimer = setTimeout(() => {
       handleReady();
-    }, 4000);
+    }, 2500);
 
     player.ready()
       .then(() => {
@@ -69,10 +69,12 @@ export const VideoPlayer = ({
           player.setLoop(true).catch(() => {});
         }
 
-        registerPlayer(playerKey, player);
+        registerPlayer(playerKey, player, { forceMuted: background || muted });
         onRef?.(player, iframe);
 
-        if (autoplay || background) {
+        const shouldAutoplay =
+          playing !== false && (autoplay || background || playing === true);
+        if (shouldAutoplay) {
           player.play().then(handleReady).catch(() => {
             handleReady();
           });
@@ -107,6 +109,32 @@ export const VideoPlayer = ({
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vimeoId, playerKey]);
+
+  useEffect(() => {
+    const player = playerRef.current;
+    if (!player || !ready || playing === undefined) return undefined;
+
+    let cancelled = false;
+    if (playing) {
+      player
+        .play()
+        .then(() => {
+          if (!cancelled) onPlay?.();
+        })
+        .catch(() => {});
+    } else {
+      player
+        .pause()
+        .then(() => {
+          if (!cancelled) onPause?.();
+        })
+        .catch(() => {});
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [playing, ready, onPlay, onPause]);
 
   // Build iframe src for Vimeo
   const vimeoSrc = vimeoId ? buildVimeoSrc(vimeoId, { autoplay, background, muted, loop }) : null;

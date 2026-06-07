@@ -23,8 +23,9 @@ function generateOGHTML(project, baseUrl, isProjectPage = false) {
     <meta name="theme-color" content="#000000" />
     <meta name="description" content="${description}" />
     <meta name="robots" content="index, follow" />
-    <link rel="icon" type="image/png" href="https://res.cloudinary.com/dsphxo7mx/image/upload/v1777731841/DD_BLANCO_l8xqal.png" />
-    <link rel="apple-touch-icon" href="https://res.cloudinary.com/dsphxo7mx/image/upload/v1777731841/DD_BLANCO_l8xqal.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_32,h_32,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_192,h_192,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_180,h_180,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap" rel="stylesheet" />
@@ -103,7 +104,10 @@ export default async function handler(request) {
   
   // If it's a bot requesting the root, serve the site logo (not a project)
   if (isBot && (path === "/" || path === "/index.html")) {
-    const logoImage = "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777731841/DD_BLANCO_l8xqal.png";
+    const logoImage = "https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_900,h_500,c_pad,b_rgb:000000,w_1200,h_630,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png";
+    const favicon32 = "https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_32,h_32,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png";
+    const favicon192 = "https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_192,h_192,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png";
+    const appleTouch = "https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_180,h_180,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png";
     const html = `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -112,8 +116,9 @@ export default async function handler(request) {
     <meta name="theme-color" content="#000000" />
     <meta name="description" content="Dani Díaz — Cinematographer. Trabajos seleccionados en ficción, documental, publicidad y videoclips." />
     <meta name="robots" content="index, follow" />
-    <link rel="icon" type="image/png" href="${logoImage}" />
-    <link rel="apple-touch-icon" href="${logoImage}" />
+    <link rel="icon" type="image/png" sizes="32x32" href="${favicon32}" />
+    <link rel="icon" type="image/png" sizes="192x192" href="${favicon192}" />
+    <link rel="apple-touch-icon" sizes="180x180" href="${appleTouch}" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap" rel="stylesheet" />

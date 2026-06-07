@@ -41,7 +41,7 @@ export const subscribeGlobalMuted = (fn) => {
 
 /* — Player registry — */
 
-export const registerPlayer = (key, player) => {
+export const registerPlayer = (key, player, { forceMuted = false } = {}) => {
   if (PLAYERS.has(key) && PLAYERS.get(key) !== player) {
     // Destroy old player if it was replaced
     try {
@@ -49,9 +49,8 @@ export const registerPlayer = (key, player) => {
     } catch {}
   }
   PLAYERS.set(key, player);
-  // Apply current global mute state
   try {
-    player.setMuted(_globalMuted).catch(() => {});
+    player.setMuted(forceMuted || _globalMuted).catch(() => {});
   } catch {}
 };
 
