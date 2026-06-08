@@ -17,7 +17,13 @@ import Admin from "./pages/Admin";
 const ScrollToTop = () => {
   const { pathname } = useLocation();
   useEffect(() => {
-    window.scrollTo(0, 0);
+    // No hacer scroll cuando se cambia de filtro dentro de /work
+    const rootSection = (p) => p.split("/")[1];
+    const prev = ScrollToTop._prev || "";
+    const sameSection =
+      rootSection(prev) === rootSection(pathname) && rootSection(pathname) === "work";
+    ScrollToTop._prev = pathname;
+    if (!sameSection) window.scrollTo(0, 0);
   }, [pathname]);
   return null;
 };
