@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 import { getActiveCategories } from "../lib/contentStore";
@@ -9,7 +9,16 @@ export default function Work() {
   const content = useContent();
   const [lang] = useLang();
   const { category } = useParams();
-  const active = category || "all";
+  const navigate = useNavigate();
+
+  // Estado local para el filtro activo — evita cambio de ruta y salto de scroll
+  const [active, setActive] = useState(category || "all");
+
+  const handleFilter = (id) => {
+    setActive(id);
+    const path = id === "all" ? "/work" : `/work/${id}`;
+    navigate(path, { replace: true, preventScrollReset: true });
+  };
 
   const list = useMemo(() => {
     const all = content.projects || [];
@@ -17,8 +26,8 @@ export default function Work() {
     return all.filter((p) => p.category === active);
   }, [active, content.projects]);
 
-  const linkBase =
-    "text-[11px] tracking-[0.28em] uppercase pb-1 transition-colors whitespace-nowrap";
+  const btnBase =
+    "text-[11px] tracking-[0.28em] uppercase pb-1 transition-colors whitespace-nowrap cursor-pointer bg-transparent border-0 p-0 font-inherit";
 
   return (
     <div data-testid="work-page" className="bg-white dark:bg-black pt-24 sm:pt-32 md:pt-40 transition-colors duration-500">
@@ -33,30 +42,30 @@ export default function Work() {
 
         {/* FILTROS */}
         <div className="mt-8 sm:mt-10 md:mt-14 flex flex-nowrap sm:flex-wrap gap-x-5 sm:gap-x-8 gap-y-3 border-t border-b border-black/10 dark:border-white/10 py-4 sm:py-5 -mx-1 px-1 overflow-x-auto">
-          <Link
-            to="/work"
+          <button
+            onClick={() => handleFilter("all")}
             data-testid="filter-all"
-            className={`${linkBase} ${
+            className={`${btnBase} ${
               active === "all"
                 ? "text-black dark:text-white border-b border-black dark:border-white"
                 : "text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white border-b border-transparent"
             }`}
           >
             {tr(T.work.all, lang)}
-          </Link>
+          </button>
           {getActiveCategories(content.projects).map((c) => (
-            <Link
+            <button
               key={c.id}
-              to={`/work/${c.id}`}
+              onClick={() => handleFilter(c.id)}
               data-testid={`filter-${c.id}`}
-              className={`${linkBase} ${
+              className={`${btnBase} ${
                 active === c.id
                   ? "text-black dark:text-white border-b border-black dark:border-white"
                   : "text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white border-b border-transparent"
               }`}
             >
               {c[lang]}
-            </Link>
+            </button>
           ))}
         </div>
 
