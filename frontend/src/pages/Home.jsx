@@ -294,15 +294,51 @@ export default function Home() {
           );
         })()}
 
-        <div className="mt-10 md:hidden">
-          <Link
-            to="/work"
-            data-testid="home-view-all-mobile"
-            className="inline-flex items-center gap-2 text-[11px] tracking-[0.28em] uppercase text-black dark:text-white border-b border-black dark:border-white pb-1"
-          >
-            {tr(T.work.all, lang)} <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={1.5} />
-          </Link>
-        </div>
+        {/* Ver más — 2 tiles de categoría */}
+        {(() => {
+          const active = getActiveCategories(content.projects || []).slice(0, 2);
+          if (active.length === 0) return null;
+          return (
+            <div className="mt-14 md:mt-20 pt-12 border-t border-black/10 dark:border-white/10">
+              <p className="text-[10px] tracking-[0.32em] uppercase text-neutral-500 dark:text-neutral-400 mb-6">
+                {lang === "es" ? "Ver más" : "More work"}
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-5">
+                {active.map((c) => {
+                  const count = (content.projects || []).filter(
+                    (p) => p.category === c.id && p.published !== false
+                  ).length;
+                  return (
+                    <Link
+                      key={c.id}
+                      to={`/work/${c.id}`}
+                      className="group flex items-center justify-between rounded-[1.5rem] md:rounded-[2rem] bg-neutral-950 border border-white/10 px-6 py-8 md:px-8 md:py-10 hover:bg-neutral-900 transition-all duration-300"
+                    >
+                      <div>
+                        <p className="text-[10px] tracking-[0.28em] uppercase text-neutral-500 mb-2">
+                          {count} {lang === "es" ? (count !== 1 ? "proyectos" : "proyecto") : (count !== 1 ? "projects" : "project")}
+                        </p>
+                        <h3 className="text-xl md:text-2xl font-light tracking-tight text-white">
+                          {c[lang]}
+                        </h3>
+                      </div>
+                      <ArrowUpRight className="w-5 h-5 text-white/40 group-hover:text-white transition" strokeWidth={1.5} />
+                    </Link>
+                  );
+                })}
+              </div>
+              <div className="mt-8">
+                <Link
+                  to="/work"
+                  data-testid="home-view-all-mobile"
+                  className="inline-flex items-center gap-2 text-[11px] tracking-[0.28em] uppercase text-black dark:text-white border-b border-black dark:border-white pb-1 hover:opacity-60 transition"
+                >
+                  {tr(T.work.all, lang)} <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={1.5} />
+                </Link>
+              </div>
+            </div>
+          );
+        })()}
       </section>
 
       {/* CATEGORIES STRIP — empty categories are hidden automatically */}

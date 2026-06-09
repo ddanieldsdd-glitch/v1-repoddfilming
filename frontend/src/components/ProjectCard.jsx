@@ -161,16 +161,16 @@ export const ProjectCard = ({
         {/* Gradiente permanente para legibilidad de la info */}
         <div className="pointer-events-none absolute inset-0 z-[4] bg-gradient-to-t from-black/90 via-black/15 to-transparent" />
 
-        {/* Info overlay: aparece en hover */}
-        <div
-          className={`pointer-events-none absolute inset-x-0 bottom-0 z-[5] p-4 md:p-5 transition-all duration-300 ease-out ${
-            hovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
-          }`}
-        >
+        {/* Info overlay — título siempre visible; detalles solo en hover */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] p-4 md:p-5">
           <div className="flex items-end justify-between gap-3">
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               {typeof index === "number" && (
-                <span className="block mb-1 text-[10px] tracking-[0.28em] uppercase text-white/50">
+                <span
+                  className={`block mb-1 text-[10px] tracking-[0.28em] uppercase text-white/50 transition-all duration-300 ${
+                    hovered ? "opacity-100" : "opacity-0"
+                  }`}
+                >
                   {String(index + 1).padStart(3, "0")}
                 </span>
               )}
@@ -181,11 +181,19 @@ export const ProjectCard = ({
               >
                 {project.title}
               </h3>
-              <p className="text-[9px] md:text-[10px] tracking-[0.22em] uppercase text-white/60 mt-1 truncate">
+              <p
+                className={`text-[9px] md:text-[10px] tracking-[0.22em] uppercase text-white/60 mt-1 truncate transition-all duration-300 ${
+                  hovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"
+                }`}
+              >
                 {project.director ? `${project.director} · ` : ""}{tr(project.type, lang)}
               </p>
             </div>
-            <span className="mb-0.5 shrink-0 text-[10px] md:text-[11px] tracking-[0.24em] uppercase text-white/55">
+            <span
+              className={`mb-0.5 shrink-0 text-[10px] md:text-[11px] tracking-[0.24em] uppercase text-white/55 transition-all duration-300 ${
+                hovered ? "opacity-100" : "opacity-0"
+              }`}
+            >
               {project.year}
             </span>
           </div>
