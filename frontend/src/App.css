@@ -152,6 +152,28 @@ a:focus-visible {
   transform: translateY(0) scale(1);
 }
 
+/* Franja horizontal de stills/BTS: cada item entra con fade+slide staggereado */
+.strip-item {
+  opacity: 0;
+  transform: translateY(16px) scale(0.97);
+  transition:
+    opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s ease,
+    ring-color 0.3s ease;
+  transition-delay: var(--strip-delay, 0ms);
+}
+
+.strip-item.strip-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Ocultar scrollbar en los strips horizontales */
+.overflow-x-auto::-webkit-scrollbar {
+  display: none;
+}
+
 /* Fullscreen hero: make the Vimeo iframe COVER the viewport without letterbox */
 .hero-fullscreen iframe {
   position: absolute !important;

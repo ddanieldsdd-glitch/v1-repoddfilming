@@ -1,6 +1,6 @@
-import { useRef, useState, useMemo, useEffect } from "react";
+import { useRef, useState, useMemo, useEffect, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowUpRight, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 import { VideoPlayer } from "../components/VideoPlayer";
@@ -9,16 +9,6 @@ import { ProjectCard } from "../components/ProjectCard";
 
 const isVideoUrl = (url) =>
   /vimeo\.com|youtube\.com|youtu\.be/.test(String(url || ""));
-
-const MOSAIC = [
-  "aspect-video",
-  "aspect-[3/4]",
-  "aspect-[4/3]",
-  "aspect-[3/4]",
-  "aspect-video",
-  "aspect-[4/3]",
-];
-const getMosaicAspect = (i) => MOSAIC[i % MOSAIC.length];
 
 /** Añade clase "revealed" al entrar en viewport */
 function useReveal(deps = []) {
@@ -71,6 +61,32 @@ function useRevealGrid(deps = []) {
   return ref;
 }
 
+/** Horizontal strip: stagger reveal con IntersectionObserver */
+function useRevealStrip(deps = []) {
+  const ref = useRef(null);
+  useEffect(() => {
+    const container = ref.current;
+    if (!container) return undefined;
+    const items = Array.from(container.querySelectorAll(".strip-item"));
+    items.forEach((el) => el.classList.remove("strip-visible"));
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("strip-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: "0px 0px -20px 0px" },
+    );
+    items.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+  return ref;
+}
+
 export default function ProjectDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -83,23 +99,34 @@ export default function ProjectDetail() {
   const [lightboxClosing, setLightboxClosing] = useState(false);
   const [lightboxImages, setLightboxImages] = useState([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [lightboxType, setLightboxType] = useState("stills");
+  const [imgKey, setImgKey] = useState(0);
   const touchStartRef = useRef({ x: 0, y: 0 });
 
-  const openLightbox = (images, index = 0) => {
+  const openLightbox = useCallback((images, index = 0, type = "stills") => {
     if (!images || images.length === 0) return;
     setLightboxImages(images);
     setLightboxIndex(index);
+    setLightboxType(type);
+    setImgKey((k) => k + 1);
     setLightboxClosing(false);
     setLightboxOpen(true);
-  };
+  }, []);
 
-  const closeLightbox = () => {
+  const closeLightbox = useCallback(() => {
     setLightboxClosing(true);
-    window.setTimeout(() => { setLightboxOpen(false); setLightboxClosing(false); }, 240);
-  };
+    window.setTimeout(() => { setLightboxOpen(false); setLightboxClosing(false); }, 260);
+  }, []);
 
-  const nextImage = () => setLightboxIndex((i) => (i + 1) % lightboxImages.length);
-  const prevImage = () => setLightboxIndex((i) => (i - 1 + lightboxImages.length) % lightboxImages.length);
+  const nextImage = useCallback(() => {
+    setImgKey((k) => k + 1);
+    setLightboxIndex((i) => (i + 1) % lightboxImages.length);
+  }, [lightboxImages.length]);
+
+  const prevImage = useCallback(() => {
+    setImgKey((k) => k + 1);
+    setLightboxIndex((i) => (i - 1 + lightboxImages.length) % lightboxImages.length);
+  }, [lightboxImages.length]);
 
   const handleLightboxTouchStart = (e) => {
     const touch = e.touches?.[0];
@@ -126,7 +153,17 @@ export default function ProjectDetail() {
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [lightboxOpen, lightboxImages.length]);
+  }, [lightboxOpen, closeLightbox, nextImage, prevImage]);
+
+  // Bloquear scroll del body cuando el lightbox está abierto
+  useEffect(() => {
+    if (lightboxOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [lightboxOpen]);
 
   const projects = content.projects || [];
   const idx = projects.findIndex((p) => p.slug === slug);
@@ -145,22 +182,29 @@ export default function ProjectDetail() {
     return () => window.clearTimeout(t);
   }, [slug, heroVideoUrl]);
 
-  // Proyectos de la misma categoría (excluye el actual)
   const sameCatProjects = useMemo(() => {
     if (!project) return [];
     return projects.filter((p) => p.slug !== project.slug && p.category === project.category);
   }, [project, projects]);
 
-  // Otras categorías con proyectos
   const otherCategories = useMemo(() => {
     if (!project) return [];
     return getActiveCategories(projects).filter((c) => c.id !== project.category);
   }, [project, projects]);
 
-  // Scroll-reveal refs
+  // Refs
   const metaRef = useReveal([slug]);
+  const stillsStripRef = useRevealStrip([slug, project?.stills?.length]);
+  const btsStripRef = useRevealStrip([slug, project?.bts?.length]);
   const sameCatRef = useRevealGrid([slug, sameCatProjects.length]);
   const exploreRef = useReveal([slug]);
+
+  // Label para el lightbox según tipo
+  const lightboxTypeLabel = useMemo(() => ({
+    stills: tr(T.project.stills, lang),
+    bts: lang === "es" ? "Detrás de cámara" : "Behind the scenes",
+    poster: lang === "es" ? "Póster" : "Poster",
+  }[lightboxType] || ""), [lightboxType, lang]);
 
   if (!project) {
     return (
@@ -174,6 +218,8 @@ export default function ProjectDetail() {
   }
 
   const catLabel = getActiveCategories(projects).find((c) => c.id === project.category)?.[lang] || "";
+  const hasStills = project.stills && project.stills.length > 0;
+  const hasBts = project.bts && project.bts.length > 0;
 
   return (
     <div data-testid="project-detail-page" className="bg-black min-h-screen">
@@ -229,7 +275,7 @@ export default function ProjectDetail() {
         ref={metaRef}
         className="reveal px-4 sm:px-6 md:px-10 lg:px-14 pt-7 pb-10 md:pt-10 md:pb-14"
       >
-        {/* Título — siempre ancho completo */}
+        {/* Título */}
         <div className="mb-8 md:mb-10">
           <p className="text-[10px] tracking-[0.34em] uppercase text-neutral-500 mb-2.5">
             {catLabel && `${catLabel} · `}{tr(project.type, lang)} — {project.year}
@@ -242,7 +288,7 @@ export default function ProjectDetail() {
           </h1>
         </div>
 
-        {/* Cuerpo: poster grande | sinopsis+botones | ficha técnica */}
+        {/* Cuerpo: poster | sinopsis+botones | ficha técnica */}
         <div
           className={`grid gap-6 md:gap-8 lg:gap-10 items-start ${
             project.poster
@@ -250,43 +296,54 @@ export default function ProjectDetail() {
               : "grid-cols-1 md:grid-cols-[1fr_250px] lg:grid-cols-[1fr_270px]"
           }`}
         >
-          {/* Poster grande */}
+          {/* Poster grande — clickeable para ampliar */}
           {project.poster && (
             <button
               type="button"
-              onClick={() => openLightbox([project.poster], 0)}
+              onClick={() => openLightbox([project.poster], 0, "poster")}
               data-testid="project-poster"
-              className="group overflow-hidden rounded-xl ring-1 ring-white/10 hover:ring-white/35 transition w-28 md:w-full self-start"
+              className="group overflow-hidden rounded-xl ring-1 ring-white/10 hover:ring-white/30 transition-all duration-300 w-28 md:w-full self-start relative"
             >
               <img
                 src={project.poster}
                 alt="poster"
                 loading="eager"
-                className="w-full h-auto object-cover transition duration-500 group-hover:scale-[1.03] group-hover:opacity-85"
+                className="w-full h-auto object-cover transition duration-500 group-hover:scale-[1.04] group-hover:brightness-90"
               />
+              {/* Overlay: indicador de ampliación */}
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-400 flex flex-col items-center justify-center gap-1.5">
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center gap-1.5">
+                  <div className="w-8 h-8 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center">
+                    <ArrowUpRight className="w-3.5 h-3.5 text-white" strokeWidth={2} />
+                  </div>
+                  <span className="text-[8px] tracking-[0.25em] uppercase text-white/70">
+                    {lang === "es" ? "Ampliar" : "Expand"}
+                  </span>
+                </div>
+              </div>
             </button>
           )}
 
-          {/* Sinopsis + botones */}
+          {/* Sinopsis + acciones */}
           <div className="min-w-0">
             <p className="text-[15px] md:text-base leading-relaxed text-neutral-400 whitespace-pre-line">
               {tr(project.synopsis, lang)}
             </p>
 
             <div className="mt-6 flex flex-wrap gap-2.5">
-              {project.stills && project.stills.length > 0 && (
+              {hasStills && (
                 <button
                   type="button"
-                  onClick={() => openLightbox(project.stills, 0)}
+                  onClick={() => openLightbox(project.stills, 0, "stills")}
                   className="rounded-full border border-white/15 px-4 py-1.5 text-[10px] tracking-[0.24em] uppercase text-white/70 hover:text-white hover:border-white/40 transition"
                 >
                   {lang === "es" ? "Fotogramas" : "Stills"} · {project.stills.length}
                 </button>
               )}
-              {project.bts && project.bts.length > 0 && (
+              {hasBts && (
                 <button
                   type="button"
-                  onClick={() => openLightbox(project.bts, 0)}
+                  onClick={() => openLightbox(project.bts, 0, "bts")}
                   className="rounded-full border border-white/15 px-4 py-1.5 text-[10px] tracking-[0.24em] uppercase text-white/70 hover:text-white hover:border-white/40 transition"
                 >
                   BTS · {project.bts.length}
@@ -341,6 +398,154 @@ export default function ProjectDetail() {
         </div>
       </section>
 
+      {/* ── FRANJA DE STILLS ──────────────────────────────────── */}
+      {hasStills && (
+        <section className="border-t border-white/8 pt-10 pb-2 md:pt-12">
+          {/* Header de la franja */}
+          <div className="px-4 sm:px-6 md:px-10 lg:px-14 mb-5 flex items-end justify-between">
+            <div>
+              <p className="text-[9px] tracking-[0.38em] uppercase text-neutral-600 mb-1.5">
+                {lang === "es" ? "Galería" : "Gallery"}
+              </p>
+              <h2 className="text-xl sm:text-2xl font-light tracking-tight text-white flex items-baseline gap-2.5">
+                {tr(T.project.stills, lang)}
+                <span className="text-neutral-600 text-base font-light">· {project.stills.length}</span>
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => openLightbox(project.stills, 0, "stills")}
+              className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.22em] uppercase text-neutral-500 hover:text-white transition-colors duration-200 pb-1 group"
+            >
+              {lang === "es" ? "Ver todos" : "View all"}
+              <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform duration-200" strokeWidth={1.5} />
+            </button>
+          </div>
+
+          {/* Tira horizontal de thumbnails */}
+          <div className="relative overflow-hidden">
+            <div
+              ref={stillsStripRef}
+              className="flex gap-2 overflow-x-auto pb-6 md:pb-8"
+              style={{
+                paddingLeft: "clamp(1rem, 3.5vw, 3.5rem)",
+                paddingRight: "clamp(1rem, 3.5vw, 3.5rem)",
+                scrollbarWidth: "none",
+                msOverflowStyle: "none",
+              }}
+            >
+              {project.stills.map((src, i) => (
+                <button
+                  key={src + i}
+                  type="button"
+                  onClick={() => openLightbox(project.stills, i, "stills")}
+                  className="strip-item group flex-none relative overflow-hidden rounded-xl ring-1 ring-white/10 hover:ring-white/35 transition-all duration-300 hover:scale-[1.03] focus-visible:ring-white/60"
+                  style={{
+                    "--strip-delay": `${i * 55}ms`,
+                  }}
+                  aria-label={`Ver fotograma ${i + 1}`}
+                >
+                  <img
+                    src={src}
+                    alt={`Still ${i + 1}`}
+                    loading="lazy"
+                    className="h-36 sm:h-44 md:h-52 lg:h-60 w-auto max-w-[72vw] sm:max-w-[360px] object-cover transition duration-500 group-hover:brightness-[1.08]"
+                  />
+                  {/* Overlay sutil al hover */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors duration-300 flex items-center justify-center">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-250 w-9 h-9 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 flex items-center justify-center">
+                      <ArrowUpRight className="w-3.5 h-3.5 text-white" strokeWidth={2} />
+                    </div>
+                  </div>
+                  {/* Número de still */}
+                  <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <span className="text-[9px] tracking-[0.2em] text-white/60 bg-black/50 backdrop-blur-sm px-1.5 py-0.5 rounded">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+            {/* Gradiente derecho — indica más contenido */}
+            <div className="pointer-events-none absolute right-0 top-0 h-full w-20 md:w-32 bg-gradient-to-l from-black via-black/60 to-transparent" />
+            {/* Gradiente izquierdo */}
+            <div className="pointer-events-none absolute left-0 top-0 h-full w-4 bg-gradient-to-r from-black to-transparent" />
+          </div>
+        </section>
+      )}
+
+      {/* ── FRANJA DE BTS ─────────────────────────────────────── */}
+      {hasBts && (
+        <section className="border-t border-white/8 pt-10 pb-2 md:pt-12">
+          {/* Header */}
+          <div className="px-4 sm:px-6 md:px-10 lg:px-14 mb-5 flex items-end justify-between">
+            <div>
+              <p className="text-[9px] tracking-[0.38em] uppercase text-neutral-600 mb-1.5">
+                {lang === "es" ? "Rodaje" : "Production"}
+              </p>
+              <h2 className="text-xl sm:text-2xl font-light tracking-tight text-white flex items-baseline gap-2.5">
+                {lang === "es" ? "Detrás de cámara" : "Behind the scenes"}
+                <span className="text-neutral-600 text-base font-light">· {project.bts.length}</span>
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => openLightbox(project.bts, 0, "bts")}
+              className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.22em] uppercase text-neutral-500 hover:text-white transition-colors duration-200 pb-1 group"
+            >
+              {lang === "es" ? "Ver todos" : "View all"}
+              <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform duration-200" strokeWidth={1.5} />
+            </button>
+          </div>
+
+          {/* Tira horizontal */}
+          <div className="relative overflow-hidden">
+            <div
+              ref={btsStripRef}
+              className="flex gap-2 overflow-x-auto pb-6 md:pb-8"
+              style={{
+                paddingLeft: "clamp(1rem, 3.5vw, 3.5rem)",
+                paddingRight: "clamp(1rem, 3.5vw, 3.5rem)",
+                scrollbarWidth: "none",
+                msOverflowStyle: "none",
+              }}
+            >
+              {project.bts.map((src, i) => (
+                <button
+                  key={src + i}
+                  type="button"
+                  onClick={() => openLightbox(project.bts, i, "bts")}
+                  className="strip-item group flex-none relative overflow-hidden rounded-xl ring-1 ring-white/10 hover:ring-white/35 transition-all duration-300 hover:scale-[1.03] focus-visible:ring-white/60"
+                  style={{
+                    "--strip-delay": `${i * 55}ms`,
+                  }}
+                  aria-label={`Ver BTS ${i + 1}`}
+                >
+                  <img
+                    src={src}
+                    alt={`BTS ${i + 1}`}
+                    loading="lazy"
+                    className="h-36 sm:h-44 md:h-52 lg:h-60 w-auto max-w-[72vw] sm:max-w-[360px] object-cover transition duration-500 group-hover:brightness-[1.08]"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors duration-300 flex items-center justify-center">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-250 w-9 h-9 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 flex items-center justify-center">
+                      <ArrowUpRight className="w-3.5 h-3.5 text-white" strokeWidth={2} />
+                    </div>
+                  </div>
+                  <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <span className="text-[9px] tracking-[0.2em] text-white/60 bg-black/50 backdrop-blur-sm px-1.5 py-0.5 rounded">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <div className="pointer-events-none absolute right-0 top-0 h-full w-20 md:w-32 bg-gradient-to-l from-black via-black/60 to-transparent" />
+            <div className="pointer-events-none absolute left-0 top-0 h-full w-4 bg-gradient-to-r from-black to-transparent" />
+          </div>
+        </section>
+      )}
+
       {/* ── PROYECTOS DE LA MISMA CATEGORÍA ───────────────────── */}
       {sameCatProjects.length > 0 && (
         <section className="border-t border-white/8 px-1.5 sm:px-4 md:px-8 lg:px-12 pt-10 pb-14 md:pt-14 md:pb-20">
@@ -353,7 +558,6 @@ export default function ProjectDetail() {
             </h2>
           </div>
 
-          {/* Grid uniforme — todas aspect-video, sin huecos */}
           <div
             ref={sameCatRef}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4"
@@ -382,7 +586,6 @@ export default function ProjectDetail() {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
             {otherCategories.map((c) => {
-              // Primer proyecto de esta categoría como preview de fondo
               const preview = projects.find((p) => p.category === c.id);
               const thumb = preview?.poster || preview?.cover;
               return (
@@ -413,47 +616,114 @@ export default function ProjectDetail() {
       {/* ── LIGHTBOX ──────────────────────────────────────────── */}
       {lightboxOpen && lightboxImages.length > 0 && (
         <div
-          className={`fixed inset-0 bg-black/96 backdrop-blur-md z-[9999] flex cursor-zoom-out items-center justify-center px-4 py-20 transition-opacity duration-300 md:px-10 ${lightboxClosing ? "opacity-0" : "opacity-100"}`}
+          className={`fixed inset-0 z-[9999] bg-black transition-opacity duration-300 ${lightboxClosing ? "opacity-0" : "opacity-100"}`}
           onClick={closeLightbox}
         >
-          <div className="absolute left-6 top-6 md:left-10 md:top-8 text-[10px] tracking-[0.32em] uppercase text-white/40">
-            {String(lightboxIndex + 1).padStart(2, "0")} / {String(lightboxImages.length).padStart(2, "0")}
+          {/* Barra superior */}
+          <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
+            <div className="flex items-start justify-between px-5 pt-5 pb-16 md:px-10 md:pt-7 bg-gradient-to-b from-black/85 via-black/40 to-transparent">
+              {/* Título + tipo */}
+              <div className="pointer-events-auto">
+                <p className="text-[9px] tracking-[0.35em] uppercase text-white/35 mb-1.5">
+                  {lightboxTypeLabel}
+                </p>
+                <p className="text-sm sm:text-base font-light text-white/80 tracking-tight">
+                  {project.title}
+                </p>
+              </div>
+
+              {/* Contador + cerrar */}
+              <div className="pointer-events-auto flex items-center gap-3">
+                {lightboxImages.length > 1 && (
+                  <span className="text-[11px] tracking-[0.25em] text-white/40 tabular-nums">
+                    {String(lightboxIndex + 1).padStart(2, "0")}&thinsp;/&thinsp;{String(lightboxImages.length).padStart(2, "0")}
+                  </span>
+                )}
+                <button
+                  onClick={(e) => { e.stopPropagation(); closeLightbox(); }}
+                  className="h-9 w-9 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/10 text-white/60 hover:text-white hover:bg-white/20 hover:border-white/25 transition-all duration-200"
+                  aria-label="Cerrar"
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M1 1L11 11M11 1L1 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
+
+          {/* Área principal de imagen */}
           <div
             className="relative flex h-full w-full touch-pan-y items-center justify-center"
+            style={{ paddingTop: "72px", paddingBottom: lightboxImages.length > 1 ? "88px" : "40px", paddingLeft: "56px", paddingRight: "56px" }}
             onClick={(e) => e.stopPropagation()}
             onTouchStart={handleLightboxTouchStart}
             onTouchEnd={handleLightboxTouchEnd}
           >
             <img
-              key={lightboxImages[lightboxIndex]}
+              key={imgKey}
               src={lightboxImages[lightboxIndex]}
-              alt="Fullscreen"
-              className={`max-w-full max-h-full cursor-default object-contain shadow-2xl transition duration-300 ease-out rounded-lg ${
-                lightboxClosing ? "scale-[0.985] opacity-0" : "scale-100 opacity-100 animate-[ddpFadeUp_450ms_ease-out_both]"
+              alt={`${lightboxTypeLabel} ${lightboxIndex + 1}`}
+              className={`max-w-full max-h-full object-contain rounded-lg shadow-[0_32px_100px_-20px_rgba(0,0,0,0.9)] cursor-default transition-opacity duration-200 ${
+                lightboxClosing
+                  ? "opacity-0 scale-[0.97]"
+                  : "opacity-100 scale-100 animate-[ddpFadeUp_320ms_ease-out_both]"
               }`}
+              style={{ transition: lightboxClosing ? "opacity 0.26s ease, transform 0.26s ease" : undefined }}
             />
           </div>
 
+          {/* Flechas de navegación */}
           {lightboxImages.length > 1 && (
             <>
-              <button onClick={(e) => { e.stopPropagation(); prevImage(); }} className="absolute left-3 md:left-8 top-1/2 -translate-y-1/2 h-16 w-10 md:h-24 md:w-14 flex items-center justify-center text-white/60 hover:text-white border border-white/10 hover:border-white/40 bg-black/30 backdrop-blur-sm transition rounded-xl" aria-label="Previous image">‹</button>
-              <button onClick={(e) => { e.stopPropagation(); nextImage(); }} className="absolute right-3 md:right-8 top-1/2 -translate-y-1/2 h-16 w-10 md:h-24 md:w-14 flex items-center justify-center text-white/60 hover:text-white border border-white/10 hover:border-white/40 bg-black/30 backdrop-blur-sm transition rounded-xl" aria-label="Next image">›</button>
+              <button
+                onClick={(e) => { e.stopPropagation(); prevImage(); }}
+                className="absolute left-2 md:left-5 top-1/2 -translate-y-1/2 z-20 h-11 w-11 md:h-14 md:w-14 flex items-center justify-center rounded-full bg-white/8 backdrop-blur-sm border border-white/10 text-white/50 hover:text-white hover:bg-white/18 hover:border-white/30 transition-all duration-200 hover:scale-[1.06]"
+                aria-label={lang === "es" ? "Anterior" : "Previous"}
+              >
+                <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" strokeWidth={1.5} />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); nextImage(); }}
+                className="absolute right-2 md:right-5 top-1/2 -translate-y-1/2 z-20 h-11 w-11 md:h-14 md:w-14 flex items-center justify-center rounded-full bg-white/8 backdrop-blur-sm border border-white/10 text-white/50 hover:text-white hover:bg-white/18 hover:border-white/30 transition-all duration-200 hover:scale-[1.06]"
+                aria-label={lang === "es" ? "Siguiente" : "Next"}
+              >
+                <ChevronRight className="w-5 h-5 md:w-6 md:h-6" strokeWidth={1.5} />
+              </button>
             </>
           )}
 
+          {/* Tira de miniaturas inferior */}
           {lightboxImages.length > 1 && (
-            <div className="absolute bottom-5 left-1/2 flex max-w-[90vw] -translate-x-1/2 gap-2 overflow-x-auto px-2 py-1 md:bottom-7" onClick={(e) => e.stopPropagation()}>
-              {lightboxImages.map((src, i) => (
-                <button key={src} type="button" onClick={() => setLightboxIndex(i)} aria-label={`Open image ${i + 1}`}
-                  className={`h-10 w-16 shrink-0 overflow-hidden rounded-lg border transition md:h-12 md:w-20 ${i === lightboxIndex ? "border-white opacity-100" : "border-white/10 opacity-40 hover:opacity-75 hover:border-white/35"}`}>
-                  <img src={src} alt="" className="h-full w-full object-cover" />
-                </button>
-              ))}
+            <div
+              className="absolute bottom-0 left-0 right-0 z-20"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="pt-8 pb-5 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
+                <div
+                  className="flex justify-center gap-1.5 overflow-x-auto px-5"
+                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                >
+                  {lightboxImages.map((src, i) => (
+                    <button
+                      key={src + i}
+                      type="button"
+                      onClick={() => { setImgKey((k) => k + 1); setLightboxIndex(i); }}
+                      aria-label={`Imagen ${i + 1}`}
+                      className={`flex-none overflow-hidden rounded-md transition-all duration-200 ${
+                        i === lightboxIndex
+                          ? "ring-2 ring-white/80 opacity-100 scale-[1.10]"
+                          : "ring-1 ring-white/10 opacity-35 hover:opacity-65 hover:ring-white/30 hover:scale-[1.05]"
+                      }`}
+                      style={{ width: "52px", height: "36px" }}
+                    >
+                      <img src={src} alt="" className="h-full w-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
-
-          <button onClick={(e) => { e.stopPropagation(); closeLightbox(); }} className="absolute top-5 right-5 md:top-8 md:right-10 h-10 w-10 flex items-center justify-center rounded-full border border-white/10 text-white/60 hover:text-white hover:border-white/40 transition" aria-label="Close lightbox">×</button>
         </div>
       )}
     </div>
