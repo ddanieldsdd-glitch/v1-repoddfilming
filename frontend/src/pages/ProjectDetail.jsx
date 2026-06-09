@@ -229,41 +229,46 @@ export default function ProjectDetail() {
         ref={metaRef}
         className="reveal px-4 sm:px-6 md:px-10 lg:px-14 pt-7 pb-10 md:pt-10 md:pb-14"
       >
-        {/* Poster + título en la misma fila */}
-        <div className="flex items-start gap-3.5 sm:gap-4 md:gap-5 mb-7 md:mb-9">
+        {/* Título — siempre ancho completo */}
+        <div className="mb-8 md:mb-10">
+          <p className="text-[10px] tracking-[0.34em] uppercase text-neutral-500 mb-2.5">
+            {catLabel && `${catLabel} · `}{tr(project.type, lang)} — {project.year}
+          </p>
+          <h1
+            data-testid="project-title"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light tracking-tight leading-none text-white max-w-4xl"
+          >
+            {project.title}
+          </h1>
+        </div>
+
+        {/* Cuerpo: poster grande | sinopsis+botones | ficha técnica */}
+        <div
+          className={`grid gap-6 md:gap-8 lg:gap-10 items-start ${
+            project.poster
+              ? "grid-cols-1 md:grid-cols-[190px_1fr_250px] lg:grid-cols-[230px_1fr_270px]"
+              : "grid-cols-1 md:grid-cols-[1fr_250px] lg:grid-cols-[1fr_270px]"
+          }`}
+        >
+          {/* Poster grande */}
           {project.poster && (
             <button
               type="button"
               onClick={() => openLightbox([project.poster], 0)}
               data-testid="project-poster"
-              className="group shrink-0 overflow-hidden rounded-xl ring-1 ring-white/10 hover:ring-white/35 transition w-12 sm:w-14 md:w-16 lg:w-20"
+              className="group overflow-hidden rounded-xl ring-1 ring-white/10 hover:ring-white/35 transition w-28 md:w-full self-start"
             >
               <img
                 src={project.poster}
                 alt="poster"
                 loading="eager"
-                className="w-full h-auto object-cover transition duration-500 group-hover:scale-[1.04] group-hover:opacity-80"
+                className="w-full h-auto object-cover transition duration-500 group-hover:scale-[1.03] group-hover:opacity-85"
               />
             </button>
           )}
-          <div className="min-w-0">
-            <p className="text-[10px] tracking-[0.34em] uppercase text-neutral-500 mb-2">
-              {catLabel && `${catLabel} · `}{tr(project.type, lang)} — {project.year}
-            </p>
-            <h1
-              data-testid="project-title"
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light tracking-tight leading-none text-white max-w-4xl"
-            >
-              {project.title}
-            </h1>
-          </div>
-        </div>
-
-        {/* Cuerpo: sinopsis izquierda + ficha derecha */}
-        <div className="flex flex-col sm:flex-row gap-6 sm:gap-10 md:gap-14 items-start">
 
           {/* Sinopsis + botones */}
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0">
             <p className="text-[15px] md:text-base leading-relaxed text-neutral-400 whitespace-pre-line">
               {tr(project.synopsis, lang)}
             </p>
@@ -300,9 +305,9 @@ export default function ProjectDetail() {
             </div>
           </div>
 
-          {/* Panel derecho: ficha técnica + poster pequeño */}
-          <div className="shrink-0 w-full sm:w-auto sm:max-w-[220px]">
-            <div className="rounded-2xl bg-white/5 ring-1 ring-white/10 p-4 space-y-3.5">
+          {/* Ficha técnica */}
+          <div className="w-full">
+            <div className="rounded-2xl bg-white/5 ring-1 ring-white/10 p-4 md:p-5 space-y-4">
               {project.director && (
                 <div>
                   <dt className="text-[9px] tracking-[0.3em] uppercase text-neutral-600 mb-0.5">{tr(T.project.director, lang)}</dt>

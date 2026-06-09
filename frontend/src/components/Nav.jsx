@@ -54,7 +54,7 @@ export const Nav = () => {
   const logoUrl = content.site.logo_white;
 
   const linkClass = ({ isActive }) =>
-    `text-[11px] tracking-[0.24em] uppercase transition-all duration-300 px-3 py-1.5 rounded-full ${
+    `text-[12px] tracking-[0.22em] uppercase transition-all duration-300 px-3.5 py-2 rounded-full ${
       isActive
         ? "text-white bg-white/12"
         : "text-white/60 hover:text-white hover:bg-white/8"
@@ -71,7 +71,7 @@ export const Nav = () => {
             : "bg-black/60 backdrop-blur-3xl"
       }`}
     >
-      <div className="px-4 sm:px-6 md:px-10 lg:px-14 py-3 md:py-4 flex items-center justify-between gap-4">
+      <div className="px-4 sm:px-6 md:px-10 lg:px-14 py-4 md:py-5 flex items-center justify-between gap-4">
 
         {/* Logo */}
         <Link to="/" data-testid="nav-logo" className="flex items-center gap-2.5 leading-none shrink-0">
@@ -79,14 +79,14 @@ export const Nav = () => {
             <img
               src={logoUrl}
               alt="DD"
-              className="h-7 w-auto md:h-9 transition-all duration-500 invert"
+              className="h-8 w-auto md:h-11 transition-all duration-500 invert"
             />
           )}
           <span className="flex flex-col">
-            <span className="font-medium text-[13px] md:text-sm tracking-[0.04em] text-white">
+            <span className="font-medium text-sm md:text-[15px] tracking-[0.04em] text-white">
               {content.site.name}
             </span>
-            <span className="text-[8px] md:text-[9px] tracking-[0.32em] uppercase mt-0.5 text-white/55">
+            <span className="text-[9px] md:text-[10px] tracking-[0.32em] uppercase mt-0.5 text-white/55">
               {tr(content.site.title, lang)}
             </span>
           </span>

@@ -305,24 +305,33 @@ export default function Home() {
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-5">
                 {active.map((c) => {
-                  const count = (content.projects || []).filter(
+                  const catProjects = (content.projects || []).filter(
                     (p) => p.category === c.id && p.published !== false
-                  ).length;
+                  );
+                  const thumb = catProjects[0]?.poster || catProjects[0]?.cover || null;
                   return (
                     <Link
                       key={c.id}
                       to={`/work/${c.id}`}
-                      className="group flex items-center justify-between rounded-[1.5rem] md:rounded-[2rem] bg-neutral-950 border border-white/10 px-6 py-8 md:px-8 md:py-10 hover:bg-neutral-900 transition-all duration-300"
+                      className="group relative overflow-hidden rounded-[1.5rem] md:rounded-[2rem] aspect-[4/3] sm:aspect-video bg-neutral-950 border border-white/10"
                     >
-                      <div>
-                        <p className="text-[10px] tracking-[0.28em] uppercase text-neutral-500 mb-2">
-                          {count} {lang === "es" ? (count !== 1 ? "proyectos" : "proyecto") : (count !== 1 ? "projects" : "project")}
-                        </p>
+                      {/* Imagen de fondo del primer proyecto de la categoría */}
+                      {thumb && (
+                        <img
+                          src={thumb}
+                          alt={c[lang]}
+                          className="absolute inset-0 w-full h-full object-cover opacity-60 scale-100 group-hover:scale-[1.04] transition-transform duration-700 ease-out"
+                        />
+                      )}
+                      {/* Gradiente */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                      {/* Texto */}
+                      <div className="absolute inset-x-0 bottom-0 p-5 md:p-6 flex items-end justify-between gap-3">
                         <h3 className="text-xl md:text-2xl font-light tracking-tight text-white">
                           {c[lang]}
                         </h3>
+                        <ArrowUpRight className="w-5 h-5 text-white/60 group-hover:text-white shrink-0 mb-0.5 transition" strokeWidth={1.5} />
                       </div>
-                      <ArrowUpRight className="w-5 h-5 text-white/40 group-hover:text-white transition" strokeWidth={1.5} />
                     </Link>
                   );
                 })}
@@ -341,38 +350,6 @@ export default function Home() {
         })()}
       </section>
 
-      {/* CATEGORIES STRIP — empty categories are hidden automatically */}
-      {(() => {
-        const active = getActiveCategories(content.projects);
-        if (active.length === 0) return null;
-        const cols =
-          active.length === 1
-            ? "grid-cols-1"
-            : active.length === 2
-              ? "grid-cols-2"
-              : active.length === 3
-                ? "grid-cols-3"
-                : "grid-cols-2 md:grid-cols-4";
-        return (
-          <section className="px-6 md:px-12 lg:px-16 py-10 md:py-12 border-t border-black/10 dark:border-white/10">
-            <div className={`grid ${cols} gap-y-6 gap-x-6`}>
-              {active.map((c) => (
-                <Link
-                  key={c.id}
-                  to={`/work/${c.id}`}
-                  data-testid={`home-category-${c.id}`}
-                  className="group block"
-                >
-                  <p className="text-lg md:text-xl tracking-tight text-black dark:text-white group-hover:opacity-50 transition">
-                    {c[lang]}
-                  </p>
-                  <span className="mt-2 inline-block w-6 h-px bg-black/30 dark:bg-white/30 group-hover:w-12 group-hover:bg-black dark:group-hover:bg-white transition-all duration-500" />
-                </Link>
-              ))}
-            </div>
-          </section>
-        );
-      })()}
     </div>
   );
 }
