@@ -17,7 +17,7 @@ import {
 
 const Field = ({ label, children }) => (
   <label className="block">
-    <span className="block text-[10px] tracking-[0.28em] uppercase text-neutral-500 mb-2">
+    <span className="block text-[10px] tracking-[0.28em] uppercase text-neutral-400 mb-2">
       {label}
     </span>
     {children}
@@ -25,7 +25,7 @@ const Field = ({ label, children }) => (
 );
 
 const inputCls =
-  "w-full border border-black/15 px-3 py-2 text-sm focus:outline-none focus:border-black bg-white";
+  "w-full border border-white/20 px-3 py-2 text-sm focus:outline-none focus:border-white/60 bg-[#111] text-white placeholder:text-neutral-500";
 
 const textareaCls = inputCls + " min-h-[90px] resize-y";
 
@@ -192,7 +192,7 @@ const ProjectForm = ({ value, onChange }) => {
               onChange={(e) => update({ published: e.target.checked })}
               className="w-4 h-4 accent-black"
             />
-            <span className="text-sm text-neutral-700">
+            <span className="text-sm text-neutral-300">
               Publicado — visible en el sitio
             </span>
           </label>
@@ -237,7 +237,7 @@ const SiteSection = ({ content, onSave, saving }) => {
   };
 
   return (
-    <div className="border border-black/10 p-6 md:p-8 mb-10">
+    <div className="border border-white/10 p-6 md:p-8 mb-10">
       <h2 className="text-xl tracking-tight mb-6">Site</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <Field label="Name">
@@ -358,7 +358,7 @@ const SiteSection = ({ content, onSave, saving }) => {
           data-testid="save-site"
           onClick={handleSave}
           disabled={saving}
-          className="border border-black px-5 py-2 text-[11px] tracking-[0.28em] uppercase hover:bg-black hover:text-white transition disabled:opacity-50"
+          className="border border-white/30 px-5 py-2 text-[11px] tracking-[0.28em] uppercase text-white hover:bg-white hover:text-black transition disabled:opacity-50"
         >
           {saving ? "Saving…" : "Save site"}
         </button>
@@ -420,15 +420,15 @@ export default function Admin() {
 
   if (!authed) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center px-6">
+      <div className="min-h-screen bg-black flex items-center justify-center px-6">
         <div className="w-full max-w-sm" data-testid="admin-login">
           <Link
             to="/"
-            className="text-[11px] tracking-[0.28em] uppercase text-neutral-500 mb-10 inline-block"
+            className="text-[11px] tracking-[0.28em] uppercase text-neutral-400 mb-10 inline-block hover:text-white"
           >
             ← Volver
           </Link>
-          <h1 className="text-3xl tracking-tight mb-8 font-light">Admin</h1>
+          <h1 className="text-3xl tracking-tight mb-8 font-light text-white">Admin</h1>
           <input
             type="password"
             data-testid="admin-password"
@@ -446,7 +446,7 @@ export default function Admin() {
             type="button"
             onClick={tryLogin}
             disabled={loginLoading}
-            className="mt-4 w-full border border-black px-5 py-3 text-[11px] tracking-[0.28em] uppercase hover:bg-black hover:text-white transition disabled:opacity-50"
+            className="mt-4 w-full border border-white/30 px-5 py-3 text-[11px] tracking-[0.28em] uppercase text-white hover:bg-white hover:text-black transition disabled:opacity-50"
           >
             {loginLoading ? "Entrando…" : "Entrar"}
           </button>
@@ -585,8 +585,8 @@ export default function Admin() {
 
   if (contentLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <p className="text-[11px] tracking-[0.28em] uppercase text-neutral-400">
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <p className="text-[11px] tracking-[0.28em] uppercase text-neutral-500">
           Cargando…
         </p>
       </div>
@@ -594,12 +594,12 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen bg-white" data-testid="admin-panel">
-      <div className="border-b border-black/10 px-6 md:px-12 py-5 flex items-center justify-between sticky top-0 bg-white z-30">
+    <div className="min-h-screen bg-black text-white" data-testid="admin-panel">
+      <div className="border-b border-white/10 px-6 md:px-12 py-5 flex items-center justify-between sticky top-0 bg-black z-30">
         <div className="flex items-center gap-6">
           <Link
             to="/"
-            className="text-[11px] tracking-[0.28em] uppercase text-neutral-500 hover:text-black"
+            className="text-[11px] tracking-[0.28em] uppercase text-neutral-400 hover:text-white"
           >
             ← Site
           </Link>
@@ -609,14 +609,14 @@ export default function Admin() {
           <button
             data-testid="admin-export"
             onClick={exportJson}
-            className="border border-black px-3 md:px-4 py-2 text-[10px] md:text-[11px] tracking-[0.24em] uppercase hover:bg-black hover:text-white transition"
+            className="border border-white/30 px-3 md:px-4 py-2 text-[10px] md:text-[11px] tracking-[0.24em] uppercase text-white hover:bg-white hover:text-black transition"
           >
             Export
           </button>
           <button
             data-testid="admin-import"
             onClick={() => fileRef.current?.click()}
-            className="border border-black px-3 md:px-4 py-2 text-[10px] md:text-[11px] tracking-[0.24em] uppercase hover:bg-black hover:text-white transition"
+            className="border border-white/30 px-3 md:px-4 py-2 text-[10px] md:text-[11px] tracking-[0.24em] uppercase text-white hover:bg-white hover:text-black transition"
           >
             Import
           </button>
@@ -631,7 +631,7 @@ export default function Admin() {
           <button
             onClick={reset}
             disabled={saving}
-            className="border border-black/40 px-3 md:px-4 py-2 text-[10px] md:text-[11px] tracking-[0.24em] uppercase text-neutral-600 hover:text-black disabled:opacity-50"
+            className="border border-white/20 px-3 md:px-4 py-2 text-[10px] md:text-[11px] tracking-[0.24em] uppercase text-neutral-400 hover:text-white disabled:opacity-50"
           >
             Reset
           </button>
@@ -641,7 +641,7 @@ export default function Admin() {
               setAdminAuthed(false);
               setAuthed(false);
             }}
-            className="text-[10px] md:text-[11px] tracking-[0.24em] uppercase text-neutral-500 hover:text-black ml-2"
+            className="text-[10px] md:text-[11px] tracking-[0.24em] uppercase text-neutral-400 hover:text-white ml-2"
           >
             Logout
           </button>
@@ -651,7 +651,7 @@ export default function Admin() {
       <div className="px-6 md:px-12 py-10 max-w-6xl">
         <SiteSection content={content} onSave={onSave} saving={saving} />
 
-        <div className="border border-black/10 p-6 md:p-8">
+        <div className="border border-white/10 p-6 md:p-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl tracking-tight">
               Projects ({content.projects.length})
@@ -659,7 +659,7 @@ export default function Admin() {
             <button
               data-testid="admin-add-project"
               onClick={startNew}
-              className="border border-black px-4 py-2 text-[11px] tracking-[0.24em] uppercase hover:bg-black hover:text-white transition"
+              className="border border-white/30 px-4 py-2 text-[11px] tracking-[0.24em] uppercase text-white hover:bg-white hover:text-black transition"
             >
               + Add project
             </button>
@@ -667,10 +667,10 @@ export default function Admin() {
 
           {editing !== null && draft && (
             <div
-              className="border border-black p-5 md:p-6 mb-8 bg-neutral-50"
+              className="border border-white/20 p-5 md:p-6 mb-8 bg-[#0a0a0a]"
               data-testid="admin-project-form"
             >
-              <p className="text-[11px] tracking-[0.28em] uppercase text-neutral-500 mb-4">
+              <p className="text-[11px] tracking-[0.28em] uppercase text-neutral-400 mb-4">
                 {editing === "new" ? "New project" : "Edit project"}
               </p>
               <ProjectForm value={draft} onChange={setDraft} />
@@ -679,13 +679,13 @@ export default function Admin() {
                   data-testid="admin-save-project"
                   onClick={saveEdit}
                   disabled={saving}
-                  className="border border-black bg-black text-white px-5 py-2 text-[11px] tracking-[0.28em] uppercase hover:bg-white hover:text-black transition disabled:opacity-50"
+                  className="border border-white bg-white text-black px-5 py-2 text-[11px] tracking-[0.28em] uppercase hover:bg-transparent hover:text-white transition disabled:opacity-50"
                 >
                   {saving ? "Saving…" : "Save"}
                 </button>
                 <button
                   onClick={cancelEdit}
-                  className="border border-black/30 px-5 py-2 text-[11px] tracking-[0.28em] uppercase text-neutral-600 hover:text-black"
+                  className="border border-white/20 px-5 py-2 text-[11px] tracking-[0.28em] uppercase text-neutral-400 hover:text-white"
                 >
                   Cancel
                 </button>
@@ -693,14 +693,14 @@ export default function Admin() {
             </div>
           )}
 
-          <ul className="divide-y divide-black/10">
+          <ul className="divide-y divide-white/10">
             {content.projects.map((p, i) => (
               <li
                 key={p.id}
                 data-testid={`admin-row-${p.slug}`}
                 className="py-4 flex items-center gap-4"
               >
-                <div className="w-16 h-12 bg-neutral-100 overflow-hidden shrink-0">
+                <div className="w-16 h-12 bg-neutral-800 overflow-hidden shrink-0">
                   {p.cover && (
                     <img
                       src={p.cover}
@@ -718,7 +718,7 @@ export default function Admin() {
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] tracking-[0.2em] uppercase text-neutral-500 truncate">
+                  <p className="text-[11px] tracking-[0.2em] uppercase text-neutral-400 truncate">
                     {p.category} · {p.year} · {p.director}
                   </p>
                 </div>
@@ -726,7 +726,7 @@ export default function Admin() {
                   <button
                     onClick={() => move(i, -1)}
                     disabled={saving}
-                    className="px-2 py-1 text-xs text-neutral-500 hover:text-black disabled:opacity-30"
+                    className="px-2 py-1 text-xs text-neutral-400 hover:text-white disabled:opacity-30"
                     aria-label="Move up"
                   >
                     ↑
@@ -734,7 +734,7 @@ export default function Admin() {
                   <button
                     onClick={() => move(i, 1)}
                     disabled={saving}
-                    className="px-2 py-1 text-xs text-neutral-500 hover:text-black disabled:opacity-30"
+                    className="px-2 py-1 text-xs text-neutral-400 hover:text-white disabled:opacity-30"
                     aria-label="Move down"
                   >
                     ↓
@@ -742,7 +742,7 @@ export default function Admin() {
                   <button
                     data-testid={`admin-edit-${p.slug}`}
                     onClick={() => startEdit(i)}
-                    className="border border-black/30 px-3 py-1 text-[10px] tracking-[0.24em] uppercase hover:border-black"
+                    className="border border-white/20 px-3 py-1 text-[10px] tracking-[0.24em] uppercase text-white hover:border-white"
                   >
                     Edit
                   </button>
@@ -750,7 +750,7 @@ export default function Admin() {
                     data-testid={`admin-delete-${p.slug}`}
                     onClick={() => deleteAt(i)}
                     disabled={saving}
-                    className="border border-black/30 px-3 py-1 text-[10px] tracking-[0.24em] uppercase text-red-600 hover:border-red-600 disabled:opacity-30"
+                    className="border border-white/20 px-3 py-1 text-[10px] tracking-[0.24em] uppercase text-red-400 hover:border-red-400 disabled:opacity-30"
                   >
                     Delete
                   </button>
