@@ -335,7 +335,7 @@ export default function ProjectDetail() {
                       key={src + i}
                       type="button"
                       onClick={() => openLightbox(project.stills, i, "stills")}
-                      className="group relative overflow-hidden rounded-md ring-1 ring-white/12 hover:ring-white/40 transition-all duration-200 hover:scale-[1.04] outline-none"
+                      className="group relative overflow-hidden rounded-md hover:ring-1 hover:ring-white/40 transition-all duration-300 hover:scale-[1.04] outline-none focus:outline-none focus:ring-0"
                       style={{ WebkitTapHighlightColor: "transparent" }}
                       aria-label={`Ver fotograma ${i + 1}`}
                     >
@@ -343,16 +343,16 @@ export default function ProjectDetail() {
                         src={src}
                         alt=""
                         loading="lazy"
-                        className="h-14 w-auto max-w-[110px] object-cover transition duration-300 group-hover:brightness-[1.1]"
+                        className="h-14 w-auto max-w-[110px] object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
                       />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200" />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-300" />
                     </button>
                   ))}
                   {project.stills.length > 5 && (
                     <button
                       type="button"
                       onClick={() => openLightbox(project.stills, 0, "stills")}
-                      className="h-14 min-w-[44px] px-3 rounded-md ring-1 ring-white/12 hover:ring-white/40 text-[11px] text-white/45 hover:text-white bg-white/4 hover:bg-white/8 transition-all duration-200 flex items-center justify-center outline-none"
+                      className="h-14 min-w-[44px] px-3 rounded-md text-[11px] text-white/45 hover:text-white bg-white/5 hover:bg-white/10 hover:ring-1 hover:ring-white/30 transition-all duration-200 flex items-center justify-center outline-none focus:outline-none focus:ring-0"
                       style={{ WebkitTapHighlightColor: "transparent" }}
                     >
                       +{project.stills.length - 5}
@@ -374,7 +374,7 @@ export default function ProjectDetail() {
                       key={src + i}
                       type="button"
                       onClick={() => openLightbox(project.bts, i, "bts")}
-                      className="group relative overflow-hidden rounded-md ring-1 ring-white/12 hover:ring-white/40 transition-all duration-200 hover:scale-[1.04] outline-none"
+                      className="group relative overflow-hidden rounded-md hover:ring-1 hover:ring-white/40 transition-all duration-300 hover:scale-[1.04] outline-none focus:outline-none focus:ring-0"
                       style={{ WebkitTapHighlightColor: "transparent" }}
                       aria-label={`Ver BTS ${i + 1}`}
                     >
@@ -382,16 +382,16 @@ export default function ProjectDetail() {
                         src={src}
                         alt=""
                         loading="lazy"
-                        className="h-14 w-auto max-w-[110px] object-cover transition duration-300 group-hover:brightness-[1.1]"
+                        className="h-14 w-auto max-w-[110px] object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
                       />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200" />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-300" />
                     </button>
                   ))}
                   {project.bts.length > 5 && (
                     <button
                       type="button"
                       onClick={() => openLightbox(project.bts, 0, "bts")}
-                      className="h-14 min-w-[44px] px-3 rounded-md ring-1 ring-white/12 hover:ring-white/40 text-[11px] text-white/45 hover:text-white bg-white/4 hover:bg-white/8 transition-all duration-200 flex items-center justify-center outline-none"
+                      className="h-14 min-w-[44px] px-3 rounded-md text-[11px] text-white/45 hover:text-white bg-white/5 hover:bg-white/10 hover:ring-1 hover:ring-white/30 transition-all duration-200 flex items-center justify-center outline-none focus:outline-none focus:ring-0"
                       style={{ WebkitTapHighlightColor: "transparent" }}
                     >
                       +{project.bts.length - 5}
