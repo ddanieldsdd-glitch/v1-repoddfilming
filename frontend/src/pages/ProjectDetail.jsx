@@ -529,10 +529,13 @@ export default function ProjectDetail() {
             </div>
           </div>
 
-          {/* Área principal de imagen */}
+          {/* Área principal de imagen — ocupa todo el ancho en móvil */}
           <div
-            className="relative flex h-full w-full touch-pan-y items-center justify-center"
-            style={{ paddingTop: "72px", paddingBottom: lightboxImages.length > 1 ? "88px" : "40px", paddingLeft: "56px", paddingRight: "56px" }}
+            className="relative flex h-full w-full touch-pan-y items-center justify-center px-0 md:px-16"
+            style={{
+              paddingTop: "64px",
+              paddingBottom: lightboxImages.length > 1 ? "76px" : "32px",
+            }}
             onClick={(e) => e.stopPropagation()}
             onTouchStart={handleLightboxTouchStart}
             onTouchEnd={handleLightboxTouchEnd}
@@ -541,7 +544,7 @@ export default function ProjectDetail() {
               key={imgKey}
               src={lightboxImages[lightboxIndex]}
               alt={`${lightboxTypeLabel} ${lightboxIndex + 1}`}
-              className={`max-w-full max-h-full object-contain rounded-lg shadow-[0_32px_100px_-20px_rgba(0,0,0,0.9)] cursor-default transition-opacity duration-200 ${
+              className={`w-full md:max-w-full max-h-full object-contain md:rounded-lg shadow-[0_32px_100px_-20px_rgba(0,0,0,0.9)] cursor-default transition-opacity duration-200 ${
                 lightboxClosing
                   ? "opacity-0 scale-[0.97]"
                   : "opacity-100 scale-100 animate-[ddpFadeUp_320ms_ease-out_both]"
@@ -550,19 +553,19 @@ export default function ProjectDetail() {
             />
           </div>
 
-          {/* Flechas de navegación */}
+          {/* Flechas de navegación — semitransparentes sobre la imagen en móvil */}
           {lightboxImages.length > 1 && (
             <>
               <button
                 onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                className="absolute left-2 md:left-5 top-1/2 -translate-y-1/2 z-20 h-11 w-11 md:h-14 md:w-14 flex items-center justify-center rounded-full bg-white/8 backdrop-blur-sm border border-white/10 text-white/50 hover:text-white hover:bg-white/18 hover:border-white/30 transition-all duration-200 hover:scale-[1.06]"
+                className="absolute left-1 md:left-5 top-1/2 -translate-y-1/2 z-20 h-12 w-9 md:h-14 md:w-14 flex items-center justify-center md:rounded-full bg-black/20 md:bg-white/8 backdrop-blur-sm md:border md:border-white/10 text-white/50 hover:text-white hover:bg-black/40 md:hover:bg-white/18 md:hover:border-white/30 transition-all duration-200"
                 aria-label={lang === "es" ? "Anterior" : "Previous"}
               >
                 <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" strokeWidth={1.5} />
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                className="absolute right-2 md:right-5 top-1/2 -translate-y-1/2 z-20 h-11 w-11 md:h-14 md:w-14 flex items-center justify-center rounded-full bg-white/8 backdrop-blur-sm border border-white/10 text-white/50 hover:text-white hover:bg-white/18 hover:border-white/30 transition-all duration-200 hover:scale-[1.06]"
+                className="absolute right-1 md:right-5 top-1/2 -translate-y-1/2 z-20 h-12 w-9 md:h-14 md:w-14 flex items-center justify-center md:rounded-full bg-black/20 md:bg-white/8 backdrop-blur-sm md:border md:border-white/10 text-white/50 hover:text-white hover:bg-black/40 md:hover:bg-white/18 md:hover:border-white/30 transition-all duration-200"
                 aria-label={lang === "es" ? "Siguiente" : "Next"}
               >
                 <ChevronRight className="w-5 h-5 md:w-6 md:h-6" strokeWidth={1.5} />
@@ -576,9 +579,9 @@ export default function ProjectDetail() {
               className="absolute bottom-0 left-0 right-0 z-20"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="pt-8 pb-5 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
+              <div className="pt-6 pb-4 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
                 <div
-                  className="flex justify-center gap-1.5 overflow-x-auto px-5"
+                  className="flex justify-center gap-1.5 overflow-x-auto px-4"
                   style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                 >
                   {lightboxImages.map((src, i) => (
