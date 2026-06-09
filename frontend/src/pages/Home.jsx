@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ArrowUpRight, ChevronDown, X } from "lucide-react";
+import { ArrowUpRight, ArrowRight, ChevronDown, X } from "lucide-react";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 import { VideoPlayer } from "../components/VideoPlayer";
@@ -303,7 +303,7 @@ export default function Home() {
               <p className="text-[10px] tracking-[0.32em] uppercase text-neutral-500 dark:text-neutral-400 mb-6">
                 {lang === "es" ? "Ver más" : "More work"}
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {active.map((c) => {
                   const catProjects = (content.projects || []).filter(
                     (p) => p.category === c.id && p.published !== false
@@ -313,25 +313,21 @@ export default function Home() {
                     <Link
                       key={c.id}
                       to={`/work/${c.id}`}
-                      className="group relative overflow-hidden rounded-[1.5rem] md:rounded-[2rem] aspect-[4/3] sm:aspect-video bg-neutral-950 border border-white/10"
+                      className="group relative overflow-hidden rounded-2xl bg-neutral-950 ring-1 ring-white/10 hover:ring-white/25 transition-all duration-500 hover:scale-[1.02] p-5 flex flex-col justify-end min-h-[100px] sm:min-h-[120px]"
                     >
-                      {/* Imagen de fondo del primer proyecto de la categoría */}
                       {thumb && (
                         <img
                           src={thumb}
-                          alt={c[lang]}
-                          className="absolute inset-0 w-full h-full object-cover opacity-60 scale-100 group-hover:scale-[1.04] transition-transform duration-700 ease-out"
+                          alt=""
+                          className="pointer-events-none absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-30 transition-opacity duration-500 scale-[1.04] group-hover:scale-100"
                         />
                       )}
-                      {/* Gradiente */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                      {/* Texto */}
-                      <div className="absolute inset-x-0 bottom-0 p-5 md:p-6 flex items-end justify-between gap-3">
-                        <h3 className="text-xl md:text-2xl font-light tracking-tight text-white">
+                      <div className="relative z-10">
+                        <span className="text-lg sm:text-xl font-light tracking-tight text-white">
                           {c[lang]}
-                        </h3>
-                        <ArrowUpRight className="w-5 h-5 text-white/60 group-hover:text-white shrink-0 mb-0.5 transition" strokeWidth={1.5} />
+                        </span>
                       </div>
+                      <ArrowRight className="absolute right-4 bottom-4 h-4 w-4 text-white/30 group-hover:text-white/70 group-hover:translate-x-1 transition-all" strokeWidth={1.5} />
                     </Link>
                   );
                 })}

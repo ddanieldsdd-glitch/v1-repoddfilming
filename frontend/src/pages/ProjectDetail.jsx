@@ -401,10 +401,6 @@ export default function ProjectDetail() {
                     <span className="text-lg sm:text-xl font-light tracking-tight text-white">
                       {c[lang]}
                     </span>
-                    <span className="block mt-1 text-[10px] tracking-[0.28em] uppercase text-neutral-500 group-hover:text-neutral-300 transition-colors">
-                      {projects.filter((p) => p.category === c.id).length}{" "}
-                      {lang === "es" ? "proyectos" : "projects"}
-                    </span>
                   </div>
                   <ArrowRight className="absolute right-4 bottom-4 h-4 w-4 text-white/30 group-hover:text-white/70 group-hover:translate-x-1 transition-all" strokeWidth={1.5} />
                 </Link>
