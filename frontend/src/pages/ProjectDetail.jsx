@@ -61,32 +61,6 @@ function useRevealGrid(deps = []) {
   return ref;
 }
 
-/** Horizontal strip: stagger reveal con IntersectionObserver */
-function useRevealStrip(deps = []) {
-  const ref = useRef(null);
-  useEffect(() => {
-    const container = ref.current;
-    if (!container) return undefined;
-    const items = Array.from(container.querySelectorAll(".strip-item"));
-    items.forEach((el) => el.classList.remove("strip-visible"));
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("strip-visible");
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.1, rootMargin: "0px 0px -20px 0px" },
-    );
-    items.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps);
-  return ref;
-}
-
 export default function ProjectDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -194,8 +168,6 @@ export default function ProjectDetail() {
 
   // Refs
   const metaRef = useReveal([slug]);
-  const stillsStripRef = useRevealStrip([slug, project?.stills?.length]);
-  const btsStripRef = useRevealStrip([slug, project?.bts?.length]);
   const sameCatRef = useRevealGrid([slug, sameCatProjects.length]);
   const exploreRef = useReveal([slug]);
 
@@ -330,26 +302,83 @@ export default function ProjectDetail() {
               {tr(project.synopsis, lang)}
             </p>
 
-            <div className="mt-6 flex flex-wrap gap-2.5">
-              {hasStills && (
-                <button
-                  type="button"
-                  onClick={() => openLightbox(project.stills, 0, "stills")}
-                  className="rounded-full border border-white/15 px-4 py-1.5 text-[10px] tracking-[0.24em] uppercase text-white/70 hover:text-white hover:border-white/40 transition"
-                >
+            {/* Miniaturas de stills */}
+            {hasStills && (
+              <div className="mt-6">
+                <p className="text-[9px] tracking-[0.32em] uppercase text-neutral-600 mb-2">
                   {lang === "es" ? "Fotogramas" : "Stills"} · {project.stills.length}
-                </button>
-              )}
-              {hasBts && (
-                <button
-                  type="button"
-                  onClick={() => openLightbox(project.bts, 0, "bts")}
-                  className="rounded-full border border-white/15 px-4 py-1.5 text-[10px] tracking-[0.24em] uppercase text-white/70 hover:text-white hover:border-white/40 transition"
-                >
+                </p>
+                <div className="flex gap-1.5 flex-wrap">
+                  {project.stills.slice(0, 5).map((src, i) => (
+                    <button
+                      key={src + i}
+                      type="button"
+                      onClick={() => openLightbox(project.stills, i, "stills")}
+                      className="group relative overflow-hidden rounded-md ring-1 ring-white/12 hover:ring-white/45 transition-all duration-200 hover:scale-[1.04]"
+                      aria-label={`Ver fotograma ${i + 1}`}
+                    >
+                      <img
+                        src={src}
+                        alt=""
+                        loading="lazy"
+                        className="h-14 w-auto max-w-[110px] object-cover transition duration-300 group-hover:brightness-[1.1]"
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200" />
+                    </button>
+                  ))}
+                  {project.stills.length > 5 && (
+                    <button
+                      type="button"
+                      onClick={() => openLightbox(project.stills, 0, "stills")}
+                      className="h-14 min-w-[44px] px-3 rounded-md ring-1 ring-white/12 hover:ring-white/40 text-[11px] text-white/45 hover:text-white bg-white/4 hover:bg-white/8 transition-all duration-200 flex items-center justify-center"
+                    >
+                      +{project.stills.length - 5}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Miniaturas de BTS */}
+            {hasBts && (
+              <div className="mt-4">
+                <p className="text-[9px] tracking-[0.32em] uppercase text-neutral-600 mb-2">
                   BTS · {project.bts.length}
-                </button>
-              )}
-              {project.external_link && (
+                </p>
+                <div className="flex gap-1.5 flex-wrap">
+                  {project.bts.slice(0, 5).map((src, i) => (
+                    <button
+                      key={src + i}
+                      type="button"
+                      onClick={() => openLightbox(project.bts, i, "bts")}
+                      className="group relative overflow-hidden rounded-md ring-1 ring-white/12 hover:ring-white/45 transition-all duration-200 hover:scale-[1.04]"
+                      aria-label={`Ver BTS ${i + 1}`}
+                    >
+                      <img
+                        src={src}
+                        alt=""
+                        loading="lazy"
+                        className="h-14 w-auto max-w-[110px] object-cover transition duration-300 group-hover:brightness-[1.1]"
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200" />
+                    </button>
+                  ))}
+                  {project.bts.length > 5 && (
+                    <button
+                      type="button"
+                      onClick={() => openLightbox(project.bts, 0, "bts")}
+                      className="h-14 min-w-[44px] px-3 rounded-md ring-1 ring-white/12 hover:ring-white/40 text-[11px] text-white/45 hover:text-white bg-white/4 hover:bg-white/8 transition-all duration-200 flex items-center justify-center"
+                    >
+                      +{project.bts.length - 5}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Enlace externo */}
+            {project.external_link && (
+              <div className="mt-5">
                 <a
                   href={project.external_link} target="_blank" rel="noreferrer"
                   data-testid="project-external-link"
@@ -358,8 +387,8 @@ export default function ProjectDetail() {
                   {tr(T.project.external, lang)}
                   <ArrowUpRight className="w-3 h-3" strokeWidth={1.5} />
                 </a>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Ficha técnica */}
@@ -397,154 +426,6 @@ export default function ProjectDetail() {
           </div>
         </div>
       </section>
-
-      {/* ── FRANJA DE STILLS ──────────────────────────────────── */}
-      {hasStills && (
-        <section className="border-t border-white/8 pt-10 pb-2 md:pt-12">
-          {/* Header de la franja */}
-          <div className="px-4 sm:px-6 md:px-10 lg:px-14 mb-5 flex items-end justify-between">
-            <div>
-              <p className="text-[9px] tracking-[0.38em] uppercase text-neutral-600 mb-1.5">
-                {lang === "es" ? "Galería" : "Gallery"}
-              </p>
-              <h2 className="text-xl sm:text-2xl font-light tracking-tight text-white flex items-baseline gap-2.5">
-                {tr(T.project.stills, lang)}
-                <span className="text-neutral-600 text-base font-light">· {project.stills.length}</span>
-              </h2>
-            </div>
-            <button
-              type="button"
-              onClick={() => openLightbox(project.stills, 0, "stills")}
-              className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.22em] uppercase text-neutral-500 hover:text-white transition-colors duration-200 pb-1 group"
-            >
-              {lang === "es" ? "Ver todos" : "View all"}
-              <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform duration-200" strokeWidth={1.5} />
-            </button>
-          </div>
-
-          {/* Tira horizontal de thumbnails */}
-          <div className="relative overflow-hidden">
-            <div
-              ref={stillsStripRef}
-              className="flex gap-2 overflow-x-auto pb-6 md:pb-8"
-              style={{
-                paddingLeft: "clamp(1rem, 3.5vw, 3.5rem)",
-                paddingRight: "clamp(1rem, 3.5vw, 3.5rem)",
-                scrollbarWidth: "none",
-                msOverflowStyle: "none",
-              }}
-            >
-              {project.stills.map((src, i) => (
-                <button
-                  key={src + i}
-                  type="button"
-                  onClick={() => openLightbox(project.stills, i, "stills")}
-                  className="strip-item group flex-none relative overflow-hidden rounded-xl ring-1 ring-white/10 hover:ring-white/35 transition-all duration-300 hover:scale-[1.03] focus-visible:ring-white/60"
-                  style={{
-                    "--strip-delay": `${i * 55}ms`,
-                  }}
-                  aria-label={`Ver fotograma ${i + 1}`}
-                >
-                  <img
-                    src={src}
-                    alt={`Still ${i + 1}`}
-                    loading="lazy"
-                    className="h-36 sm:h-44 md:h-52 lg:h-60 w-auto max-w-[72vw] sm:max-w-[360px] object-cover transition duration-500 group-hover:brightness-[1.08]"
-                  />
-                  {/* Overlay sutil al hover */}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors duration-300 flex items-center justify-center">
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-250 w-9 h-9 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 flex items-center justify-center">
-                      <ArrowUpRight className="w-3.5 h-3.5 text-white" strokeWidth={2} />
-                    </div>
-                  </div>
-                  {/* Número de still */}
-                  <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    <span className="text-[9px] tracking-[0.2em] text-white/60 bg-black/50 backdrop-blur-sm px-1.5 py-0.5 rounded">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-            {/* Gradiente derecho — indica más contenido */}
-            <div className="pointer-events-none absolute right-0 top-0 h-full w-20 md:w-32 bg-gradient-to-l from-black via-black/60 to-transparent" />
-            {/* Gradiente izquierdo */}
-            <div className="pointer-events-none absolute left-0 top-0 h-full w-4 bg-gradient-to-r from-black to-transparent" />
-          </div>
-        </section>
-      )}
-
-      {/* ── FRANJA DE BTS ─────────────────────────────────────── */}
-      {hasBts && (
-        <section className="border-t border-white/8 pt-10 pb-2 md:pt-12">
-          {/* Header */}
-          <div className="px-4 sm:px-6 md:px-10 lg:px-14 mb-5 flex items-end justify-between">
-            <div>
-              <p className="text-[9px] tracking-[0.38em] uppercase text-neutral-600 mb-1.5">
-                {lang === "es" ? "Rodaje" : "Production"}
-              </p>
-              <h2 className="text-xl sm:text-2xl font-light tracking-tight text-white flex items-baseline gap-2.5">
-                {lang === "es" ? "Detrás de cámara" : "Behind the scenes"}
-                <span className="text-neutral-600 text-base font-light">· {project.bts.length}</span>
-              </h2>
-            </div>
-            <button
-              type="button"
-              onClick={() => openLightbox(project.bts, 0, "bts")}
-              className="inline-flex items-center gap-1.5 text-[10px] tracking-[0.22em] uppercase text-neutral-500 hover:text-white transition-colors duration-200 pb-1 group"
-            >
-              {lang === "es" ? "Ver todos" : "View all"}
-              <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform duration-200" strokeWidth={1.5} />
-            </button>
-          </div>
-
-          {/* Tira horizontal */}
-          <div className="relative overflow-hidden">
-            <div
-              ref={btsStripRef}
-              className="flex gap-2 overflow-x-auto pb-6 md:pb-8"
-              style={{
-                paddingLeft: "clamp(1rem, 3.5vw, 3.5rem)",
-                paddingRight: "clamp(1rem, 3.5vw, 3.5rem)",
-                scrollbarWidth: "none",
-                msOverflowStyle: "none",
-              }}
-            >
-              {project.bts.map((src, i) => (
-                <button
-                  key={src + i}
-                  type="button"
-                  onClick={() => openLightbox(project.bts, i, "bts")}
-                  className="strip-item group flex-none relative overflow-hidden rounded-xl ring-1 ring-white/10 hover:ring-white/35 transition-all duration-300 hover:scale-[1.03] focus-visible:ring-white/60"
-                  style={{
-                    "--strip-delay": `${i * 55}ms`,
-                  }}
-                  aria-label={`Ver BTS ${i + 1}`}
-                >
-                  <img
-                    src={src}
-                    alt={`BTS ${i + 1}`}
-                    loading="lazy"
-                    className="h-36 sm:h-44 md:h-52 lg:h-60 w-auto max-w-[72vw] sm:max-w-[360px] object-cover transition duration-500 group-hover:brightness-[1.08]"
-                  />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors duration-300 flex items-center justify-center">
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-250 w-9 h-9 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 flex items-center justify-center">
-                      <ArrowUpRight className="w-3.5 h-3.5 text-white" strokeWidth={2} />
-                    </div>
-                  </div>
-                  <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    <span className="text-[9px] tracking-[0.2em] text-white/60 bg-black/50 backdrop-blur-sm px-1.5 py-0.5 rounded">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-            <div className="pointer-events-none absolute right-0 top-0 h-full w-20 md:w-32 bg-gradient-to-l from-black via-black/60 to-transparent" />
-            <div className="pointer-events-none absolute left-0 top-0 h-full w-4 bg-gradient-to-r from-black to-transparent" />
-          </div>
-        </section>
-      )}
 
       {/* ── PROYECTOS DE LA MISMA CATEGORÍA ───────────────────── */}
       {sameCatProjects.length > 0 && (
