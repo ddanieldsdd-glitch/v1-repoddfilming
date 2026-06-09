@@ -1,19 +1,39 @@
-import { projects, defaultProject } from "./projects-data.js";
+const { MongoClient } = require('mongodb');
+const defaultContent = require('../src/data/content.json');
 
-export const config = {
-  runtime: "edge",
-};
+const MONGO_URL = process.env.MONGO_URL;
+const DB_NAME = process.env.DB_NAME || 'ddp_portfolio';
 
-function getProjectBySlug(slug) {
-  return projects.find((p) => p.slug === slug) || null;
+let _client = null;
+async function getProjects() {
+  if (!MONGO_URL) return defaultContent.projects || [];
+  try {
+    if (!_client) {
+      _client = new MongoClient(MONGO_URL);
+      await _client.connect();
+    }
+    const doc = await _client
+      .db(DB_NAME)
+      .collection('content')
+      .findOne({}, { projection: { _id: 0, projects: 1 } });
+    return doc?.projects || defaultContent.projects || [];
+  } catch {
+    return defaultContent.projects || [];
+  }
 }
 
 function generateOGHTML(project, baseUrl, isProjectPage = false) {
   const title = project.title;
-  const description = project.synopsis?.es || project.synopsis?.en || "Proyecto de Dani Díaz";
-  const image = project.poster || project.cover || "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777654137/POSTER-ORIGAMI2-scaled_r5mmum.jpg";
+  const description =
+    project.synopsis?.es ||
+    project.synopsis?.en ||
+    'Proyecto de Dani Díaz';
+  const image =
+    project.poster ||
+    project.cover ||
+    'https://res.cloudinary.com/dsphxo7mx/image/upload/v1777654137/POSTER-ORIGAMI2-scaled_r5mmum.jpg';
   const url = isProjectPage ? `${baseUrl}/project/${project.slug}` : baseUrl;
-  const type = isProjectPage ? "article" : "website";
+  const type = isProjectPage ? 'article' : 'website';
 
   return `<!DOCTYPE html>
 <html lang="es">
@@ -30,8 +50,6 @@ function generateOGHTML(project, baseUrl, isProjectPage = false) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap" rel="stylesheet" />
     <title>${title} — Dani Díaz</title>
-
-    <!-- Open Graph / Social Sharing -->
     <meta property="og:type" content="${type}" />
     <meta property="og:site_name" content="Dani Díaz — Director de Fotografía" />
     <meta property="og:title" content="${title} — Dani Díaz" />
@@ -42,30 +60,18 @@ function generateOGHTML(project, baseUrl, isProjectPage = false) {
     <meta property="og:url" content="${url}" />
     <meta property="og:locale" content="es_ES" />
     <meta property="og:locale:alternate" content="en_US" />
-
-    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@ddani_00" />
     <meta name="twitter:title" content="${title} — Dani Díaz" />
     <meta name="twitter:description" content="${description}" />
     <meta name="twitter:image" content="${image}" />
-
     <script>
-        window.addEventListener(
-            "error",
-            function (e) {
-                if (
-                    e.error instanceof DOMException &&
-                    e.error.name === "DataCloneError" &&
-                    e.message &&
-                    e.message.includes("PerformanceServerTiming")
-                ) {
-                    e.stopImmediatePropagation();
-                    e.preventDefault();
-                }
-            },
-            true,
-        );
+        window.addEventListener("error", function(e) {
+            if (e.error instanceof DOMException && e.error.name === "DataCloneError" &&
+                e.message && e.message.includes("PerformanceServerTiming")) {
+                e.stopImmediatePropagation(); e.preventDefault();
+            }
+        }, true);
     </script>
 </head>
 <body style="background:#000000;">
@@ -75,39 +81,42 @@ function generateOGHTML(project, baseUrl, isProjectPage = false) {
 </html>`;
 }
 
-export default async function handler(request) {
-  const url = new URL(request.url);
-  const path = url.pathname;
-  const baseUrl = "https://ddanidiaz.com";
+module.exports = async (req, res) => {
+  const { URL } = require('url');
+  const parsed = new URL(req.url, 'http://localhost');
+  const path = parsed.pathname;
+  const baseUrl = 'https://ddanidiaz.com';
 
-  // Check if it's a project page
   const projectMatch = path.match(/^\/project\/([^/]+)/);
-  
+
   if (projectMatch) {
     const slug = projectMatch[1];
-    const project = getProjectBySlug(slug);
-    
+    const projects = await getProjects();
+    const project = projects.find((p) => p.slug === slug) || null;
+
     if (project) {
-      const html = generateOGHTML(project, baseUrl, true);
-      return new Response(html, {
-        headers: {
-          "Content-Type": "text/html; charset=utf-8",
-          "Cache-Control": "public, max-age=3600, s-maxage=86400",
-        },
-      });
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');
+      return res.status(200).send(generateOGHTML(project, baseUrl, true));
     }
   }
 
-  // For root or other pages, check if it's a bot/crawler
-  const userAgent = request.headers.get("user-agent") || "";
-  const isBot = /bot|crawler|spider|facebook|twitter|linkedin|whatsapp|telegram|slack|discord/i.test(userAgent);
-  
-  // If it's a bot requesting the root, serve the site logo (not a project)
-  if (isBot && (path === "/" || path === "/index.html")) {
-    const logoImage = "https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_1200,h_630,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png";
-    const favicon32 = "https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_32,h_32,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png";
-    const favicon192 = "https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_192,h_192,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png";
-    const appleTouch = "https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_180,h_180,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png";
+  const userAgent = req.headers['user-agent'] || '';
+  const isBot =
+    /bot|crawler|spider|facebook|twitter|linkedin|whatsapp|telegram|slack|discord/i.test(
+      userAgent
+    );
+
+  if (isBot && (path === '/' || path === '/index.html')) {
+    const logoImage =
+      'https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_1200,h_630,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png';
+    const favicon32 =
+      'https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_32,h_32,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png';
+    const favicon192 =
+      'https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_192,h_192,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png';
+    const appleTouch =
+      'https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_180,h_180,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png';
+
     const html = `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -123,8 +132,6 @@ export default async function handler(request) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap" rel="stylesheet" />
     <title>Dani Díaz — Cinematographer</title>
-
-    <!-- Open Graph / Social Sharing -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Dani Díaz — Cinematographer" />
     <meta property="og:title" content="Dani Díaz — Cinematographer" />
@@ -135,30 +142,18 @@ export default async function handler(request) {
     <meta property="og:url" content="${baseUrl}/" />
     <meta property="og:locale" content="es_ES" />
     <meta property="og:locale:alternate" content="en_US" />
-
-    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@ddani_00" />
     <meta name="twitter:title" content="Dani Díaz — Cinematographer" />
     <meta name="twitter:description" content="La luz como narrativa. La imagen como memoria. Trabajos seleccionados en ficción, documental, publicidad y videoclips." />
     <meta name="twitter:image" content="${logoImage}" />
-
     <script>
-        window.addEventListener(
-            "error",
-            function (e) {
-                if (
-                    e.error instanceof DOMException &&
-                    e.error.name === "DataCloneError" &&
-                    e.message &&
-                    e.message.includes("PerformanceServerTiming")
-                ) {
-                    e.stopImmediatePropagation();
-                    e.preventDefault();
-                }
-            },
-            true,
-        );
+        window.addEventListener("error", function(e) {
+            if (e.error instanceof DOMException && e.error.name === "DataCloneError" &&
+                e.message && e.message.includes("PerformanceServerTiming")) {
+                e.stopImmediatePropagation(); e.preventDefault();
+            }
+        }, true);
     </script>
 </head>
 <body style="background:#000000;">
@@ -166,14 +161,11 @@ export default async function handler(request) {
     <div id="root"></div>
 </body>
 </html>`;
-    return new Response(html, {
-      headers: {
-        "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control": "public, max-age=3600, s-maxage=86400",
-      },
-    });
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');
+    return res.status(200).send(html);
   }
 
-  // For all other requests, let the SPA handle it
-  return new Response(null, { status: 404 });
-}
+  return res.status(404).end();
+};

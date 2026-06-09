@@ -4,12 +4,6 @@ const STORAGE_KEY = "ddp_content_v7";
 const LANG_KEY = "ddp_lang";
 const ADMIN_AUTH_KEY = "ddp_admin_auth";
 
-// CRA solo expone variables con prefijo REACT_APP_. Configura REACT_APP_ADMIN_PASSWORD en Vercel (.env local para desarrollo).
-export const ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD || "";
-
-export const isAdminLoginConfigured = () =>
-  typeof ADMIN_PASSWORD === "string" && ADMIN_PASSWORD.length > 0;
-
 const listeners = new Set();
 
 const safeParse = (raw) => {
@@ -20,6 +14,7 @@ const safeParse = (raw) => {
   }
 };
 
+// Synchronous read from localStorage cache — used for instant first render
 export const loadContent = () => {
   if (typeof window === "undefined") return defaultContent;
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -27,14 +22,37 @@ export const loadContent = () => {
   return parsed || defaultContent;
 };
 
+// Async fetch from the server — returns fresh data from MongoDB
+export const fetchContent = async () => {
+  const res = await fetch("/api/content", { credentials: "same-origin" });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+};
+
+// Update localStorage cache and notify all subscribers (local only, no server write)
 export const saveContent = (next) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   listeners.forEach((fn) => fn(next));
 };
 
-export const resetContent = () => {
-  localStorage.removeItem(STORAGE_KEY);
-  listeners.forEach((fn) => fn(defaultContent));
+// Write to server via PUT, then update cache on success
+export const pushContent = async (next) => {
+  const res = await fetch("/api/content", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify(next),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.message || `HTTP ${res.status}`);
+  }
+  saveContent(next);
+  return next;
+};
+
+export const resetContent = async () => {
+  await pushContent(defaultContent);
 };
 
 export const subscribeContent = (fn) => {
@@ -72,10 +90,11 @@ export const CATEGORIES = [
   { id: "music-video", es: "Videoclips", en: "Music Videos" },
 ];
 
-// Returns only the categories that have at least one project.
-// Empty categories are hidden everywhere on the public site.
+// Returns only categories that have at least one published project
 export const getActiveCategories = (projects = []) =>
-  CATEGORIES.filter((c) => projects.some((p) => p.category === c.id));
+  CATEGORIES.filter((c) =>
+    projects.some((p) => p.category === c.id && p.published !== false)
+  );
 
 export const slugify = (str) =>
   String(str || "")
@@ -87,5 +106,3 @@ export const slugify = (str) =>
 
 export const newProjectId = () =>
   "p-" + Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-3);
-
-

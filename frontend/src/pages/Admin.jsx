@@ -3,16 +3,16 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import {
   loadContent,
-  saveContent,
+  fetchContent,
+  pushContent,
   resetContent,
-  ADMIN_PASSWORD,
-  isAdminLoginConfigured,
   isAdminAuthed,
   setAdminAuthed,
   CATEGORIES,
   slugify,
   newProjectId,
   getDefaultContent,
+  saveContent,
 } from "../lib/contentStore";
 
 const Field = ({ label, children }) => (
@@ -183,11 +183,26 @@ const ProjectForm = ({ value, onChange }) => {
           onChange={(e) => updateList("bts", e.target.value)}
         />
       </Field>
+      <div className="md:col-span-2">
+        <Field label="Visibilidad">
+          <label className="flex items-center gap-3 cursor-pointer mt-1">
+            <input
+              type="checkbox"
+              checked={value.published !== false}
+              onChange={(e) => update({ published: e.target.checked })}
+              className="w-4 h-4 accent-black"
+            />
+            <span className="text-sm text-neutral-700">
+              Publicado — visible en el sitio
+            </span>
+          </label>
+        </Field>
+      </div>
     </div>
   );
 };
 
-const SiteSection = ({ content, onSave }) => {
+const SiteSection = ({ content, onSave, saving }) => {
   const [draft, setDraft] = useState(content);
   useEffect(() => setDraft(content), [content]);
 
@@ -211,6 +226,15 @@ const SiteSection = ({ content, onSave }) => {
       ...draft,
       site: { ...draft.site, social: { ...draft.site.social, [k]: v } },
     });
+
+  const handleSave = async () => {
+    try {
+      await onSave(draft);
+      toast.success("Saved");
+    } catch {
+      /* onSave already shows the error toast */
+    }
+  };
 
   return (
     <div className="border border-black/10 p-6 md:p-8 mb-10">
@@ -332,13 +356,11 @@ const SiteSection = ({ content, onSave }) => {
       <div className="mt-6 flex gap-3">
         <button
           data-testid="save-site"
-          onClick={() => {
-            onSave(draft);
-            toast.success("Saved");
-          }}
-          className="border border-black px-5 py-2 text-[11px] tracking-[0.28em] uppercase hover:bg-black hover:text-white transition"
+          onClick={handleSave}
+          disabled={saving}
+          className="border border-black px-5 py-2 text-[11px] tracking-[0.28em] uppercase hover:bg-black hover:text-white transition disabled:opacity-50"
         >
-          Save site
+          {saving ? "Saving…" : "Save site"}
         </button>
       </div>
     </div>
@@ -348,69 +370,103 @@ const SiteSection = ({ content, onSave }) => {
 export default function Admin() {
   const [authed, setAuthed] = useState(isAdminAuthed());
   const [pwd, setPwd] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
+
   const [content, setContent] = useState(loadContent());
-  const [editing, setEditing] = useState(null); // index or 'new'
+  const [contentLoading, setContentLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const [editing, setEditing] = useState(null);
   const [draft, setDraft] = useState(null);
   const fileRef = useRef(null);
 
-  const onSave = (next) => {
-    saveContent(next);
-    setContent(next);
-  };
+  // Fetch fresh content from MongoDB whenever we become authenticated
+  useEffect(() => {
+    if (!authed) return;
+    setContentLoading(true);
+    fetchContent()
+      .then((serverContent) => {
+        if (serverContent) {
+          setContent(serverContent);
+          saveContent(serverContent);
+        }
+      })
+      .catch(() => toast.error("No se pudo cargar el contenido del servidor"))
+      .finally(() => setContentLoading(false));
+  }, [authed]);
 
-  const tryLogin = () => {
-    if (!isAdminLoginConfigured()) {
-      toast.error("Admin no configurado en este entorno");
-      return;
+  const tryLogin = async () => {
+    setLoginLoading(true);
+    try {
+      const res = await fetch("/api/admin-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ password: pwd }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) {
+        setAdminAuthed(true);
+        setAuthed(true);
+      } else {
+        toast.error(data.message || "Contraseña incorrecta");
+      }
+    } catch {
+      toast.error("Error de conexión");
+    } finally {
+      setLoginLoading(false);
     }
-    if (pwd === ADMIN_PASSWORD) {
-      setAdminAuthed(true);
-      setAuthed(true);
-    } else toast.error("Contraseña incorrecta");
   };
 
   if (!authed) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center px-6">
         <div className="w-full max-w-sm" data-testid="admin-login">
-          <Link to="/" className="text-[11px] tracking-[0.28em] uppercase text-neutral-500 mb-10 inline-block">
+          <Link
+            to="/"
+            className="text-[11px] tracking-[0.28em] uppercase text-neutral-500 mb-10 inline-block"
+          >
             ← Volver
           </Link>
           <h1 className="text-3xl tracking-tight mb-8 font-light">Admin</h1>
-          {!isAdminLoginConfigured() ? (
-            <p className="text-sm text-neutral-600 leading-relaxed">
-              El panel no está activo en esta versión pública. Para usarlo en producción,
-              define la variable <code className="text-xs bg-neutral-100 px-1">REACT_APP_ADMIN_PASSWORD</code> en
-              Vercel y vuelve a desplegar.
-            </p>
-          ) : (
-            <>
-              <input
-                type="password"
-                data-testid="admin-password"
-                value={pwd}
-                onChange={(e) => setPwd(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") tryLogin();
-                }}
-                placeholder="Contraseña"
-                className={inputCls}
-                autoComplete="current-password"
-              />
-              <button
-                data-testid="admin-login-btn"
-                type="button"
-                onClick={tryLogin}
-                className="mt-4 w-full border border-black px-5 py-3 text-[11px] tracking-[0.28em] uppercase hover:bg-black hover:text-white transition"
-              >
-                Entrar
-              </button>
-            </>
-          )}
+          <input
+            type="password"
+            data-testid="admin-password"
+            value={pwd}
+            onChange={(e) => setPwd(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") tryLogin();
+            }}
+            placeholder="Contraseña"
+            className={inputCls}
+            autoComplete="current-password"
+          />
+          <button
+            data-testid="admin-login-btn"
+            type="button"
+            onClick={tryLogin}
+            disabled={loginLoading}
+            className="mt-4 w-full border border-black px-5 py-3 text-[11px] tracking-[0.28em] uppercase hover:bg-black hover:text-white transition disabled:opacity-50"
+          >
+            {loginLoading ? "Entrando…" : "Entrar"}
+          </button>
         </div>
       </div>
     );
   }
+
+  const onSave = async (next) => {
+    setSaving(true);
+    try {
+      await pushContent(next);
+      setContent(next);
+    } catch (err) {
+      toast.error("Error al guardar: " + err.message);
+      throw err;
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const startEdit = (i) => {
     setEditing(i);
@@ -435,13 +491,14 @@ export default function Admin() {
       stills: [],
       bts: [],
       external_link: "",
+      published: true,
     });
   };
   const cancelEdit = () => {
     setEditing(null);
     setDraft(null);
   };
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!draft.title || !draft.slug) {
       toast.error("Title and slug required");
       return;
@@ -449,26 +506,43 @@ export default function Admin() {
     const next = { ...content, projects: [...content.projects] };
     if (editing === "new") next.projects.push(draft);
     else next.projects[editing] = draft;
-    onSave(next);
-    cancelEdit();
-    toast.success("Saved");
+    try {
+      await onSave(next);
+      cancelEdit();
+      toast.success("Saved");
+    } catch {
+      /* onSave already shows the error toast */
+    }
   };
-  const deleteAt = (i) => {
+  const deleteAt = async (i) => {
     if (!window.confirm("Delete this project?")) return;
-    const next = { ...content, projects: content.projects.filter((_, x) => x !== i) };
-    onSave(next);
-    toast.success("Deleted");
+    const next = {
+      ...content,
+      projects: content.projects.filter((_, x) => x !== i),
+    };
+    try {
+      await onSave(next);
+      toast.success("Deleted");
+    } catch {
+      /* onSave already shows the error toast */
+    }
   };
-  const move = (i, dir) => {
+  const move = async (i, dir) => {
     const j = i + dir;
     if (j < 0 || j >= content.projects.length) return;
     const arr = [...content.projects];
     [arr[i], arr[j]] = [arr[j], arr[i]];
-    onSave({ ...content, projects: arr });
+    try {
+      await onSave({ ...content, projects: arr });
+    } catch {
+      /* onSave already shows the error toast */
+    }
   };
 
   const exportJson = () => {
-    const blob = new Blob([JSON.stringify(content, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(content, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -480,12 +554,12 @@ export default function Admin() {
     const f = e.target.files?.[0];
     if (!f) return;
     const r = new FileReader();
-    r.onload = () => {
+    r.onload = async () => {
       try {
         const json = JSON.parse(r.result);
         if (!json.site || !Array.isArray(json.projects))
           throw new Error("Invalid structure");
-        onSave(json);
+        await onSave(json);
         toast.success("Imported");
       } catch (err) {
         toast.error("Invalid JSON: " + err.message);
@@ -494,18 +568,39 @@ export default function Admin() {
     r.readAsText(f);
     e.target.value = "";
   };
-  const reset = () => {
-    if (!window.confirm("Reset to default content? Local changes will be lost.")) return;
-    resetContent();
-    setContent(getDefaultContent());
-    toast.success("Reset");
+  const reset = async () => {
+    if (
+      !window.confirm("Reset to default content? All changes will be lost.")
+    )
+      return;
+    try {
+      await resetContent();
+      const def = getDefaultContent();
+      setContent(def);
+      toast.success("Reset");
+    } catch (err) {
+      toast.error("Error al resetear: " + err.message);
+    }
   };
+
+  if (contentLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <p className="text-[11px] tracking-[0.28em] uppercase text-neutral-400">
+          Cargando…
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white" data-testid="admin-panel">
       <div className="border-b border-black/10 px-6 md:px-12 py-5 flex items-center justify-between sticky top-0 bg-white z-30">
         <div className="flex items-center gap-6">
-          <Link to="/" className="text-[11px] tracking-[0.28em] uppercase text-neutral-500 hover:text-black">
+          <Link
+            to="/"
+            className="text-[11px] tracking-[0.28em] uppercase text-neutral-500 hover:text-black"
+          >
             ← Site
           </Link>
           <h1 className="text-base tracking-[0.2em] uppercase">Admin</h1>
@@ -535,7 +630,8 @@ export default function Admin() {
           />
           <button
             onClick={reset}
-            className="border border-black/40 px-3 md:px-4 py-2 text-[10px] md:text-[11px] tracking-[0.24em] uppercase text-neutral-600 hover:text-black"
+            disabled={saving}
+            className="border border-black/40 px-3 md:px-4 py-2 text-[10px] md:text-[11px] tracking-[0.24em] uppercase text-neutral-600 hover:text-black disabled:opacity-50"
           >
             Reset
           </button>
@@ -553,7 +649,7 @@ export default function Admin() {
       </div>
 
       <div className="px-6 md:px-12 py-10 max-w-6xl">
-        <SiteSection content={content} onSave={onSave} />
+        <SiteSection content={content} onSave={onSave} saving={saving} />
 
         <div className="border border-black/10 p-6 md:p-8">
           <div className="flex items-center justify-between mb-6">
@@ -570,7 +666,10 @@ export default function Admin() {
           </div>
 
           {editing !== null && draft && (
-            <div className="border border-black p-5 md:p-6 mb-8 bg-neutral-50" data-testid="admin-project-form">
+            <div
+              className="border border-black p-5 md:p-6 mb-8 bg-neutral-50"
+              data-testid="admin-project-form"
+            >
               <p className="text-[11px] tracking-[0.28em] uppercase text-neutral-500 mb-4">
                 {editing === "new" ? "New project" : "Edit project"}
               </p>
@@ -579,9 +678,10 @@ export default function Admin() {
                 <button
                   data-testid="admin-save-project"
                   onClick={saveEdit}
-                  className="border border-black bg-black text-white px-5 py-2 text-[11px] tracking-[0.28em] uppercase hover:bg-white hover:text-black transition"
+                  disabled={saving}
+                  className="border border-black bg-black text-white px-5 py-2 text-[11px] tracking-[0.28em] uppercase hover:bg-white hover:text-black transition disabled:opacity-50"
                 >
-                  Save
+                  {saving ? "Saving…" : "Save"}
                 </button>
                 <button
                   onClick={cancelEdit}
@@ -602,11 +702,22 @@ export default function Admin() {
               >
                 <div className="w-16 h-12 bg-neutral-100 overflow-hidden shrink-0">
                   {p.cover && (
-                    <img src={p.cover} alt="" className="w-full h-full object-cover" />
+                    <img
+                      src={p.cover}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm truncate">{p.title || <em>untitled</em>}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm truncate">{p.title || <em>untitled</em>}</p>
+                    {p.published === false && (
+                      <span className="shrink-0 text-[9px] tracking-[0.2em] uppercase text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5">
+                        Draft
+                      </span>
+                    )}
+                  </div>
                   <p className="text-[11px] tracking-[0.2em] uppercase text-neutral-500 truncate">
                     {p.category} · {p.year} · {p.director}
                   </p>
@@ -614,14 +725,16 @@ export default function Admin() {
                 <div className="flex items-center gap-1 md:gap-2">
                   <button
                     onClick={() => move(i, -1)}
-                    className="px-2 py-1 text-xs text-neutral-500 hover:text-black"
+                    disabled={saving}
+                    className="px-2 py-1 text-xs text-neutral-500 hover:text-black disabled:opacity-30"
                     aria-label="Move up"
                   >
                     ↑
                   </button>
                   <button
                     onClick={() => move(i, 1)}
-                    className="px-2 py-1 text-xs text-neutral-500 hover:text-black"
+                    disabled={saving}
+                    className="px-2 py-1 text-xs text-neutral-500 hover:text-black disabled:opacity-30"
                     aria-label="Move down"
                   >
                     ↓
@@ -636,7 +749,8 @@ export default function Admin() {
                   <button
                     data-testid={`admin-delete-${p.slug}`}
                     onClick={() => deleteAt(i)}
-                    className="border border-black/30 px-3 py-1 text-[10px] tracking-[0.24em] uppercase text-red-600 hover:border-red-600"
+                    disabled={saving}
+                    className="border border-black/30 px-3 py-1 text-[10px] tracking-[0.24em] uppercase text-red-600 hover:border-red-600 disabled:opacity-30"
                   >
                     Delete
                   </button>
@@ -645,7 +759,6 @@ export default function Admin() {
             ))}
           </ul>
         </div>
-
       </div>
     </div>
   );

@@ -1,9 +1,40 @@
 import { useEffect, useState, useCallback } from "react";
-import { loadContent, subscribeContent, getLang } from "./contentStore";
+import {
+  loadContent,
+  fetchContent,
+  saveContent,
+  subscribeContent,
+  getLang,
+} from "./contentStore";
 
 export const useContent = () => {
+  // Instant initial render from localStorage cache (or bundled default)
   const [content, setContent] = useState(loadContent());
-  useEffect(() => subscribeContent(setContent), []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    // Subscribe to local saves first so we pick up any changes immediately
+    const unsubscribe = subscribeContent(setContent);
+
+    // Fetch fresh data from MongoDB in the background
+    fetchContent()
+      .then((serverContent) => {
+        if (mounted && serverContent) {
+          // saveContent updates cache + triggers setContent via the subscription above
+          saveContent(serverContent);
+        }
+      })
+      .catch(() => {
+        // Silently fall back to cached/default content on network errors
+      });
+
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
+  }, []);
+
   return content;
 };
 
