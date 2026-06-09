@@ -323,81 +323,52 @@ export default function ProjectDetail() {
               {tr(project.synopsis, lang)}
             </p>
 
-            {/* Miniaturas de stills */}
-            {hasStills && (
-              <div className="mt-6 clear-left md:clear-none">
-                <p className="text-[9px] tracking-[0.32em] uppercase text-neutral-600 mb-2">
-                  {lang === "es" ? "Fotogramas" : "Stills"} · {project.stills.length}
-                </p>
-                <div className="flex gap-1.5 flex-wrap">
-                  {project.stills.slice(0, 5).map((src, i) => (
-                    <button
-                      key={src + i}
-                      type="button"
-                      onClick={() => openLightbox(project.stills, i, "stills")}
-                      className="group relative overflow-hidden rounded-md hover:ring-1 hover:ring-white/40 transition-all duration-300 hover:scale-[1.04] outline-none focus:outline-none focus:ring-0"
-                      style={{ WebkitTapHighlightColor: "transparent" }}
-                      aria-label={`Ver fotograma ${i + 1}`}
-                    >
+            {/* Botones pill con preview — stills y BTS */}
+            {(hasStills || hasBts) && (
+              <div className="mt-6 clear-left md:clear-none flex flex-wrap gap-2.5">
+                {hasStills && (
+                  <button
+                    type="button"
+                    onClick={() => openLightbox(project.stills, 0, "stills")}
+                    className="group inline-flex items-center overflow-hidden rounded-full border border-white/15 hover:border-white/35 transition-all duration-300 outline-none focus:outline-none focus:ring-0"
+                    style={{ WebkitTapHighlightColor: "transparent" }}
+                    aria-label={`Ver fotogramas (${project.stills.length})`}
+                  >
+                    <div className="h-7 w-11 overflow-hidden flex-shrink-0">
                       <img
-                        src={src}
+                        src={project.stills[0]}
                         alt=""
                         loading="lazy"
-                        className="h-14 w-auto max-w-[110px] object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                        className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
                       />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-300" />
-                    </button>
-                  ))}
-                  {project.stills.length > 5 && (
-                    <button
-                      type="button"
-                      onClick={() => openLightbox(project.stills, 0, "stills")}
-                      className="h-14 min-w-[44px] px-3 rounded-md text-[11px] text-white/45 hover:text-white bg-white/5 hover:bg-white/10 hover:ring-1 hover:ring-white/30 transition-all duration-200 flex items-center justify-center outline-none focus:outline-none focus:ring-0"
-                      style={{ WebkitTapHighlightColor: "transparent" }}
-                    >
-                      +{project.stills.length - 5}
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
+                    </div>
+                    <span className="px-3 text-[10px] tracking-[0.24em] uppercase text-white/65 group-hover:text-white transition-colors duration-200 whitespace-nowrap">
+                      {lang === "es" ? "Fotogramas" : "Stills"} · {project.stills.length}
+                    </span>
+                  </button>
+                )}
 
-            {/* Miniaturas de BTS */}
-            {hasBts && (
-              <div className={`mt-4 ${!hasStills ? "clear-left md:clear-none" : ""}`}>
-                <p className="text-[9px] tracking-[0.32em] uppercase text-neutral-600 mb-2">
-                  BTS · {project.bts.length}
-                </p>
-                <div className="flex gap-1.5 flex-wrap">
-                  {project.bts.slice(0, 5).map((src, i) => (
-                    <button
-                      key={src + i}
-                      type="button"
-                      onClick={() => openLightbox(project.bts, i, "bts")}
-                      className="group relative overflow-hidden rounded-md hover:ring-1 hover:ring-white/40 transition-all duration-300 hover:scale-[1.04] outline-none focus:outline-none focus:ring-0"
-                      style={{ WebkitTapHighlightColor: "transparent" }}
-                      aria-label={`Ver BTS ${i + 1}`}
-                    >
+                {hasBts && (
+                  <button
+                    type="button"
+                    onClick={() => openLightbox(project.bts, 0, "bts")}
+                    className="group inline-flex items-center overflow-hidden rounded-full border border-white/15 hover:border-white/35 transition-all duration-300 outline-none focus:outline-none focus:ring-0"
+                    style={{ WebkitTapHighlightColor: "transparent" }}
+                    aria-label={`Ver BTS (${project.bts.length})`}
+                  >
+                    <div className="h-7 w-11 overflow-hidden flex-shrink-0">
                       <img
-                        src={src}
+                        src={project.bts[0]}
                         alt=""
                         loading="lazy"
-                        className="h-14 w-auto max-w-[110px] object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                        className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
                       />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-300" />
-                    </button>
-                  ))}
-                  {project.bts.length > 5 && (
-                    <button
-                      type="button"
-                      onClick={() => openLightbox(project.bts, 0, "bts")}
-                      className="h-14 min-w-[44px] px-3 rounded-md text-[11px] text-white/45 hover:text-white bg-white/5 hover:bg-white/10 hover:ring-1 hover:ring-white/30 transition-all duration-200 flex items-center justify-center outline-none focus:outline-none focus:ring-0"
-                      style={{ WebkitTapHighlightColor: "transparent" }}
-                    >
-                      +{project.bts.length - 5}
-                    </button>
-                  )}
-                </div>
+                    </div>
+                    <span className="px-3 text-[10px] tracking-[0.24em] uppercase text-white/65 group-hover:text-white transition-colors duration-200 whitespace-nowrap">
+                      BTS · {project.bts.length}
+                    </span>
+                  </button>
+                )}
               </div>
             )}
 
