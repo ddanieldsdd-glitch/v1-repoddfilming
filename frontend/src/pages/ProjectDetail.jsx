@@ -260,7 +260,7 @@ export default function ProjectDetail() {
           </h1>
         </div>
 
-        {/* Cuerpo: poster | sinopsis+botones | ficha técnica */}
+        {/* Cuerpo: [poster desktop] | sinopsis+botones | ficha técnica */}
         <div
           className={`grid gap-6 md:gap-8 lg:gap-10 items-start ${
             project.poster
@@ -268,13 +268,14 @@ export default function ProjectDetail() {
               : "grid-cols-1 md:grid-cols-[1fr_250px] lg:grid-cols-[1fr_270px]"
           }`}
         >
-          {/* Poster grande — clickeable para ampliar */}
+          {/* Poster — columna propia solo en desktop */}
           {project.poster && (
             <button
               type="button"
               onClick={() => openLightbox([project.poster], 0, "poster")}
               data-testid="project-poster"
-              className="group overflow-hidden rounded-xl ring-1 ring-white/10 hover:ring-white/30 transition-all duration-300 w-28 md:w-full self-start relative"
+              className="hidden md:block group overflow-hidden rounded-xl ring-1 ring-white/10 hover:ring-white/30 transition-all duration-300 w-full self-start relative outline-none"
+              style={{ WebkitTapHighlightColor: "transparent" }}
             >
               <img
                 src={project.poster}
@@ -282,7 +283,6 @@ export default function ProjectDetail() {
                 loading="eager"
                 className="w-full h-auto object-cover transition duration-500 group-hover:scale-[1.04] group-hover:brightness-90"
               />
-              {/* Overlay: indicador de ampliación */}
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-400 flex flex-col items-center justify-center gap-1.5">
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center gap-1.5">
                   <div className="w-8 h-8 rounded-full bg-white/15 backdrop-blur-sm border border-white/20 flex items-center justify-center">
@@ -298,13 +298,34 @@ export default function ProjectDetail() {
 
           {/* Sinopsis + acciones */}
           <div className="min-w-0">
+            {/* Poster flotante en móvil — el texto lo rodea */}
+            {project.poster && (
+              <button
+                type="button"
+                onClick={() => openLightbox([project.poster], 0, "poster")}
+                className="md:hidden float-left mr-4 mb-3 w-[108px] group overflow-hidden rounded-xl ring-1 ring-white/10 hover:ring-white/30 transition-all duration-300 relative outline-none"
+                style={{ WebkitTapHighlightColor: "transparent" }}
+                aria-label={lang === "es" ? "Ampliar póster" : "Expand poster"}
+              >
+                <img
+                  src={project.poster}
+                  alt="poster"
+                  loading="eager"
+                  className="w-full h-auto object-cover transition duration-300 group-hover:brightness-90"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">
+                  <ArrowUpRight className="w-3.5 h-3.5 text-white opacity-0 group-hover:opacity-100 transition-opacity" strokeWidth={2} />
+                </div>
+              </button>
+            )}
+
             <p className="text-[15px] md:text-base leading-relaxed text-neutral-400 whitespace-pre-line">
               {tr(project.synopsis, lang)}
             </p>
 
             {/* Miniaturas de stills */}
             {hasStills && (
-              <div className="mt-6">
+              <div className="mt-6 clear-left md:clear-none">
                 <p className="text-[9px] tracking-[0.32em] uppercase text-neutral-600 mb-2">
                   {lang === "es" ? "Fotogramas" : "Stills"} · {project.stills.length}
                 </p>
@@ -314,7 +335,8 @@ export default function ProjectDetail() {
                       key={src + i}
                       type="button"
                       onClick={() => openLightbox(project.stills, i, "stills")}
-                      className="group relative overflow-hidden rounded-md ring-1 ring-white/12 hover:ring-white/45 transition-all duration-200 hover:scale-[1.04]"
+                      className="group relative overflow-hidden rounded-md ring-1 ring-white/12 hover:ring-white/40 transition-all duration-200 hover:scale-[1.04] outline-none"
+                      style={{ WebkitTapHighlightColor: "transparent" }}
                       aria-label={`Ver fotograma ${i + 1}`}
                     >
                       <img
@@ -330,7 +352,8 @@ export default function ProjectDetail() {
                     <button
                       type="button"
                       onClick={() => openLightbox(project.stills, 0, "stills")}
-                      className="h-14 min-w-[44px] px-3 rounded-md ring-1 ring-white/12 hover:ring-white/40 text-[11px] text-white/45 hover:text-white bg-white/4 hover:bg-white/8 transition-all duration-200 flex items-center justify-center"
+                      className="h-14 min-w-[44px] px-3 rounded-md ring-1 ring-white/12 hover:ring-white/40 text-[11px] text-white/45 hover:text-white bg-white/4 hover:bg-white/8 transition-all duration-200 flex items-center justify-center outline-none"
+                      style={{ WebkitTapHighlightColor: "transparent" }}
                     >
                       +{project.stills.length - 5}
                     </button>
@@ -341,7 +364,7 @@ export default function ProjectDetail() {
 
             {/* Miniaturas de BTS */}
             {hasBts && (
-              <div className="mt-4">
+              <div className={`mt-4 ${!hasStills ? "clear-left md:clear-none" : ""}`}>
                 <p className="text-[9px] tracking-[0.32em] uppercase text-neutral-600 mb-2">
                   BTS · {project.bts.length}
                 </p>
@@ -351,7 +374,8 @@ export default function ProjectDetail() {
                       key={src + i}
                       type="button"
                       onClick={() => openLightbox(project.bts, i, "bts")}
-                      className="group relative overflow-hidden rounded-md ring-1 ring-white/12 hover:ring-white/45 transition-all duration-200 hover:scale-[1.04]"
+                      className="group relative overflow-hidden rounded-md ring-1 ring-white/12 hover:ring-white/40 transition-all duration-200 hover:scale-[1.04] outline-none"
+                      style={{ WebkitTapHighlightColor: "transparent" }}
                       aria-label={`Ver BTS ${i + 1}`}
                     >
                       <img
@@ -367,7 +391,8 @@ export default function ProjectDetail() {
                     <button
                       type="button"
                       onClick={() => openLightbox(project.bts, 0, "bts")}
-                      className="h-14 min-w-[44px] px-3 rounded-md ring-1 ring-white/12 hover:ring-white/40 text-[11px] text-white/45 hover:text-white bg-white/4 hover:bg-white/8 transition-all duration-200 flex items-center justify-center"
+                      className="h-14 min-w-[44px] px-3 rounded-md ring-1 ring-white/12 hover:ring-white/40 text-[11px] text-white/45 hover:text-white bg-white/4 hover:bg-white/8 transition-all duration-200 flex items-center justify-center outline-none"
+                      style={{ WebkitTapHighlightColor: "transparent" }}
                     >
                       +{project.bts.length - 5}
                     </button>
