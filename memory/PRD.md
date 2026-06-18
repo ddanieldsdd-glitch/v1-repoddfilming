@@ -12,7 +12,7 @@ Build a high-end, minimalist cinematic portfolio website for Director of Photogr
 - Content source: `/app/frontend/src/data/content.json`. Admin edits saved to `localStorage` (key `ddp_content_v1`); export/import JSON for portability.
 - React Router v7 client-side routes.
 - i18n: `T` map + `tr()` helper (`/app/frontend/src/lib/i18n.js`). Lang persisted in `localStorage` (`ddp_lang`).
-- Admin: simple password (default `ddfilming2026`, override via `REACT_APP_ADMIN_PASSWORD`). Session via `sessionStorage` (`ddp_admin_auth`).
+- Admin: password set via `ADMIN_PASSWORD` env var (server-side only). Session via `sessionStorage` (`ddp_admin_auth`).
 - Vimeo embeds via `VimeoEmbed` component (also supports YouTube).
 
 ## Implemented (2026-02-01)

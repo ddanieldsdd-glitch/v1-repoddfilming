@@ -1,5 +1,6 @@
 const { MongoClient } = require('mongodb');
 const verifyToken = require('./_verifyToken');
+const applyCors = require('./_cors');
 const defaultContent = require('../src/data/content.json');
 
 const MONGO_URL = process.env.MONGO_URL;
@@ -19,7 +20,7 @@ async function getDb() {
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (applyCors(req, res)) return;
 
   try {
     const db = await getDb();

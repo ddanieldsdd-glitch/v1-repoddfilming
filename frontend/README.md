@@ -86,8 +86,7 @@ You have **two options**:
 
 1. Run the site locally or open the deployed URL.
 2. Go to `/admin`.
-3. Sign in with the password (default `ddfilming2026`, configurable via
-   `REACT_APP_ADMIN_PASSWORD`).
+3. Sign in with the password configured in the `ADMIN_PASSWORD` environment variable.
 4. Edit the site info, About text, photo, social links, and project list.
 5. Reorder projects with the ↑ / ↓ buttons.
 6. Click **Export JSON** to download the updated `content.json`.

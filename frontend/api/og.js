@@ -1,171 +1,239 @@
+/**
+ * Serverless function que gestiona el Open Graph para todos los proyectos.
+ *
+ * Flujo:
+ *  - Bot (WhatsApp, Telegram, etc.) visita /project/:slug
+ *    → rewrite en vercel.json envía aquí
+ *    → se sirve HTML mínimo con meta tags OG correctas (bots no ejecutan JS)
+ *
+ *  - Usuario normal visita /project/:slug
+ *    → rewrite envía aquí también
+ *    → se obtiene el index.html real del CDN (en caché), se inyectan los
+ *      meta tags del proyecto y se sirve el SPA completo con React
+ */
+
 const { MongoClient } = require('mongodb');
 const defaultContent = require('../src/data/content.json');
 
 const MONGO_URL = process.env.MONGO_URL;
-const DB_NAME = process.env.DB_NAME || 'ddp_portfolio';
+const DB_NAME   = process.env.DB_NAME || 'ddp_portfolio';
+const BASE_URL  = 'https://ddanidiaz.com';
 
-let _client = null;
-async function getProjects() {
-  if (!MONGO_URL) return defaultContent.projects || [];
+// ─── MongoDB ──────────────────────────────────────────────────────────────────
+
+let _mongoClient = null;
+
+async function getContent() {
+  if (!MONGO_URL) return defaultContent;
   try {
-    if (!_client) {
-      _client = new MongoClient(MONGO_URL);
-      await _client.connect();
+    if (!_mongoClient) {
+      _mongoClient = new MongoClient(MONGO_URL);
+      await _mongoClient.connect();
     }
-    const doc = await _client
+    const doc = await _mongoClient
       .db(DB_NAME)
       .collection('content')
-      .findOne({}, { projection: { _id: 0, projects: 1 } });
-    return doc?.projects || defaultContent.projects || [];
+      .findOne({}, { projection: { _id: 0 } });
+    return doc || defaultContent;
   } catch {
-    return defaultContent.projects || [];
+    return defaultContent;
   }
 }
 
-function generateOGHTML(project, baseUrl, isProjectPage = false) {
-  const title = project.title;
-  const description =
-    project.synopsis?.es ||
-    project.synopsis?.en ||
-    'Proyecto de Dani Díaz';
-  const image =
-    project.poster ||
-    project.cover ||
-    'https://res.cloudinary.com/dsphxo7mx/image/upload/v1777654137/POSTER-ORIGAMI2-scaled_r5mmum.jpg';
-  const url = isProjectPage ? `${baseUrl}/project/${project.slug}` : baseUrl;
-  const type = isProjectPage ? 'article' : 'website';
+// ─── Base HTML (React SPA) cache ──────────────────────────────────────────────
+// Se obtiene del CDN de producción y se reutiliza entre invocaciones calientes.
 
+let _baseHtml = null;
+let _baseHtmlFetchedAt = 0;
+const BASE_HTML_TTL = 20 * 60 * 1000; // 20 minutos
+
+async function getBaseHtml() {
+  const now = Date.now();
+  if (_baseHtml && now - _baseHtmlFetchedAt < BASE_HTML_TTL) return _baseHtml;
+  try {
+    const r = await fetch(`${BASE_URL}/`, { headers: { 'User-Agent': 'og-injector/1.0' } });
+    if (r.ok) {
+      _baseHtml = await r.text();
+      _baseHtmlFetchedAt = now;
+    }
+  } catch {
+    // Usa la caché obsoleta si existe
+  }
+  return _baseHtml;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const BOT_RE = /bot|crawler|spider|facebookexternalhit|whatsapp|telegram|slack|discord|twitter|linkedin|googlebot|bingbot|duckduck/i;
+
+function isBot(ua) {
+  return BOT_RE.test(ua || '');
+}
+
+function esc(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+/**
+ * Inserta transformaciones de Cloudinary en una URL de imagen para obtener
+ * un recuadro de 1200×630 px óptimo para Open Graph.
+ *
+ * mode = 'pad'  → cartel de cine (portrait): añade franjas negras laterales.
+ *                  Ideal para mantener la composición del cartel intacta.
+ * mode = 'fill' → cover horizontal (landscape): recorte inteligente.
+ */
+function toOGImage(url, mode = 'pad') {
+  if (!url || !url.includes('res.cloudinary.com')) return url;
+  // Evitar doble transformación
+  if (url.includes('/upload/w_1200')) return url;
+  const t = mode === 'fill'
+    ? 'w_1200,h_630,c_fill,g_auto,q_auto,f_jpg'
+    : 'w_1200,h_630,c_pad,b_rgb:000000,q_auto,f_jpg';
+  return url.replace('/upload/', `/upload/${t}/`);
+}
+
+/**
+ * Construye los datos OG de un proyecto.
+ * Prioridad de imagen: poster (cartel) → cover → fallback logo.
+ */
+function buildOGData(project) {
+  const title       = esc(`${project.title} — Dani Díaz`);
+  const description = esc(
+    project.synopsis?.es || project.synopsis?.en || 'Proyecto cinematográfico de Dani Díaz, Director de Fotografía.'
+  );
+
+  // Poster (cartel, portrait) → c_pad con fondo negro para respetar composición
+  // Cover (landscape) → c_fill con recorte inteligente
+  const image = project.poster
+    ? toOGImage(project.poster, 'pad')
+    : project.cover
+    ? toOGImage(project.cover, 'fill')
+    : `${BASE_URL}/og-fallback.jpg`;
+
+  const url = `${BASE_URL}/project/${project.slug}`;
+
+  return { title, description, image, url };
+}
+
+/** HTML mínimo para bots: solo necesitan los meta tags, no ejecutan JS. */
+function buildBotHTML({ title, description, image, url }) {
+  const favicon = 'https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_32,h_32,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png';
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta name="description" content="${description}" />
-    <meta name="robots" content="index, follow" />
-    <link rel="icon" type="image/png" sizes="32x32" href="https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_32,h_32,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png" />
-    <link rel="icon" type="image/png" sizes="192x192" href="https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_192,h_192,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_180,h_180,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap" rel="stylesheet" />
-    <title>${title} — Dani Díaz</title>
-    <meta property="og:type" content="${type}" />
-    <meta property="og:site_name" content="Dani Díaz — Director de Fotografía" />
-    <meta property="og:title" content="${title} — Dani Díaz" />
-    <meta property="og:description" content="${description}" />
-    <meta property="og:image" content="${image}" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:url" content="${url}" />
-    <meta property="og:locale" content="es_ES" />
-    <meta property="og:locale:alternate" content="en_US" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@ddani_00" />
-    <meta name="twitter:title" content="${title} — Dani Díaz" />
-    <meta name="twitter:description" content="${description}" />
-    <meta name="twitter:image" content="${image}" />
-    <script>
-        window.addEventListener("error", function(e) {
-            if (e.error instanceof DOMException && e.error.name === "DataCloneError" &&
-                e.message && e.message.includes("PerformanceServerTiming")) {
-                e.stopImmediatePropagation(); e.preventDefault();
-            }
-        }, true);
-    </script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#000000" />
+  <title>${title}</title>
+  <meta name="description" content="${description}" />
+  <meta name="robots" content="index, follow" />
+  <link rel="icon" type="image/png" sizes="32x32" href="${favicon}" />
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="Dani Díaz — Director de Fotografía" />
+  <meta property="og:title" content="${title}" />
+  <meta property="og:description" content="${description}" />
+  <meta property="og:image" content="${image}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:url" content="${url}" />
+  <meta property="og:locale" content="es_ES" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@ddani_00" />
+  <meta name="twitter:title" content="${title}" />
+  <meta name="twitter:description" content="${description}" />
+  <meta name="twitter:image" content="${image}" />
 </head>
 <body style="background:#000000;">
-    <noscript>Necesitas habilitar JavaScript para ver esta web.</noscript>
-    <div id="root"></div>
+  <noscript>Necesitas habilitar JavaScript para ver esta web.</noscript>
+  <div id="root"></div>
 </body>
 </html>`;
 }
 
+/**
+ * Inyecta meta tags OG de proyecto en el HTML real del SPA.
+ * Elimina los meta tags genéricos del home y añade los del proyecto.
+ */
+function injectOGTags(html, { title, description, image, url }) {
+  let out = html;
+
+  // Reemplazar <title>
+  out = out.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`);
+
+  // Eliminar meta tags OG/Twitter/description existentes
+  out = out.replace(/<meta\s+(?:property="(?:og|twitter):[^"]*"|name="(?:twitter|description)[^"]*")[^>]*\/?>\s*/gi, '');
+
+  // Inyectar antes de </head>
+  const tags = `
+  <meta name="description" content="${description}" />
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="Dani Díaz — Director de Fotografía" />
+  <meta property="og:title" content="${title}" />
+  <meta property="og:description" content="${description}" />
+  <meta property="og:image" content="${image}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:url" content="${url}" />
+  <meta property="og:locale" content="es_ES" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@ddani_00" />
+  <meta name="twitter:title" content="${title}" />
+  <meta name="twitter:description" content="${description}" />
+  <meta name="twitter:image" content="${image}" />`;
+
+  out = out.replace('</head>', `${tags}\n</head>`);
+  return out;
+}
+
+// ─── Handler ──────────────────────────────────────────────────────────────────
+
 module.exports = async (req, res) => {
-  const { URL } = require('url');
-  const parsed = new URL(req.url, 'http://localhost');
-  const path = parsed.pathname;
-  const baseUrl = 'https://ddanidiaz.com';
+  // Vercel preserva el path original en req.url cuando reescribe a una función
+  const { URL: NodeURL } = require('url');
+  const parsed = new NodeURL(req.url, 'http://localhost');
+  const pathname = parsed.pathname;
 
-  const projectMatch = path.match(/^\/project\/([^/]+)/);
+  const projectMatch = pathname.match(/^\/project\/([^/?#]+)/);
 
-  if (projectMatch) {
-    const slug = projectMatch[1];
-    const projects = await getProjects();
-    const project = projects.find((p) => p.slug === slug) || null;
-
-    if (project) {
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');
-      return res.status(200).send(generateOGHTML(project, baseUrl, true));
-    }
+  if (!projectMatch) {
+    return res.status(404).end();
   }
 
-  const userAgent = req.headers['user-agent'] || '';
-  const isBot =
-    /bot|crawler|spider|facebook|twitter|linkedin|whatsapp|telegram|slack|discord/i.test(
-      userAgent
-    );
+  const slug    = decodeURIComponent(projectMatch[1]);
+  const content = await getContent();
+  const project = (content.projects || []).find(
+    (p) => p.slug === slug && p.published !== false
+  );
 
-  if (isBot && (path === '/' || path === '/index.html')) {
-    const logoImage =
-      'https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_1200,h_630,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png';
-    const favicon32 =
-      'https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_32,h_32,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png';
-    const favicon192 =
-      'https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_192,h_192,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png';
-    const appleTouch =
-      'https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_180,h_180,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png';
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  // Cloudflare cachea la respuesta hasta 1 hora; el navegador 10 min
+  res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=3600, stale-while-revalidate=86400');
 
-    const html = `<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta name="description" content="Dani Díaz — Cinematographer. Trabajos seleccionados en ficción, documental, publicidad y videoclips." />
-    <meta name="robots" content="index, follow" />
-    <link rel="icon" type="image/png" sizes="32x32" href="${favicon32}" />
-    <link rel="icon" type="image/png" sizes="192x192" href="${favicon192}" />
-    <link rel="apple-touch-icon" sizes="180x180" href="${appleTouch}" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600&display=swap" rel="stylesheet" />
-    <title>Dani Díaz — Cinematographer</title>
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Dani Díaz — Cinematographer" />
-    <meta property="og:title" content="Dani Díaz — Cinematographer" />
-    <meta property="og:description" content="La luz como narrativa. La imagen como memoria. Trabajos seleccionados en ficción, documental, publicidad y videoclips." />
-    <meta property="og:image" content="${logoImage}" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:url" content="${baseUrl}/" />
-    <meta property="og:locale" content="es_ES" />
-    <meta property="og:locale:alternate" content="en_US" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@ddani_00" />
-    <meta name="twitter:title" content="Dani Díaz — Cinematographer" />
-    <meta name="twitter:description" content="La luz como narrativa. La imagen como memoria. Trabajos seleccionados en ficción, documental, publicidad y videoclips." />
-    <meta name="twitter:image" content="${logoImage}" />
-    <script>
-        window.addEventListener("error", function(e) {
-            if (e.error instanceof DOMException && e.error.name === "DataCloneError" &&
-                e.message && e.message.includes("PerformanceServerTiming")) {
-                e.stopImmediatePropagation(); e.preventDefault();
-            }
-        }, true);
-    </script>
-</head>
-<body style="background:#000000;">
-    <noscript>Necesitas habilitar JavaScript para ver esta web.</noscript>
-    <div id="root"></div>
-</body>
-</html>`;
-
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');
-    return res.status(200).send(html);
+  // Proyecto no encontrado → devolver el SPA para que React muestre su 404
+  if (!project) {
+    const baseHtml = await getBaseHtml();
+    if (baseHtml) return res.status(200).send(baseHtml);
+    return res.redirect(302, '/');
   }
 
-  return res.status(404).end();
+  const ogData = buildOGData(project);
+  const ua     = req.headers['user-agent'] || '';
+
+  if (isBot(ua)) {
+    // Bots no ejecutan JS → HTML mínimo con meta tags es suficiente
+    return res.status(200).send(buildBotHTML(ogData));
+  }
+
+  // Usuario real → necesita el SPA completo con React + los meta tags del proyecto
+  const baseHtml = await getBaseHtml();
+  if (baseHtml) {
+    return res.status(200).send(injectOGTags(baseHtml, ogData));
+  }
+
+  // Fallback si el CDN no responde aún (ej: primer deploy)
+  return res.status(200).send(buildBotHTML(ogData));
 };
