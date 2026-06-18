@@ -3,6 +3,14 @@
   "buildCommand": "npm run predeploy",
   "outputDirectory": "build",
   "framework": "create-react-app",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.ddanidiaz.com" }],
+      "destination": "https://ddanidiaz.com/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/project/(.*)", "destination": "/api/og" },

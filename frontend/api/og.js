@@ -131,6 +131,7 @@ function buildBotHTML({ title, description, image, url }) {
   <title>${title}</title>
   <meta name="description" content="${description}" />
   <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="${url}" />
   <link rel="icon" type="image/png" sizes="32x32" href="${favicon}" />
   <meta property="og:type" content="article" />
   <meta property="og:site_name" content="Dani Díaz — Director de Fotografía" />
@@ -164,11 +165,13 @@ function injectOGTags(html, { title, description, image, url }) {
   // Reemplazar <title>
   out = out.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`);
 
-  // Eliminar meta tags OG/Twitter/description existentes
+  // Eliminar meta tags OG/Twitter/description y canonical existentes
   out = out.replace(/<meta\s+(?:property="(?:og|twitter):[^"]*"|name="(?:twitter|description)[^"]*")[^>]*\/?>\s*/gi, '');
+  out = out.replace(/<link\s+rel="canonical"[^>]*\/?>\s*/gi, '');
 
   // Inyectar antes de </head>
   const tags = `
+  <link rel="canonical" href="${url}" />
   <meta name="description" content="${description}" />
   <meta property="og:type" content="article" />
   <meta property="og:site_name" content="Dani Díaz — Director de Fotografía" />
