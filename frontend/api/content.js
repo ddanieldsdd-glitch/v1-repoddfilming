@@ -53,6 +53,11 @@ module.exports = async (req, res) => {
       delete body._id;
 
       await db.collection(COLLECTION).replaceOne({}, body, { upsert: true });
+
+      // Notificar a Google que el sitemap ha cambiado (no bloqueante).
+      // Así Google descubre los proyectos nuevos automáticamente sin tocar código.
+      fetch('https://www.google.com/ping?sitemap=https://ddanidiaz.com/sitemap.xml').catch(() => {});
+
       return res.status(200).json({ ok: true });
     }
 
