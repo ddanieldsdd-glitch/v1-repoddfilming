@@ -54,9 +54,11 @@ module.exports = async (req, res) => {
 
       await db.collection(COLLECTION).replaceOne({}, body, { upsert: true });
 
-      // Notificar a Google que el sitemap ha cambiado (no bloqueante).
-      // Así Google descubre los proyectos nuevos automáticamente sin tocar código.
-      fetch('https://www.google.com/ping?sitemap=https://ddanidiaz.com/sitemap.xml').catch(() => {});
+      // Notificar a Google y Bing que el sitemap ha cambiado (no bloqueante).
+      // Así ambos buscadores descubren los proyectos nuevos automáticamente.
+      const sitemapUrl = encodeURIComponent('https://ddanidiaz.com/sitemap.xml');
+      fetch(`https://www.google.com/ping?sitemap=${sitemapUrl}`).catch(() => {});
+      fetch(`https://www.bing.com/ping?sitemap=${sitemapUrl}`).catch(() => {});
 
       return res.status(200).json({ ok: true });
     }

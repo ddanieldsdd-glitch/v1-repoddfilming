@@ -34,6 +34,24 @@ const SpeedInsightsBridge = () => {
   return <SpeedInsights framework="react" route={pathname} />;
 };
 
+/**
+ * Envía un evento page_view a GA4 en cada cambio de ruta.
+ * Sin esto, una SPA solo registra la visita inicial (/) y Google Analytics
+ * no ve las visitas a /project/:slug, /about, /contact, etc.
+ */
+const GA4Tracker = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    if (typeof window.gtag !== "function") return;
+    window.gtag("event", "page_view", {
+      page_path: pathname,
+      page_location: window.location.href,
+      page_title: document.title,
+    });
+  }, [pathname]);
+  return null;
+};
+
 function App() {
   const [theme] = useTheme();
 
@@ -42,6 +60,7 @@ function App() {
       <div className="film-grain-overlay pointer-events-none fixed inset-0 z-[100] mix-blend-overlay opacity-[0.035] dark:mix-blend-soft-light dark:opacity-[0.075]" aria-hidden />
       <BrowserRouter>
         <SpeedInsightsBridge />
+        <GA4Tracker />
         <ScrollToTop />
         <Nav />
         <main>
