@@ -96,6 +96,58 @@ function toOGImage(url, mode = 'pad') {
   return url.replace('/upload/', `/upload/${t}/`);
 }
 
+/** Extrae el ID numérico de una URL de Vimeo */
+function vimeoId(url) {
+  const m = (url || '').match(/vimeo\.com\/(\d+)/);
+  return m ? m[1] : null;
+}
+
+/**
+ * Genera el bloque JSON-LD (VideoObject + Person) para una página de proyecto.
+ * Esto permite a Google mostrar miniaturas de vídeo en los resultados de búsqueda.
+ */
+function buildProjectJsonLd(project, pageUrl) {
+  const id      = vimeoId(project.preview_url);
+  const thumb   = project.cover || project.poster || '';
+  const synopsisEs = (project.synopsis?.es || '').slice(0, 500);
+  const synopsisEn = (project.synopsis?.en || '').slice(0, 500);
+  const description = synopsisEs || synopsisEn || 'Proyecto cinematográfico de Dani Díaz.';
+
+  const graph = [
+    {
+      '@type': 'WebPage',
+      '@id': `${pageUrl}#webpage`,
+      url: pageUrl,
+      name: `${project.title} — Dani Díaz`,
+      description,
+      inLanguage: ['es', 'en'],
+      author: { '@id': 'https://ddanidiaz.com/#person' }
+    }
+  ];
+
+  if (id) {
+    graph.push({
+      '@type': 'VideoObject',
+      '@id': `${pageUrl}#video`,
+      name: project.title,
+      description,
+      thumbnailUrl: thumb,
+      uploadDate: project.year ? `${project.year}-01-01` : undefined,
+      embedUrl: `https://player.vimeo.com/video/${id}`,
+      url: pageUrl,
+      director: project.director
+        ? { '@type': 'Person', name: project.director }
+        : undefined,
+      productionCompany: project.production_company
+        ? { '@type': 'Organization', name: project.production_company }
+        : undefined
+    });
+  }
+
+  // Eliminar claves undefined para JSON limpio
+  return JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }, (_, v) => v === undefined ? undefined : v, 2);
+}
+
 /**
  * Construye los datos OG de un proyecto.
  * Prioridad de imagen: poster (cartel) → cover → fallback logo.
@@ -120,7 +172,7 @@ function buildOGData(project) {
 }
 
 /** HTML mínimo para bots: solo necesitan los meta tags, no ejecutan JS. */
-function buildBotHTML({ title, description, image, url }) {
+function buildBotHTML({ title, description, image, url }, jsonLd = '') {
   const favicon = 'https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_32,h_32,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png';
   return `<!DOCTYPE html>
 <html lang="es">
@@ -133,6 +185,7 @@ function buildBotHTML({ title, description, image, url }) {
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="${url}" />
   <link rel="icon" type="image/png" sizes="32x32" href="${favicon}" />
+  ${jsonLd ? `<script type="application/ld+json">${jsonLd}</script>` : ''}
   <meta property="og:type" content="article" />
   <meta property="og:site_name" content="Dani Díaz — Director de Fotografía" />
   <meta property="og:title" content="${title}" />
@@ -159,7 +212,7 @@ function buildBotHTML({ title, description, image, url }) {
  * Inyecta meta tags OG de proyecto en el HTML real del SPA.
  * Elimina los meta tags genéricos del home y añade los del proyecto.
  */
-function injectOGTags(html, { title, description, image, url }) {
+function injectOGTags(html, { title, description, image, url }, jsonLd = '') {
   let out = html;
 
   // Reemplazar <title>
@@ -168,6 +221,9 @@ function injectOGTags(html, { title, description, image, url }) {
   // Eliminar meta tags OG/Twitter/description y canonical existentes
   out = out.replace(/<meta\s+(?:property="(?:og|twitter):[^"]*"|name="(?:twitter|description)[^"]*")[^>]*\/?>\s*/gi, '');
   out = out.replace(/<link\s+rel="canonical"[^>]*\/?>\s*/gi, '');
+
+  // Eliminar JSON-LD existente del home para inyectar el del proyecto
+  out = out.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>\s*/gi, '');
 
   // Inyectar antes de </head>
   const tags = `
@@ -186,7 +242,8 @@ function injectOGTags(html, { title, description, image, url }) {
   <meta name="twitter:site" content="@ddani_00" />
   <meta name="twitter:title" content="${title}" />
   <meta name="twitter:description" content="${description}" />
-  <meta name="twitter:image" content="${image}" />`;
+  <meta name="twitter:image" content="${image}" />
+  ${jsonLd ? `<script type="application/ld+json">${jsonLd}</script>` : ''}`;
 
   out = out.replace('</head>', `${tags}\n</head>`);
   return out;
@@ -223,20 +280,21 @@ module.exports = async (req, res) => {
     return res.redirect(302, '/');
   }
 
-  const ogData = buildOGData(project);
-  const ua     = req.headers['user-agent'] || '';
+  const ogData  = buildOGData(project);
+  const jsonLd  = buildProjectJsonLd(project, `${BASE_URL}/project/${project.slug}`);
+  const ua      = req.headers['user-agent'] || '';
 
   if (isBot(ua)) {
     // Bots no ejecutan JS → HTML mínimo con meta tags es suficiente
-    return res.status(200).send(buildBotHTML(ogData));
+    return res.status(200).send(buildBotHTML(ogData, jsonLd));
   }
 
   // Usuario real → necesita el SPA completo con React + los meta tags del proyecto
   const baseHtml = await getBaseHtml();
   if (baseHtml) {
-    return res.status(200).send(injectOGTags(baseHtml, ogData));
+    return res.status(200).send(injectOGTags(baseHtml, ogData, jsonLd));
   }
 
   // Fallback si el CDN no responde aún (ej: primer deploy)
-  return res.status(200).send(buildBotHTML(ogData));
+  return res.status(200).send(buildBotHTML(ogData, jsonLd));
 };
