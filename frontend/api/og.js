@@ -132,7 +132,7 @@ function buildProjectJsonLd(project, pageUrl) {
       name: project.title,
       description,
       thumbnailUrl: thumb,
-      uploadDate: project.year ? `${project.year}-01-01` : undefined,
+      uploadDate: project.year ? `${project.year}-01-01T00:00:00+00:00` : undefined,
       embedUrl: `https://player.vimeo.com/video/${id}`,
       url: pageUrl,
       director: project.director
