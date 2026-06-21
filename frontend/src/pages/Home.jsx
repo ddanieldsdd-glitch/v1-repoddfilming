@@ -74,15 +74,16 @@ export default function Home() {
               autoplay
               background
               muted={true}
-              className={`w-full h-full transition-opacity duration-500 ${heroReelReady ? "opacity-100" : "opacity-0"}`}
+              className="w-full h-full"
               testId="hero-showreel"
               interactive={false}
               onReady={() => setHeroReelReady(true)}
             />
           </div>
-          {!heroReelReady && (
-            <div className="pointer-events-none absolute inset-0 z-[1] bg-neutral-950" />
-          )}
+          {/* Overlay que se desvanece cuando el SDK está listo y el thumbnail es visible */}
+          <div
+            className={`pointer-events-none absolute inset-0 z-[1] bg-neutral-950 transition-opacity duration-700 ${heroReelReady ? "opacity-0" : "opacity-100"}`}
+          />
 
           {/* Gradiente inferior para legibilidad */}
           <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black/60 via-transparent to-transparent" />

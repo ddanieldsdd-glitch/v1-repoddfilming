@@ -54,9 +54,10 @@ export const VideoPlayer = ({
     const player = new Player(iframe);
     playerRef.current = player;
 
+    // Safety net por si el SDK tarda más de lo esperado
     const safetyTimer = setTimeout(() => {
       handleReady();
-    }, 2500);
+    }, 1500);
 
     player.ready()
       .then(() => {
@@ -72,14 +73,14 @@ export const VideoPlayer = ({
         registerPlayer(playerKey, player, { forceMuted: background || muted });
         onRef?.(player, iframe);
 
+        // Señalar ready en cuanto el SDK está listo: el iframe ya muestra
+        // el thumbnail del vídeo, eliminando el flash negro mientras bufferiza.
+        handleReady();
+
         const shouldAutoplay =
           playing !== false && (autoplay || background || playing === true);
         if (shouldAutoplay) {
-          player.play().then(handleReady).catch(() => {
-            handleReady();
-          });
-        } else {
-          handleReady();
+          player.play().catch(() => {});
         }
       })
       .catch(() => {
@@ -168,9 +169,9 @@ export const VideoPlayer = ({
         onLoad={vimeoId ? undefined : handleReady}
         className={`absolute inset-0 h-full w-full border-0 bg-black [color-scheme:dark] ${interactive ? "" : "pointer-events-none"}`}
       />
-      {!ready && (
-        <div className="pointer-events-none absolute inset-0 z-[1] bg-black" />
-      )}
+      <div
+        className={`pointer-events-none absolute inset-0 z-[1] bg-black transition-opacity duration-500 ${ready ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+      />
     </div>
   );
 };
