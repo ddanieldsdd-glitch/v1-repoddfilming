@@ -7,8 +7,9 @@ import {
 } from "../lib/videoStore";
 
 /**
- * Reliable video player using @vimeo/player SDK (Vimeo)
- * and YouTube IFrame Player API (YouTube).
+ * Vimeo: @vimeo/player SDK.
+ * YouTube (tarjetas / background): IFrame Player API (play/pause al hover).
+ * YouTube (hero / interactivo): iframe embed directo (más fiable).
  */
 export const VideoPlayer = ({
   url,
@@ -35,6 +36,8 @@ export const VideoPlayer = ({
 
   const vimeoId = extractVimeoId(url);
   const ytId = !vimeoId ? extractYoutubeId(url) : null;
+  // API solo en tarjetas (background + control playing); hero usa iframe directo
+  const useYtApi = Boolean(ytId && background);
 
   const handleReady = useCallback(() => {
     if (readyCalledRef.current) return;
@@ -108,9 +111,9 @@ export const VideoPlayer = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vimeoId, playerKey]);
 
-  // — Init YouTube Player via IFrame API —
+  // — Init YouTube Player via IFrame API (solo tarjetas background) —
   useEffect(() => {
-    if (!ytId || vimeoId || !containerRef.current) return undefined;
+    if (!useYtApi || !containerRef.current) return undefined;
 
     readyCalledRef.current = false;
     setReady(false);
@@ -129,17 +132,16 @@ export const VideoPlayer = ({
           videoId: ytId,
           playerVars: {
             autoplay: 0,
-            controls: background ? 0 : 1,
+            controls: 0,
             modestbranding: 1,
             rel: 0,
             playsinline: 1,
             mute: shouldMute ? 1 : 0,
             loop: shouldLoop ? 1 : 0,
             ...(shouldLoop ? { playlist: ytId } : {}),
-            fs: background ? 0 : 1,
-            disablekb: background ? 1 : 0,
+            fs: 0,
+            disablekb: 1,
             iv_load_policy: 3,
-            origin: window.location.origin,
           },
           events: {
             onReady: (event) => {
@@ -153,9 +155,7 @@ export const VideoPlayer = ({
 
               handleReady();
 
-              const shouldAutoplay =
-                playing !== false && (autoplay || background || playing === true);
-              if (shouldAutoplay) {
+              if (playing === true) {
                 event.target.playVideo();
               }
             },
@@ -170,7 +170,6 @@ export const VideoPlayer = ({
           },
         });
 
-        // Guardar referencia temprana para destroy en cleanup
         ytPlayerRef.current = ytPlayer;
       })
       .catch(() => {
@@ -189,9 +188,9 @@ export const VideoPlayer = ({
       unregisterPlayer(playerKey);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ytId, playerKey]);
+  }, [ytId, playerKey, useYtApi]);
 
-  // Play / pause (Vimeo SDK y adaptador YouTube)
+  // Play / pause (Vimeo SDK y adaptador YouTube API)
   useEffect(() => {
     const player = playerRef.current;
     if (!player || !ready || playing === undefined) return undefined;
@@ -219,6 +218,10 @@ export const VideoPlayer = ({
   }, [playing, ready, onPlay, onPause]);
 
   const vimeoSrc = vimeoId ? buildVimeoSrc(vimeoId, { autoplay, background, muted, loop }) : null;
+  const ytSrc =
+    ytId && !useYtApi
+      ? buildYtSrc(ytId, { autoplay, muted, background, loop })
+      : null;
 
   if (!vimeoId && !ytId) {
     return (
@@ -230,6 +233,8 @@ export const VideoPlayer = ({
       </div>
     );
   }
+
+  const iframeCls = `absolute inset-0 h-full w-full border-0 bg-black [color-scheme:dark] ${interactive ? "" : "pointer-events-none"}`;
 
   return (
     <div
@@ -243,12 +248,22 @@ export const VideoPlayer = ({
           title="Video player"
           allow="autoplay; fullscreen; picture-in-picture"
           allowFullScreen
-          className={`absolute inset-0 h-full w-full border-0 bg-black [color-scheme:dark] ${interactive ? "" : "pointer-events-none"}`}
+          className={iframeCls}
         />
-      ) : (
+      ) : useYtApi ? (
         <div
           ref={containerRef}
           className={`absolute inset-0 h-full w-full overflow-hidden bg-black ${interactive ? "" : "pointer-events-none"} [&>iframe]:absolute [&>iframe]:inset-0 [&>iframe]:h-full [&>iframe]:w-full [&>iframe]:border-0`}
+        />
+      ) : (
+        <iframe
+          ref={containerRef}
+          src={ytSrc || ""}
+          title="Video player"
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowFullScreen
+          onLoad={handleReady}
+          className={iframeCls}
         />
       )}
       <div
@@ -283,7 +298,6 @@ const loadYouTubeApi = () => {
   return ytApiPromise;
 };
 
-/** Adaptador con la misma interfaz que @vimeo/player para videoStore */
 const createYoutubeAdapter = (player) => ({
   play: () =>
     new Promise((resolve, reject) => {
@@ -354,4 +368,21 @@ const buildVimeoSrc = (id, { autoplay, background, muted, loop }) => {
     params.set("autopause", "0");
   }
   return `https://player.vimeo.com/video/${id}?${params.toString()}`;
+};
+
+const buildYtSrc = (id, { autoplay, muted, background, loop }) => {
+  const params = new URLSearchParams({
+    rel: "0",
+    modestbranding: "1",
+    enablejsapi: "1",
+    playsinline: "1",
+  });
+  if (autoplay) params.set("autoplay", "1");
+  if (getGlobalMuted() || muted || background) params.set("mute", "1");
+  if (loop || background) {
+    params.set("loop", "1");
+    params.set("playlist", id);
+  }
+  if (background) params.set("controls", "0");
+  return `https://www.youtube.com/embed/${id}?${params.toString()}`;
 };
