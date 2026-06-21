@@ -142,6 +142,8 @@ export const VideoPlayer = ({
             fs: 0,
             disablekb: 1,
             iv_load_policy: 3,
+            cc_load_policy: 0,
+            autohide: 1,
           },
           events: {
             onReady: (event) => {
@@ -238,7 +240,7 @@ export const VideoPlayer = ({
 
   return (
     <div
-      className={`relative w-full bg-black ${className} ${interactive ? "" : "pointer-events-none"}`}
+      className={`relative w-full bg-black ${background && ytId ? "video-bg-cover" : ""} ${className} ${interactive ? "" : "pointer-events-none"}`}
       data-testid={testId}
     >
       {vimeoId ? (
@@ -253,7 +255,7 @@ export const VideoPlayer = ({
       ) : useYtApi ? (
         <div
           ref={containerRef}
-          className={`absolute inset-0 h-full w-full overflow-hidden bg-black ${interactive ? "" : "pointer-events-none"} [&>iframe]:absolute [&>iframe]:inset-0 [&>iframe]:h-full [&>iframe]:w-full [&>iframe]:border-0`}
+          className={`absolute inset-0 h-full w-full overflow-hidden bg-black ${interactive ? "" : "pointer-events-none"}`}
         />
       ) : (
         <iframe

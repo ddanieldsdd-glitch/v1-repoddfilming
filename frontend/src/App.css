@@ -119,6 +119,23 @@ a:focus-visible {
   border-radius: inherit;
 }
 
+/* Tarjetas background: recortar chrome de YouTube (título, botones) */
+.video-bg-cover {
+  overflow: hidden !important;
+}
+
+.video-bg-cover iframe {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  width: 320% !important;
+  height: 320% !important;
+  max-width: none !important;
+  transform: translate(-50%, -54%) !important;
+  pointer-events: none !important;
+  border: 0 !important;
+}
+
 @media (max-width: 767px) {
   .apple-tv-card:active .aspect-video {
     transform: scale(0.985);
