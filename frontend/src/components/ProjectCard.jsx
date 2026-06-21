@@ -7,6 +7,9 @@ import { pauseAllExcept, resumePlayer } from "../lib/videoStore";
 const isVideoUrl = (url) =>
   /vimeo\.com|youtube\.com|youtu\.be/.test(String(url || ""));
 
+const isYoutubeUrl = (url) =>
+  /youtube\.com|youtu\.be/.test(String(url || ""));
+
 export const ProjectCard = ({
   project,
   lang,
@@ -29,9 +32,13 @@ export const ProjectCard = ({
   const previewKey = `card-preview-${project.slug}`;
   const heroKey    = "hero-showreel";
 
-  const previewUrl =
+  const rawPreviewUrl =
     project.preview_url ||
     (isVideoUrl(project.cover) ? project.cover : null);
+
+  // YouTube no se previsualiza en tarjetas (embed inestable); solo imagen estática
+  const previewUrl =
+    rawPreviewUrl && !isYoutubeUrl(rawPreviewUrl) ? rawPreviewUrl : null;
 
   const coverIsImage  = project.cover && !isVideoUrl(project.cover);
   const fallbackImage = coverIsImage ? project.cover : project.poster;
