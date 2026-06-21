@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 
@@ -32,12 +33,12 @@ export default function About() {
 
   return (
     <>
-      {/* ── Lightbox ───────────────────────────────────────────────────── */}
-      {lightboxOpen && photo && (
+      {/* ── Lightbox (portal → directo en body, evita stacking context) ── */}
+      {lightboxOpen && photo && createPortal(
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-[200] bg-black/96 flex items-center justify-center cursor-zoom-out"
+          className="fixed inset-0 z-[9999] bg-black/96 flex items-center justify-center cursor-zoom-out"
           onClick={() => setLightboxOpen(false)}
         >
           <button
@@ -53,7 +54,8 @@ export default function About() {
             className="max-h-[90vh] max-w-[90vw] object-contain rounded-xl shadow-[0_40px_100px_rgba(0,0,0,0.8)]"
             onClick={(e) => e.stopPropagation()}
           />
-        </div>
+        </div>,
+        document.body,
       )}
 
       {/* ── Página ─────────────────────────────────────────────────────── */}
