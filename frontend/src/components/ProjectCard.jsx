@@ -61,7 +61,9 @@ export const ProjectCard = ({
     return () => obs.disconnect();
   }, [alwaysPlay, previewUrl]);
 
-  const shouldPreload = Boolean(previewUrl && (inView || hovered));
+  // Con alwaysPlay el VideoPlayer permanece montado aunque la tarjeta esté
+  // oculta por el filtro de categoría, evitando así reiniciar la reproducción.
+  const shouldPreload = Boolean(previewUrl && (alwaysPlay || inView || hovered));
   const shouldPlay    = Boolean(previewUrl && (hovered || (alwaysPlay && playInView)));
 
   const onMouseEnter = () => {
