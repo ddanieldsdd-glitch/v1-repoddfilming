@@ -33,26 +33,53 @@ export default function About() {
 
   return (
     <>
-      {/* ── Lightbox (portal → directo en body, evita stacking context) ── */}
+      {/* ── Lightbox (portal → directo en body) ── */}
       {lightboxOpen && photo && createPortal(
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-[9999] bg-black/96 flex items-center justify-center cursor-zoom-out"
           onClick={() => setLightboxOpen(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 99999,
+            backgroundColor: "#000",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "zoom-out",
+          }}
         >
           <button
             aria-label="Cerrar"
-            className="absolute top-5 right-6 text-white/50 hover:text-white transition-colors text-4xl leading-none font-extralight"
             onClick={() => setLightboxOpen(false)}
+            style={{
+              position: "absolute",
+              top: "20px",
+              right: "24px",
+              background: "none",
+              border: "none",
+              color: "rgba(255,255,255,0.5)",
+              fontSize: "36px",
+              lineHeight: 1,
+              cursor: "pointer",
+              padding: 0,
+            }}
           >
             ×
           </button>
           <img
             src={photo}
             alt={name}
-            className="max-h-[90vh] max-w-[90vw] object-contain rounded-xl shadow-[0_40px_100px_rgba(0,0,0,0.8)]"
             onClick={(e) => e.stopPropagation()}
+            style={{
+              maxHeight: "90vh",
+              maxWidth: "90vw",
+              objectFit: "contain",
+              borderRadius: "12px",
+              boxShadow: "0 40px 100px rgba(0,0,0,0.9)",
+              cursor: "default",
+            }}
           />
         </div>,
         document.body,
