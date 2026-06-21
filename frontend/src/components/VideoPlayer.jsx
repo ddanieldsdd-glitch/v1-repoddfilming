@@ -7,8 +7,8 @@ import {
 } from "../lib/videoStore";
 
 /**
- * Reliable video player using @vimeo/player SDK.
- * Supports Vimeo and YouTube (via native iframe for YouTube).
+ * Reliable video player using @vimeo/player SDK (Vimeo)
+ * and YouTube IFrame Player API (YouTube).
  */
 export const VideoPlayer = ({
   url,
@@ -27,8 +27,9 @@ export const VideoPlayer = ({
   onError,
   onRef,
 }) => {
-  const iframeRef = useRef(null);
+  const containerRef = useRef(null);
   const playerRef = useRef(null);
+  const ytPlayerRef = useRef(null);
   const [ready, setReady] = useState(false);
   const readyCalledRef = useRef(false);
 
@@ -44,17 +45,15 @@ export const VideoPlayer = ({
 
   // — Init Vimeo Player via SDK —
   useEffect(() => {
-    if (!vimeoId || !iframeRef.current) return undefined;
+    if (!vimeoId || !containerRef.current) return undefined;
 
-    // Reset ready state for new player
     readyCalledRef.current = false;
     setReady(false);
 
-    const iframe = iframeRef.current;
+    const iframe = containerRef.current;
     const player = new Player(iframe);
     playerRef.current = player;
 
-    // Safety net por si el SDK tarda más de lo esperado
     const safetyTimer = setTimeout(() => {
       handleReady();
     }, 1500);
@@ -73,8 +72,6 @@ export const VideoPlayer = ({
         registerPlayer(playerKey, player, { forceMuted: background || muted });
         onRef?.(player, iframe);
 
-        // Señalar ready en cuanto el SDK está listo: el iframe ya muestra
-        // el thumbnail del vídeo, eliminando el flash negro mientras bufferiza.
         handleReady();
 
         const shouldAutoplay =
@@ -111,6 +108,90 @@ export const VideoPlayer = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vimeoId, playerKey]);
 
+  // — Init YouTube Player via IFrame API —
+  useEffect(() => {
+    if (!ytId || vimeoId || !containerRef.current) return undefined;
+
+    readyCalledRef.current = false;
+    setReady(false);
+
+    let cancelled = false;
+    const safetyTimer = setTimeout(handleReady, 2000);
+
+    loadYouTubeApi()
+      .then((YT) => {
+        if (cancelled || !containerRef.current) return;
+
+        const shouldMute = background || muted || getGlobalMuted();
+        const shouldLoop = loop || background;
+
+        const ytPlayer = new YT.Player(containerRef.current, {
+          videoId: ytId,
+          playerVars: {
+            autoplay: 0,
+            controls: background ? 0 : 1,
+            modestbranding: 1,
+            rel: 0,
+            playsinline: 1,
+            mute: shouldMute ? 1 : 0,
+            loop: shouldLoop ? 1 : 0,
+            ...(shouldLoop ? { playlist: ytId } : {}),
+            fs: background ? 0 : 1,
+            disablekb: background ? 1 : 0,
+            iv_load_policy: 3,
+            origin: window.location.origin,
+          },
+          events: {
+            onReady: (event) => {
+              if (cancelled) return;
+
+              const adapter = createYoutubeAdapter(event.target);
+              playerRef.current = adapter;
+              ytPlayerRef.current = event.target;
+              registerPlayer(playerKey, adapter, { forceMuted: background || muted });
+              onRef?.(adapter, containerRef.current);
+
+              handleReady();
+
+              const shouldAutoplay =
+                playing !== false && (autoplay || background || playing === true);
+              if (shouldAutoplay) {
+                event.target.playVideo();
+              }
+            },
+            onStateChange: (event) => {
+              if (event.data === YT.PlayerState.PLAYING) onPlay?.();
+              if (event.data === YT.PlayerState.PAUSED) onPause?.();
+            },
+            onError: () => {
+              onError?.();
+              handleReady();
+            },
+          },
+        });
+
+        // Guardar referencia temprana para destroy en cleanup
+        ytPlayerRef.current = ytPlayer;
+      })
+      .catch(() => {
+        handleReady();
+      });
+
+    return () => {
+      cancelled = true;
+      clearTimeout(safetyTimer);
+      onRef?.(null, null);
+      playerRef.current = null;
+      try {
+        ytPlayerRef.current?.destroy?.();
+      } catch {}
+      ytPlayerRef.current = null;
+      unregisterPlayer(playerKey);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ytId, playerKey]);
+
+  // Play / pause (Vimeo SDK y adaptador YouTube)
   useEffect(() => {
     const player = playerRef.current;
     if (!player || !ready || playing === undefined) return undefined;
@@ -137,13 +218,8 @@ export const VideoPlayer = ({
     };
   }, [playing, ready, onPlay, onPause]);
 
-  // Build iframe src for Vimeo
   const vimeoSrc = vimeoId ? buildVimeoSrc(vimeoId, { autoplay, background, muted, loop }) : null;
 
-  // Build iframe src for YouTube
-  const ytSrc = ytId && !vimeoId ? buildYtSrc(ytId, { autoplay, muted, background, loop }) : null;
-
-  // — Nothing valid —
   if (!vimeoId && !ytId) {
     return (
       <div
@@ -160,15 +236,21 @@ export const VideoPlayer = ({
       className={`relative w-full bg-black ${className} ${interactive ? "" : "pointer-events-none"}`}
       data-testid={testId}
     >
-      <iframe
-        ref={iframeRef}
-        src={vimeoSrc || ytSrc || ""}
-        title="Video player"
-        allow="autoplay; fullscreen; picture-in-picture"
-        allowFullScreen
-        onLoad={vimeoId ? undefined : handleReady}
-        className={`absolute inset-0 h-full w-full border-0 bg-black [color-scheme:dark] ${interactive ? "" : "pointer-events-none"}`}
-      />
+      {vimeoId ? (
+        <iframe
+          ref={containerRef}
+          src={vimeoSrc || ""}
+          title="Video player"
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowFullScreen
+          className={`absolute inset-0 h-full w-full border-0 bg-black [color-scheme:dark] ${interactive ? "" : "pointer-events-none"}`}
+        />
+      ) : (
+        <div
+          ref={containerRef}
+          className={`absolute inset-0 h-full w-full overflow-hidden bg-black ${interactive ? "" : "pointer-events-none"} [&>iframe]:absolute [&>iframe]:inset-0 [&>iframe]:h-full [&>iframe]:w-full [&>iframe]:border-0`}
+        />
+      )}
       <div
         className={`pointer-events-none absolute inset-0 z-[1] bg-black transition-opacity duration-500 ${ready ? "opacity-0 pointer-events-none" : "opacity-100"}`}
       />
@@ -178,14 +260,78 @@ export const VideoPlayer = ({
 
 /* — Helpers — */
 
+let ytApiPromise = null;
+
+const loadYouTubeApi = () => {
+  if (typeof window === "undefined") return Promise.reject(new Error("no window"));
+  if (window.YT?.Player) return Promise.resolve(window.YT);
+  if (ytApiPromise) return ytApiPromise;
+
+  ytApiPromise = new Promise((resolve, reject) => {
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      prev?.();
+      resolve(window.YT);
+    };
+
+    const tag = document.createElement("script");
+    tag.src = "https://www.youtube.com/iframe_api";
+    tag.onerror = () => reject(new Error("YouTube API failed to load"));
+    document.head.appendChild(tag);
+  });
+
+  return ytApiPromise;
+};
+
+/** Adaptador con la misma interfaz que @vimeo/player para videoStore */
+const createYoutubeAdapter = (player) => ({
+  play: () =>
+    new Promise((resolve, reject) => {
+      try {
+        player.playVideo();
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+    }),
+  pause: () =>
+    new Promise((resolve) => {
+      try {
+        player.pauseVideo();
+      } catch {}
+      resolve();
+    }),
+  setMuted: (val) =>
+    new Promise((resolve) => {
+      try {
+        if (val) player.mute();
+        else player.unMute();
+      } catch {}
+      resolve();
+    }),
+  getPaused: () =>
+    new Promise((resolve) => {
+      try {
+        const state = player.getPlayerState();
+        resolve(
+          state !== window.YT.PlayerState.PLAYING &&
+            state !== window.YT.PlayerState.BUFFERING,
+        );
+      } catch {
+        resolve(true);
+      }
+    }),
+});
+
 const extractVimeoId = (url) => {
   const m = String(url).match(/vimeo\.com\/(?:video\/)?(\d+)/);
   return m ? m[1] : null;
 };
 
 const extractYoutubeId = (url) => {
-  const m =
-    String(url).match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{6,})/);
+  const m = String(url).match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{6,})/,
+  );
   return m ? m[1] : null;
 };
 
@@ -208,21 +354,4 @@ const buildVimeoSrc = (id, { autoplay, background, muted, loop }) => {
     params.set("autopause", "0");
   }
   return `https://player.vimeo.com/video/${id}?${params.toString()}`;
-};
-
-const buildYtSrc = (id, { autoplay, muted, background, loop }) => {
-  const params = new URLSearchParams({
-    rel: "0",
-    modestbranding: "1",
-    enablejsapi: "1",
-    playsinline: "1",
-  });
-  if (autoplay) params.set("autoplay", "1");
-  if (getGlobalMuted() || muted || background) params.set("mute", "1");
-  if (loop || background) {
-    params.set("loop", "1");
-    params.set("playlist", id);
-  }
-  if (background) params.set("controls", "0");
-  return `https://www.youtube.com/embed/${id}?${params.toString()}`;
 };
