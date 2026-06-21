@@ -364,12 +364,21 @@ const SiteSection = ({ content, onSave, saving }) => {
             onChange={(e) => updSite({ showreel_url: e.target.value })}
           />
         </Field>
-        <Field label="About photo URL (shown on /about)">
+        <Field label="About — foto URL">
           <input
             data-testid="site-about-image"
             className={inputCls}
             value={draft.site.about_image || ""}
             onChange={(e) => updSite({ about_image: e.target.value })}
+            placeholder="https://..."
+          />
+        </Field>
+        <Field label="About — pie de foto">
+          <input
+            className={inputCls}
+            value={draft.site.about_photo_caption || ""}
+            onChange={(e) => updSite({ about_photo_caption: e.target.value })}
+            placeholder="Ej: Nave Soviética"
           />
         </Field>
         <Field label="Title ES">

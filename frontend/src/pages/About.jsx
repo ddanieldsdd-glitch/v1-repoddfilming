@@ -141,7 +141,7 @@ export default function About() {
                   </button>
 
                   <p className="mt-3 text-[10px] tracking-[0.22em] uppercase text-neutral-400 dark:text-neutral-500 text-center">
-                    {name} · {tr(title, lang)}
+                    {content.site.about_photo_caption || `${name} · ${tr(title, lang)}`}
                   </p>
                 </div>
               )}
