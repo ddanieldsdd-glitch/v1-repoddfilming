@@ -80,36 +80,44 @@ export function cloudinaryResponsive(
 
 /** Ancho recomendado según contexto de uso */
 export const IMG = {
-  card: 560,
-  cardEager: 720,
+  card: 960,
+  cardEager: 1280,
   cardDecor: 280,
-  hero: 1280,
+  hero: 1600,
   poster: 480,
   still: 900,
-  stillGallery: 1600,
-  stillSide: 960,
-  stillRow: 640,
+  stillGallery: 1800,
+  stillSide: 1000,
+  stillRow: 800,
   stillThumb: 560,
-  lightbox: 1920,
+  lightbox: 2400,
   about: 1200,
   avatar: 128,
   logo: 88,
 };
 
-/** Tarjetas de proyecto — prioridad móvil (100vw en pantallas <768px). */
+/** Tarjetas de proyecto — equilibrio calidad / peso. */
 export const CARD_PRESETS = {
   lazy: {
-    widths: [280, 400, 520, 640],
+    widths: [400, 640, 960, 1200],
     sizes: "(min-width: 1024px) 28vw, (min-width: 768px) 44vw, 100vw",
     aspect: 16 / 9,
     quality: "good",
   },
   eager: {
-    widths: [360, 480, 640, 800],
+    widths: [640, 960, 1280, 1600],
     sizes: "(min-width: 1024px) 42vw, (min-width: 768px) 58vw, 100vw",
     aspect: 16 / 9,
     quality: "good",
   },
+};
+
+/** Cover / hero de ficha de proyecto (ancho completo). */
+export const COVER_PRESET = {
+  widths: [640, 960, 1280, 1600, 1920],
+  sizes: "100vw",
+  aspect: 16 / 9,
+  quality: "good",
 };
 
 /** Fondos decorativos (baja opacidad) — muy ligeros en móvil. */
@@ -122,18 +130,21 @@ export const DECOR_PRESET = {
 
 export const STILL_PRESETS = {
   hero: {
-    widths: [360, 480, 640, 960, 1280],
+    widths: [480, 720, 1080, 1400, 1800],
     sizes: "(min-width: 1024px) 58vw, (min-width: 768px) 92vw, 100vw",
     aspect: 16 / 9,
+    quality: "best",
   },
   side: {
-    widths: [240, 360, 480, 640],
+    widths: [360, 540, 720, 1000],
     sizes: "(min-width: 1024px) 22vw, (min-width: 768px) 42vw, 100vw",
     aspect: 16 / 9,
+    quality: "good",
   },
   row: {
-    widths: [180, 260, 360, 480],
+    widths: [280, 420, 560, 800],
     sizes: "(min-width: 1024px) 22vw, (min-width: 768px) 46vw, 50vw",
     aspect: 16 / 9,
+    quality: "good",
   },
 };

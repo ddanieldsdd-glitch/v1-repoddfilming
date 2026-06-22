@@ -8,28 +8,34 @@ import { getActiveCategories } from "../lib/contentStore";
 import { ProjectCard } from "../components/ProjectCard";
 import { ImageLightbox } from "../components/ImageLightbox";
 import { useImageLightbox } from "../hooks/useImageLightbox";
-import { optimizeCloudinaryUrl, cloudinaryResponsive, IMG, STILL_PRESETS } from "../lib/cloudinary";
+import { optimizeCloudinaryUrl, cloudinaryResponsive, IMG, STILL_PRESETS, COVER_PRESET } from "../lib/cloudinary";
 
-const oimg = (url, width = IMG.still, quality = "auto") =>
+const oimg = (url, width = IMG.still, quality = "good") =>
   url ? optimizeCloudinaryUrl(url, { width, quality }) : url;
 
-function StillImg({ src, preset = "row", eager = false, className = "" }) {
-  const { src: imgSrc, srcSet, sizes } = cloudinaryResponsive(src, {
-    ...STILL_PRESETS[preset],
-    quality: "good",
-  });
+function ResponsiveImg({ src, preset, eager = false, className = "", alt = "", ...rest }) {
+  const cfg =
+    preset === "cover" ? COVER_PRESET : STILL_PRESETS[preset] || STILL_PRESETS.row;
+  const { src: imgSrc, srcSet, sizes } = cloudinaryResponsive(src, cfg);
 
   return (
     <img
       src={imgSrc}
       srcSet={srcSet}
       sizes={sizes}
-      alt=""
+      alt={alt}
       loading={eager ? "eager" : "lazy"}
       decoding="async"
       fetchPriority={eager ? "high" : "auto"}
       className={className}
+      {...rest}
     />
+  );
+}
+
+function StillImg({ src, preset = "row", eager = false, className = "" }) {
+  return (
+    <ResponsiveImg src={src} preset={preset} eager={eager} className={className} />
   );
 }
 
@@ -205,18 +211,35 @@ export default function ProjectDetail() {
               {!heroMediaReady && (
                 <div className="pointer-events-none absolute inset-0 z-10 bg-neutral-950">
                   {(project.cover && !isVideoUrl(project.cover)) || project.poster ? (
-                    <img
-                      src={oimg(project.cover && !isVideoUrl(project.cover) ? project.cover : project.poster, IMG.hero)}
-                      alt="" className="w-full h-full object-cover opacity-60"
+                    <ResponsiveImg
+                      src={project.cover && !isVideoUrl(project.cover) ? project.cover : project.poster}
+                      preset="cover"
+                      eager
+                      alt=""
+                      className="w-full h-full object-cover opacity-60"
                     />
                   ) : null}
                 </div>
               )}
             </>
           ) : project.cover && !isVideoUrl(project.cover) ? (
-            <img src={oimg(project.cover, IMG.hero)} alt={project.title} data-testid="project-cover-image" className="w-full aspect-video object-cover" />
+            <ResponsiveImg
+              src={project.cover}
+              preset="cover"
+              eager
+              alt={project.title}
+              className="w-full aspect-video object-cover"
+              data-testid="project-cover-image"
+            />
           ) : project.poster ? (
-            <img src={oimg(project.poster, IMG.hero)} alt={project.title} data-testid="project-cover-image" className="w-full aspect-video object-cover" />
+            <ResponsiveImg
+              src={project.poster}
+              preset="cover"
+              eager
+              alt={project.title}
+              className="w-full aspect-video object-cover"
+              data-testid="project-cover-image"
+            />
           ) : (
             <div className="w-full aspect-video bg-neutral-950" />
           )}
