@@ -7,6 +7,29 @@ const MONGO_URL = process.env.MONGO_URL;
 const DB_NAME = process.env.DB_NAME || 'ddp_portfolio';
 const COLLECTION = 'content';
 
+/** Fusiona MongoDB con defaults para campos nuevos (p. ej. meta_description). */
+function mergeContent(doc) {
+  if (!doc) return { ...defaultContent };
+  return {
+    ...defaultContent,
+    ...doc,
+    site: {
+      ...defaultContent.site,
+      ...doc.site,
+      meta_description: {
+        ...(defaultContent.site?.meta_description || {}),
+        ...(doc.site?.meta_description || {}),
+      },
+      social: {
+        ...(defaultContent.site?.social || {}),
+        ...(doc.site?.social || {}),
+      },
+    },
+    about: { ...defaultContent.about, ...doc.about },
+    projects: doc.projects ?? defaultContent.projects,
+  };
+}
+
 // Reuse the client across warm invocations
 let _client = null;
 async function getDb() {
@@ -28,7 +51,7 @@ module.exports = async (req, res) => {
     if (req.method === 'GET') {
       const isAdmin = !!verifyToken(req);
       const doc = await db.collection(COLLECTION).findOne({}, { projection: { _id: 0 } });
-      const content = doc ? { ...doc } : { ...defaultContent };
+      const content = mergeContent(doc);
 
       // Public visitors only see published projects; admin sees all
       if (!isAdmin && Array.isArray(content.projects)) {

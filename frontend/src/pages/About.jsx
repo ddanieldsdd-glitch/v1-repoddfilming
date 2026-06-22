@@ -24,14 +24,7 @@ export default function About() {
   const photo = content.site.about_image
     ? optimizeCloudinaryUrl(content.site.about_image, { width: IMG.about })
     : null;
-  const { name, title, tagline, social } = content.site;
-
-  const socialLinks = [
-    social?.email    && { href: `mailto:${social.email}`,    label: social.email,  external: false },
-    social?.instagram && { href: social.instagram,            label: "Instagram",   external: true  },
-    social?.vimeo     && { href: social.vimeo,                label: "Vimeo",       external: true  },
-    social?.imdb      && { href: social.imdb,                 label: "IMDb",        external: true  },
-  ].filter(Boolean);
+  const { name, title, tagline } = content.site;
 
   return (
     <>
@@ -111,23 +104,6 @@ export default function About() {
                   <p className="mt-3 text-[10px] tracking-[0.22em] uppercase text-neutral-400 dark:text-neutral-500 text-center">
                     {content.site.about_photo_caption || `${name} · ${tr(title, lang)}`}
                   </p>
-                </div>
-              )}
-
-              {/* Links sociales */}
-              {socialLinks.length > 0 && (
-                <div className="mt-10 space-y-2.5">
-                  {socialLinks.map(({ href, label, external }) => (
-                    <a
-                      key={label}
-                      href={href}
-                      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-                      className="flex items-center gap-3 text-[11px] tracking-[0.22em] uppercase text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors group/link"
-                    >
-                      <span className="w-4 h-px bg-current transition-all duration-300 group-hover/link:w-7 shrink-0" />
-                      {label}
-                    </a>
-                  ))}
                 </div>
               )}
             </div>

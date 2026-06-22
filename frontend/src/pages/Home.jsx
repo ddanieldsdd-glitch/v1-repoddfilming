@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
-import { ArrowUpRight, ArrowRight, ChevronDown, X } from "lucide-react";
+import { ArrowUpRight, ArrowRight, ChevronDown } from "lucide-react";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 import { VideoPlayer } from "../components/VideoPlayer";
@@ -13,10 +13,7 @@ import { optimizeCloudinaryUrl, IMG } from "../lib/cloudinary";
 export default function Home() {
   const content = useContent();
   const [lang] = useLang();
-  const [showReelOpen, setShowReelOpen] = useState(false);
-  const [showReelClosing, setShowReelClosing] = useState(false);
   const [heroReelReady, setHeroReelReady] = useState(false);
-  const [modalReelReady, setModalReelReady] = useState(false);
   const [heroVideoEnabled, setHeroVideoEnabled] = useState(false);
 
   const featured = (content.projects || []).slice(0, 6);
@@ -45,36 +42,12 @@ export default function Home() {
     };
   }, []);
 
-  const openShowReel = () => {
-    setShowReelClosing(false);
-    setModalReelReady(false);
-    setShowReelOpen(true);
-  };
-
-  const closeShowReel = () => {
-    setShowReelClosing(true);
-    window.setTimeout(() => {
-      setShowReelOpen(false);
-      setShowReelClosing(false);
-    }, 260);
-  };
-
-  useEffect(() => {
-    const handleKey = (e) => {
-      if (e.key === "Escape") closeShowReel();
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, []);
-
   // Keep the hero showreel permanently muted, even if global unmute is toggled
   useEffect(() => {
-    // Immediately mute on mount
     const hero = getPlayer("hero-showreel");
     if (hero) {
       try { hero.setMuted(true).catch(() => {}); } catch {}
     }
-    // Re-mute whenever global mute state changes
     const unsubscribe = subscribeGlobalMuted(() => {
       const h = getPlayer("hero-showreel");
       if (h) {
@@ -92,7 +65,6 @@ export default function Home() {
         className="relative bg-black"
         style={{ height: "100svh", padding: "8px 8px 0" }}
       >
-        {/* Tarjeta redondeada que ocupa casi toda la pantalla */}
         <div className="relative w-full h-full rounded-[1.75rem] sm:rounded-[2rem] md:rounded-[2.5rem] overflow-hidden bg-neutral-950 hero-fullscreen shadow-[0_40px_120px_-20px_rgba(0,0,0,1)]">
           {showreelPoster && (
             <img
@@ -100,6 +72,8 @@ export default function Home() {
               alt=""
               fetchPriority="high"
               decoding="async"
+              width={1920}
+              height={1080}
               className={`absolute inset-0 z-0 h-full w-full object-cover transition-opacity duration-700 ${
                 heroReelReady ? "opacity-0" : "opacity-100"
               }`}
@@ -120,37 +94,31 @@ export default function Home() {
               />
             </div>
           )}
-          {/* Overlay que se desvanece cuando el vídeo está listo */}
           <div
             className={`pointer-events-none absolute inset-0 z-[1] bg-neutral-950 transition-opacity duration-700 ${
               heroReelReady ? "opacity-0" : showreelPoster ? "opacity-0" : "opacity-100"
             }`}
           />
 
-          {/* Gradiente inferior para legibilidad */}
           <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-          {/* Botón invisible que abre el reel */}
-          <button
-            type="button"
-            onClick={openShowReel}
+          <Link
+            to="/showreel"
             className="absolute inset-0 z-10 cursor-pointer"
-            aria-label={lang === "es" ? "Ver reel en grande" : "View reel fullscreen"}
+            aria-label={lang === "es" ? "Ver showreel" : "View showreel"}
           >
             <span className="sr-only">
-              {lang === "es" ? "Ver reel en grande" : "View reel fullscreen"}
+              {lang === "es" ? "Ver showreel" : "View showreel"}
             </span>
-          </button>
+          </Link>
 
-          {/* Etiqueta "Ver reel" — pill estilo Apple TV */}
           <div className="absolute right-5 bottom-6 sm:right-7 sm:bottom-8 md:right-9 md:bottom-10 z-20 pointer-events-none">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 px-4 py-2 text-[10px] tracking-[0.24em] uppercase text-white/90">
-              {lang === "es" ? "Ver reel" : "View reel"}
+              {tr(T.hero.showreel, lang)}
               <ArrowUpRight className="h-3 w-3" strokeWidth={1.5} />
             </span>
           </div>
 
-          {/* Scroll indicator */}
           <div className="absolute bottom-6 sm:bottom-8 md:bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/50 text-[9px] tracking-[0.32em] uppercase pointer-events-none z-20">
             <span>{tr(T.hero.scroll, lang)}</span>
             <ChevronDown className="w-3.5 h-3.5 animate-bounce" strokeWidth={1} />
@@ -160,39 +128,6 @@ export default function Home() {
           <p data-testid="hero-title" className="sr-only">{tr(content.site.title, lang)}</p>
         </div>
       </section>
-
-      {showReelOpen && (
-        <div
-          className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black/95 px-2 py-10 backdrop-blur-md transition-opacity duration-300 md:px-6 md:py-12 ${showReelClosing ? "opacity-0" : "opacity-100 animate-[ddpFadeUp_320ms_ease-out_both]"}`}
-          onClick={closeShowReel}
-        >
-          <button
-            type="button"
-            onClick={closeShowReel}
-            className="absolute right-5 top-5 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 text-white/80 transition hover:border-white hover:text-white md:right-8 md:top-8"
-            aria-label="Close reel"
-          >
-            <X className="h-4 w-4" strokeWidth={1.5} />
-          </button>
-          <div
-            className={`relative aspect-video w-full max-w-[min(96vw,calc(92svh*16/9))] overflow-hidden bg-black shadow-2xl transition-transform duration-300 ease-out ${showReelClosing ? "scale-[0.985]" : "scale-100"}`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <VideoPlayer
-              url={content.site.showreel_url}
-              playerKey="hero-showreel-modal"
-              autoplay
-              className={`h-full w-full transition-opacity duration-700 ${modalReelReady ? "opacity-100" : "opacity-0"}`}
-              testId="hero-showreel-fullscreen"
-              interactive
-              onReady={() => setModalReelReady(true)}
-            />
-            {!modalReelReady && (
-              <div className="pointer-events-none absolute inset-0 bg-black" />
-            )}
-          </div>
-        </div>
-      )}
 
       {/* SELECTED WORK */}
       <section
@@ -217,7 +152,6 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* Layout alternante: 1 grande + 2 pequeños / 2 pequeños + 1 grande */}
         {(() => {
           const GAP = "gap-3 sm:gap-4 md:gap-5";
           const groups = [];
@@ -230,7 +164,6 @@ export default function Home() {
                 const baseIdx = gi * 3;
                 const eager   = (i) => baseIdx + i < 2;
 
-                // Grupo de 1 sola tarjeta → ancho completo
                 if (group.length === 1) {
                   return (
                     <ProjectCard
@@ -244,7 +177,6 @@ export default function Home() {
                   );
                 }
 
-                // Grupo de 2 tarjetas → grid 2 columnas iguales
                 if (group.length === 2) {
                   return (
                     <div key={group[0].id} className={`grid grid-cols-2 ${GAP}`}>
@@ -262,7 +194,6 @@ export default function Home() {
                   );
                 }
 
-                // Grupo de 3: alterna grande-izq/peq-der ↔ peq-izq/grande-der
                 const isEven = gi % 2 === 0;
                 return (
                   <div
@@ -271,7 +202,6 @@ export default function Home() {
                   >
                     {isEven ? (
                       <>
-                        {/* GRANDE izquierda */}
                         <div className="md:col-span-7 md:flex md:flex-col">
                           <ProjectCard
                             project={group[0]}
@@ -281,7 +211,6 @@ export default function Home() {
                             fill
                           />
                         </div>
-                        {/* 2 PEQUEÑOS derecha */}
                         <div className={`md:col-span-5 flex flex-col ${GAP}`}>
                           <ProjectCard
                             project={group[1]}
@@ -301,7 +230,6 @@ export default function Home() {
                       </>
                     ) : (
                       <>
-                        {/* 2 PEQUEÑOS izquierda */}
                         <div className={`md:col-span-5 flex flex-col ${GAP}`}>
                           <ProjectCard
                             project={group[0]}
@@ -318,7 +246,6 @@ export default function Home() {
                             aspectClass="aspect-video"
                           />
                         </div>
-                        {/* GRANDE derecha */}
                         <div className="md:col-span-7 md:flex md:flex-col">
                           <ProjectCard
                             project={group[2]}
@@ -337,7 +264,6 @@ export default function Home() {
           );
         })()}
 
-        {/* Ver más — 2 tiles de categoría */}
         {(() => {
           const active = getActiveCategories(content.projects || []).slice(0, 2);
           if (active.length === 0) return null;
@@ -362,6 +288,8 @@ export default function Home() {
                         <img
                           src={optimizeCloudinaryUrl(thumb, { width: IMG.card })}
                           alt=""
+                          loading="lazy"
+                          decoding="async"
                           className="pointer-events-none absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-30 transition-opacity duration-500 scale-[1.04] group-hover:scale-100"
                         />
                       )}

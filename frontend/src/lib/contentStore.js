@@ -19,7 +19,21 @@ export const loadContent = () => {
   if (typeof window === "undefined") return defaultContent;
   const raw = localStorage.getItem(STORAGE_KEY);
   const parsed = raw ? safeParse(raw) : null;
-  return parsed || defaultContent;
+  const base = parsed || defaultContent;
+  return {
+    ...defaultContent,
+    ...base,
+    site: {
+      ...defaultContent.site,
+      ...base.site,
+      meta_description: {
+        ...(defaultContent.site?.meta_description || {}),
+        ...(base.site?.meta_description || {}),
+      },
+    },
+    about: { ...defaultContent.about, ...base.about },
+    projects: base.projects ?? defaultContent.projects,
+  };
 };
 
 // Async fetch from the server — returns fresh data from MongoDB

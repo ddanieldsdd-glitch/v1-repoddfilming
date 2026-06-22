@@ -13,6 +13,7 @@ import Home from "./pages/Home";
 const Work = lazy(() => import("./pages/Work"));
 const ProjectDetail = lazy(() => import("./pages/ProjectDetail"));
 const About = lazy(() => import("./pages/About"));
+const Showreel = lazy(() => import("./pages/Showreel"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Admin = lazy(() => import("./pages/Admin"));
 
@@ -74,6 +75,7 @@ function App() {
               <Route path="/work/:category" element={<Work />} />
               <Route path="/project/:slug" element={<ProjectDetail />} />
               <Route path="/about" element={<About />} />
+              <Route path="/showreel" element={<Showreel />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/admin" element={<Admin />} />
             </Routes>

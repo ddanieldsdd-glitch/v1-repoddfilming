@@ -1,10 +1,8 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useContent, useLang } from "../lib/useContent";
-import { tr } from "../lib/i18n";
-
-const DEFAULT_DESC =
-  "Dani Díaz, Director de Fotografía entre Sevilla y Barcelona. Formado en la ESCAC. Ficción, documental, publicidad y videoclips.";
+import { getPageSeo } from "../lib/seo";
+import { getVimeoPosterUrl } from "../lib/vimeo";
 
 const setMeta = (key, value, property = false) => {
   if (!value) return;
@@ -18,32 +16,63 @@ const setMeta = (key, value, property = false) => {
   el.setAttribute("content", value);
 };
 
-/** Sincroniza title y meta description con el contenido del admin (MongoDB). */
+const setCanonical = (href) => {
+  if (!href) return;
+  let el = document.querySelector('link[rel="canonical"]');
+  if (!el) {
+    el = document.createElement("link");
+    el.setAttribute("rel", "canonical");
+    document.head.appendChild(el);
+  }
+  el.setAttribute("href", href);
+};
+
+const PRELOAD_ID = "ddp-lcp-poster";
+
+/** Sincroniza title, description y canonical en cada ruta pública. */
 export function SeoHead() {
   const content = useContent();
   const [lang] = useLang();
   const { pathname } = useLocation();
 
   useEffect(() => {
-    // Meta del sitio en home; otras rutas mantienen su propio SEO (p. ej. og.js en proyectos)
-    if (pathname !== "/") return;
+    if (pathname.startsWith("/admin") || pathname.startsWith("/project/")) return;
 
-    const title = `${content.site?.name || "Dani Díaz"} — ${tr(content.site?.title, lang)}`;
-    const description =
-      tr(content.site?.meta_description, lang) ||
-      String(content.about?.[lang] || content.about?.es || "")
-        .split("\n")
-        .filter(Boolean)[0]
-        ?.slice(0, 320) ||
-      DEFAULT_DESC;
+    const { title, description, canonical } = getPageSeo(pathname, content, lang);
 
     document.title = title;
     setMeta("description", description);
     setMeta("og:title", title, true);
     setMeta("og:description", description, true);
+    setMeta("og:url", canonical, true);
     setMeta("twitter:title", title);
     setMeta("twitter:description", description);
+    setCanonical(canonical);
   }, [content, lang, pathname]);
+
+  // Preload del poster LCP en home (mejora PageSpeed)
+  useEffect(() => {
+    if (pathname !== "/") {
+      document.getElementById(PRELOAD_ID)?.remove();
+      return undefined;
+    }
+
+    const poster = getVimeoPosterUrl(content.site?.showreel_url);
+    if (!poster) return undefined;
+
+    let link = document.getElementById(PRELOAD_ID);
+    if (!link) {
+      link = document.createElement("link");
+      link.id = PRELOAD_ID;
+      link.rel = "preload";
+      link.as = "image";
+      link.setAttribute("fetchpriority", "high");
+      document.head.appendChild(link);
+    }
+    link.href = poster;
+
+    return () => document.getElementById(PRELOAD_ID)?.remove();
+  }, [pathname, content.site?.showreel_url]);
 
   return null;
 }

@@ -148,6 +148,58 @@ function buildProjectJsonLd(project, pageUrl) {
   return JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }, (_, v) => v === undefined ? undefined : v, 2);
 }
 
+function buildShowreelJsonLd(content, pageUrl) {
+  const id = vimeoId(content.site?.showreel_url);
+  const title = 'Showreel — Dani Díaz';
+  const description =
+    content.site?.meta_description?.es
+    || defaultContent.site?.meta_description?.es
+    || 'Showreel de Dani Díaz, Director de Fotografía.';
+  const thumb = id ? `https://vumbnail.com/${id}.jpg` : toOGImage(content.site?.logo_white || '');
+
+  const graph = [
+    {
+      '@type': 'WebPage',
+      '@id': `${pageUrl}#webpage`,
+      url: pageUrl,
+      name: title,
+      description,
+      inLanguage: ['es', 'en'],
+      author: { '@id': 'https://ddanidiaz.com/#person' },
+    },
+  ];
+
+  if (id) {
+    graph.push({
+      '@type': 'VideoObject',
+      '@id': `${pageUrl}#video`,
+      name: title,
+      description,
+      thumbnailUrl: thumb,
+      contentUrl: `https://vimeo.com/${id}`,
+      embedUrl: `https://player.vimeo.com/video/${id}`,
+      url: pageUrl,
+    });
+  }
+
+  return JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }, (_, v) => v === undefined ? undefined : v, 2);
+}
+
+function buildShowreelOG(content) {
+  const id = vimeoId(content.site?.showreel_url);
+  const title = esc('Showreel — Dani Díaz');
+  const description = esc(
+    content.site?.meta_description?.es
+    || defaultContent.site?.meta_description?.es
+    || 'Showreel de Dani Díaz, Director de Fotografía.',
+  );
+  const image = id
+    ? `https://vumbnail.com/${id}.jpg`
+    : toOGImage(content.site?.logo_white || `${BASE_URL}/og-fallback.jpg`);
+  const url = `${BASE_URL}/showreel`;
+  return { title, description, image, url };
+}
+
 /**
  * Construye los datos OG de un proyecto.
  * Prioridad de imagen: poster (cartel) → cover → fallback logo.
@@ -256,6 +308,27 @@ module.exports = async (req, res) => {
   const { URL: NodeURL } = require('url');
   const parsed = new NodeURL(req.url, 'http://localhost');
   const pathname = parsed.pathname;
+
+  if (pathname === '/showreel') {
+    const content = await getContent();
+    const ogData  = buildShowreelOG(content);
+    const jsonLd  = buildShowreelJsonLd(content, `${BASE_URL}/showreel`);
+    const ua      = req.headers['user-agent'] || '';
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=3600, stale-while-revalidate=86400');
+
+    if (isBot(ua)) {
+      return res.status(200).send(buildBotHTML(ogData, jsonLd));
+    }
+
+    const baseHtml = await getBaseHtml();
+    if (baseHtml) {
+      return res.status(200).send(injectOGTags(baseHtml, ogData, jsonLd));
+    }
+
+    return res.status(200).send(buildBotHTML(ogData, jsonLd));
+  }
 
   const projectMatch = pathname.match(/^\/project\/([^/?#]+)/);
 

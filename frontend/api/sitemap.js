@@ -16,8 +16,8 @@ const BASE_URL  = 'https://ddanidiaz.com';
 
 let _client = null;
 
-async function getProjects() {
-  if (!MONGO_URL) return defaultContent.projects || [];
+async function getContent() {
+  if (!MONGO_URL) return defaultContent;
   try {
     if (!_client) {
       _client = new MongoClient(MONGO_URL);
@@ -26,10 +26,16 @@ async function getProjects() {
     const doc = await _client
       .db(DB_NAME)
       .collection('content')
-      .findOne({}, { projection: { _id: 0, projects: 1 } });
-    return doc?.projects || defaultContent.projects || [];
+      .findOne({}, { projection: { _id: 0 } });
+    if (!doc) return defaultContent;
+    return {
+      ...defaultContent,
+      ...doc,
+      site: { ...defaultContent.site, ...doc.site },
+      projects: doc.projects || defaultContent.projects || [],
+    };
   } catch {
-    return defaultContent.projects || [];
+    return defaultContent;
   }
 }
 
@@ -59,53 +65,73 @@ function toVideoThumb(url) {
   return url.replace('/upload/', '/upload/w_1280,h_720,c_fill,g_auto,q_auto,f_jpg/');
 }
 
-/** Bloque <video:video> para un proyecto con vídeo de Vimeo. */
-function buildVideoBlock(project) {
-  const id = vimeoId(project.preview_url);
+/** Bloque <video:video> genérico para una URL de Vimeo. */
+function buildVideoBlockFromUrl(vimeoUrl, title, description, thumb) {
+  const id = vimeoId(vimeoUrl);
   if (!id) return '';
 
-  const playerLoc  = `https://player.vimeo.com/video/${id}`;
-  const thumb      = toVideoThumb(project.cover || project.poster || '');
-  const title      = escXml(project.title);
-  const desc       = escXml(
-    (project.synopsis?.es || project.synopsis?.en || '').slice(0, 2048)
-  );
+  const playerLoc = `https://player.vimeo.com/video/${id}`;
+  const poster = thumb || `https://vumbnail.com/${id}.jpg`;
 
   return [
     '    <video:video>',
-    thumb  ? `      <video:thumbnail_loc>${thumb}</video:thumbnail_loc>` : '',
-    `      <video:title>${title}</video:title>`,
-    desc   ? `      <video:description>${desc}</video:description>` : '',
+    `      <video:thumbnail_loc>${escXml(poster)}</video:thumbnail_loc>`,
+    `      <video:title>${escXml(title)}</video:title>`,
+    description ? `      <video:description>${escXml(description.slice(0, 2048))}</video:description>` : '',
     `      <video:player_loc>${playerLoc}</video:player_loc>`,
     '      <video:family_friendly>yes</video:family_friendly>',
     '    </video:video>',
   ].filter(Boolean).join('\n');
 }
 
+/** Bloque <video:video> para un proyecto con vídeo de Vimeo. */
+function buildVideoBlock(project) {
+  const desc = (project.synopsis?.es || project.synopsis?.en || '').slice(0, 2048);
+  return buildVideoBlockFromUrl(
+    project.preview_url,
+    project.title,
+    desc,
+    toVideoThumb(project.cover || project.poster || ''),
+  );
+}
+
 module.exports = async (req, res) => {
   if (req.method !== 'GET') return res.status(405).end('Method Not Allowed');
 
-  const projects  = await getProjects();
+  const content   = await getContent();
+  const projects  = content.projects || [];
   const published = projects.filter((p) => p.published !== false);
   const today     = new Date().toISOString().split('T')[0];
+  const siteDesc  = content.site?.meta_description?.es
+    || defaultContent.site?.meta_description?.es
+    || 'Showreel de Dani Díaz, Director de Fotografía.';
 
   const categories = [...new Set(published.map((p) => p.category).filter(Boolean))];
 
+  const showreelVideo = buildVideoBlockFromUrl(
+    content.site?.showreel_url,
+    'Showreel — Dani Díaz',
+    siteDesc,
+    content.site?.showreel_url ? `https://vumbnail.com/${vimeoId(content.site.showreel_url)}.jpg` : '',
+  );
+
   // ── Páginas estáticas ─────────────────────────────────────────────────────
   const staticUrls = [
-    { loc: '/',        priority: '1.0', changefreq: 'weekly',  lastmod: today },
-    { loc: '/work',    priority: '0.9', changefreq: 'weekly',  lastmod: today },
-    { loc: '/about',   priority: '0.8', changefreq: 'monthly', lastmod: today },
-    { loc: '/contact', priority: '0.7', changefreq: 'monthly', lastmod: today },
-  ].map(({ loc, priority, changefreq, lastmod }) =>
+    { loc: '/',        priority: '1.0', changefreq: 'weekly',  lastmod: today, video: '' },
+    { loc: '/showreel', priority: '0.95', changefreq: 'monthly', lastmod: today, video: showreelVideo },
+    { loc: '/work',    priority: '0.9', changefreq: 'weekly',  lastmod: today, video: '' },
+    { loc: '/about',   priority: '0.8', changefreq: 'monthly', lastmod: today, video: '' },
+    { loc: '/contact', priority: '0.7', changefreq: 'monthly', lastmod: today, video: '' },
+  ].map(({ loc, priority, changefreq, lastmod, video }) =>
     [
       '  <url>',
       `    <loc>${BASE_URL}${loc}</loc>`,
       `    <lastmod>${lastmod}</lastmod>`,
       `    <changefreq>${changefreq}</changefreq>`,
       `    <priority>${priority}</priority>`,
+      video,
       '  </url>',
-    ].join('\n')
+    ].filter(Boolean).join('\n')
   );
 
   // ── Páginas de categoría ─────────────────────────────────────────────────
