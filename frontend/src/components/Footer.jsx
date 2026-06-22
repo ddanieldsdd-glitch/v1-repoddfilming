@@ -9,6 +9,7 @@ export const Footer = () => {
   const location = useLocation();
   if (location.pathname.startsWith("/admin")) return null;
   if (location.pathname.startsWith("/contact")) return null;
+  if (location.pathname === "/showreel") return null;
 
   const s = content.site.social;
   const year = new Date().getFullYear();

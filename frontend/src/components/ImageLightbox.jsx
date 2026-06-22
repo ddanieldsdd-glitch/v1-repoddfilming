@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { optimizeCloudinaryUrl, IMG } from "../lib/cloudinary";
 
 const lightboxSrc = (url) =>
-  url ? optimizeCloudinaryUrl(url, { width: IMG.lightbox }) : url;
+  url ? optimizeCloudinaryUrl(url, { width: IMG.lightbox, quality: "good" }) : url;
 
 const thumbSrc = (url) =>
   url ? optimizeCloudinaryUrl(url, { width: IMG.stillThumb }) : url;

@@ -2,6 +2,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
+import { optimizeCloudinaryUrl, IMG } from "../lib/cloudinary";
 
 export const Nav = () => {
   const content = useContent();
@@ -25,6 +26,7 @@ export const Nav = () => {
       const y = window.scrollY;
       const hasHero =
         location.pathname === "/" ||
+        location.pathname === "/showreel" ||
         location.pathname.startsWith("/project/");
       setOverHero(hasHero && y < window.innerHeight - 80);
     };
@@ -46,12 +48,15 @@ export const Nav = () => {
   useEffect(() => setOpen(false), [location.pathname]);
 
   if (location.pathname.startsWith("/admin")) return null;
+  if (location.pathname === "/showreel") return null;
 
   // El nav es siempre visible. Transparente sobre el hero, glass al hacer scroll.
   const isTransparent = overHero && !open;
   const isHidden      = isFullscreen;
 
-  const logoUrl = content.site.logo_white;
+  const logoUrl = content.site.logo_white
+    ? optimizeCloudinaryUrl(content.site.logo_white, { width: IMG.logo })
+    : null;
 
   const linkClass = ({ isActive }) =>
     `text-[12px] tracking-[0.22em] uppercase transition-all duration-300 px-3.5 py-2 rounded-full ${
@@ -79,6 +84,9 @@ export const Nav = () => {
             <img
               src={logoUrl}
               alt="DD"
+              width={88}
+              height={44}
+              decoding="async"
               className="h-8 w-auto md:h-11 transition-all duration-500 invert"
             />
           )}

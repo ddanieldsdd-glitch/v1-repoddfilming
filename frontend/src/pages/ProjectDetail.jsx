@@ -10,8 +10,8 @@ import { ImageLightbox } from "../components/ImageLightbox";
 import { useImageLightbox } from "../hooks/useImageLightbox";
 import { optimizeCloudinaryUrl, IMG } from "../lib/cloudinary";
 
-const oimg = (url, width = IMG.still) =>
-  url ? optimizeCloudinaryUrl(url, { width }) : url;
+const oimg = (url, width = IMG.still, quality = "auto") =>
+  url ? optimizeCloudinaryUrl(url, { width, quality }) : url;
 
 const isVideoUrl = (url) =>
   /vimeo\.com|youtube\.com|youtu\.be/.test(String(url || ""));
@@ -405,10 +405,8 @@ export default function ProjectDetail() {
           </div>
 
           <div ref={stillsRef} className="flex flex-col gap-1.5 sm:gap-2">
-            {/* Fila principal: still destacado (2/3) + 2 apilados (1/3) */}
+            {/* Fila principal: 1 grande + 2 apilados */}
             <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-1.5 sm:gap-2">
-
-              {/* Still héroe */}
               <button
                 type="button"
                 onClick={() => openLightbox(project.stills, 0, "stills")}
@@ -417,69 +415,56 @@ export default function ProjectDetail() {
                 aria-label={lang === "es" ? "Ver galería completa" : "View full gallery"}
               >
                 <img
-                  src={oimg(project.stills[0], IMG.still)}
+                  src={oimg(project.stills[0], IMG.stillGallery, "good")}
                   alt=""
                   loading="eager"
+                  decoding="async"
                   className="w-full h-full object-cover transition-all duration-700 group-hover:scale-[1.04] group-hover:brightness-[0.88]"
                 />
-                {/* Overlay degradado inferior */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                {/* Pill "Ver galería" */}
                 <div className="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transition-all duration-400 translate-y-1 group-hover:translate-y-0">
                   <span className="inline-flex items-center gap-2 text-[9px] tracking-[0.28em] uppercase text-white/80 bg-black/50 backdrop-blur-md rounded-full px-3.5 py-1.5 border border-white/10">
-                    <svg width="9" height="9" viewBox="0 0 9 9" fill="none" className="shrink-0">
-                      <circle cx="4.5" cy="4.5" r="4" stroke="currentColor" strokeWidth="1" />
-                      <path d="M3 4.5h3M4.5 3v3" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
-                    </svg>
                     {lang === "es" ? "Ver galería" : "View gallery"} · {project.stills.length}
                   </span>
                 </div>
-                {/* Número de fotograma */}
                 <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <span className="text-[9px] tracking-[0.22em] text-white/40">01</span>
                 </div>
               </button>
 
-              {/* 2 stills apilados a la derecha */}
               {project.stills.length >= 2 && (
                 <div className="grid grid-rows-2 gap-1.5 sm:gap-2">
                   {project.stills.slice(1, 3).map((src, i) => (
-                    <button
-                      key={src + i}
-                      type="button"
-                      onClick={() => openLightbox(project.stills, i + 1, "stills")}
-                      className="reveal-stagger group relative overflow-hidden rounded-2xl bg-neutral-950 aspect-video sm:aspect-auto cursor-zoom-in outline-none ring-1 ring-white/5 hover:ring-white/15 transition-all duration-500"
-                      style={{ "--delay": `${(i + 1) * 60}ms` }}
-                      aria-label={`${lang === "es" ? "Fotograma" : "Still"} ${i + 2}`}
-                    >
-                      <img
-                        src={oimg(src, IMG.stillThumb)}
-                        alt=""
-                        loading="lazy"
-                        className="w-full h-full object-cover transition-all duration-700 group-hover:scale-[1.05] group-hover:brightness-[0.88]"
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-500" />
-                      <div className="absolute top-2 right-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <span className="text-[9px] tracking-[0.22em] text-white/40">
-                          {String(i + 2).padStart(2, "0")}
-                        </span>
-                      </div>
-                    </button>
+                      <button
+                        key={src + i}
+                        type="button"
+                        onClick={() => openLightbox(project.stills, i + 1, "stills")}
+                        className="reveal-stagger group relative overflow-hidden rounded-2xl bg-neutral-950 aspect-video sm:aspect-auto cursor-zoom-in outline-none ring-1 ring-white/5 hover:ring-white/15 transition-all duration-500"
+                        style={{ "--delay": `${(i + 1) * 60}ms` }}
+                        aria-label={`${lang === "es" ? "Fotograma" : "Still"} ${i + 2}`}
+                      >
+                        <img
+                          src={oimg(src, IMG.stillGallery, "good")}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-full object-cover transition-all duration-700 group-hover:scale-[1.05] group-hover:brightness-[0.88]"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-500" />
+                        <div className="absolute top-2 right-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <span className="text-[9px] tracking-[0.22em] text-white/40">
+                            {String(i + 2).padStart(2, "0")}
+                          </span>
+                        </div>
+                      </button>
                   ))}
                 </div>
               )}
             </div>
 
-            {/* Fila de stills adicionales */}
+            {/* Segunda fila: hasta 4 fotogramas con +N en el último */}
             {project.stills.length > 3 && (
-              <div
-                className={`grid gap-1.5 sm:gap-2 ${
-                  Math.min(project.stills.length - 3, 4) === 1 ? "grid-cols-1" :
-                  Math.min(project.stills.length - 3, 4) === 2 ? "grid-cols-2" :
-                  Math.min(project.stills.length - 3, 4) === 3 ? "grid-cols-3" :
-                  "grid-cols-4"
-                }`}
-              >
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
                 {project.stills.slice(3, 7).map((src, i) => {
                   const isLastSlot = i === 3;
                   const remaining = project.stills.length - 7;
@@ -488,15 +473,16 @@ export default function ProjectDetail() {
                     <button
                       key={src + i}
                       type="button"
-                      onClick={() => openLightbox(project.stills, i + 3, "stills")}
+                      onClick={() => openLightbox(project.stills, showCount ? 0 : i + 3, "stills")}
                       className="reveal-stagger group relative overflow-hidden rounded-xl md:rounded-2xl bg-neutral-950 aspect-video cursor-zoom-in outline-none ring-1 ring-white/5 hover:ring-white/15 transition-all duration-500"
                       style={{ "--delay": `${(i + 3) * 55}ms` }}
                       aria-label={`${lang === "es" ? "Fotograma" : "Still"} ${i + 4}`}
                     >
                       <img
-                        src={oimg(src, IMG.stillThumb)}
+                        src={oimg(src, IMG.stillRow, "good")}
                         alt=""
                         loading="lazy"
+                        decoding="async"
                         className={`w-full h-full object-cover transition-all duration-700 ${
                           showCount
                             ? "brightness-[0.35]"
@@ -505,8 +491,8 @@ export default function ProjectDetail() {
                       />
                       {showCount ? (
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-white text-3xl font-extralight tracking-tight">
-                            +{remaining + 1}
+                          <span className="text-white text-2xl sm:text-3xl font-extralight tracking-tight">
+                            +{remaining}
                           </span>
                         </div>
                       ) : (
@@ -526,34 +512,66 @@ export default function ProjectDetail() {
             )}
           </div>
 
-          {/* BTS — tira compacta si existe */}
+          {/* BTS — fila inferior */}
           {hasBts && (
-            <div className="mt-4">
+            <div className="mt-4 sm:mt-5">
               <div className="flex items-center gap-4 mb-2.5 px-1">
                 <p className="text-[10px] tracking-[0.34em] uppercase text-neutral-600 shrink-0">
                   {lang === "es" ? "Detrás de cámara" : "Behind the scenes"} — {String(project.bts.length).padStart(2, "0")}
                 </p>
                 <div className="flex-1 h-px bg-white/6" />
+                <button
+                  type="button"
+                  onClick={() => openLightbox(project.bts, 0, "bts")}
+                  className="shrink-0 text-[10px] tracking-[0.24em] uppercase text-neutral-600 hover:text-white/80 transition-colors duration-200"
+                >
+                  {lang === "es" ? "Ver todos →" : "View all →"}
+                </button>
               </div>
-              <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
-                {project.bts.map((src, i) => (
-                  <button
-                    key={src + i}
-                    type="button"
-                    onClick={() => openLightbox(project.bts, i, "bts")}
-                    className="group relative flex-none overflow-hidden rounded-xl bg-neutral-950 cursor-zoom-in outline-none ring-1 ring-white/5 hover:ring-white/15 transition-all duration-400"
-                    style={{ width: "160px", height: "90px" }}
-                    aria-label={`BTS ${i + 1}`}
-                  >
-                    <img
-                      src={oimg(src, IMG.stillThumb)}
-                      alt=""
-                      loading="lazy"
-                      className="w-full h-full object-cover transition-all duration-500 group-hover:scale-[1.06] group-hover:brightness-90"
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors duration-400" />
-                  </button>
-                ))}
+              <div
+                className={`grid gap-1.5 sm:gap-2 ${
+                  Math.min(project.bts.length, 4) === 1 ? "grid-cols-1" :
+                  Math.min(project.bts.length, 4) === 2 ? "grid-cols-2" :
+                  Math.min(project.bts.length, 4) === 3 ? "grid-cols-3" :
+                  "grid-cols-2 sm:grid-cols-4"
+                }`}
+              >
+                {project.bts.slice(0, 4).map((src, i) => {
+                  const isLastSlot = i === 3;
+                  const remaining = project.bts.length - 4;
+                  const showCount = isLastSlot && remaining > 0;
+                  return (
+                    <button
+                      key={src + i}
+                      type="button"
+                      onClick={() => openLightbox(project.bts, showCount ? 0 : i, "bts")}
+                      className="reveal-stagger group relative overflow-hidden rounded-xl md:rounded-2xl bg-neutral-950 aspect-video cursor-zoom-in outline-none ring-1 ring-white/5 hover:ring-white/15 transition-all duration-500"
+                      style={{ "--delay": `${(i + 1) * 55}ms` }}
+                      aria-label={`BTS ${i + 1}`}
+                    >
+                      <img
+                        src={oimg(src, IMG.stillRow, "good")}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        className={`w-full h-full object-cover transition-all duration-700 ${
+                          showCount
+                            ? "brightness-[0.35]"
+                            : "group-hover:scale-[1.05] group-hover:brightness-[0.88]"
+                        }`}
+                      />
+                      {showCount ? (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-white text-2xl sm:text-3xl font-extralight tracking-tight">
+                            +{remaining}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-500" />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

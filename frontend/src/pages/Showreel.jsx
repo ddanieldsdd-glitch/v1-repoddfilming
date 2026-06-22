@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { X } from "lucide-react";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 import { VideoPlayer } from "../components/VideoPlayer";
@@ -19,6 +19,21 @@ export default function Showreel() {
     lang === "es"
       ? `Showreel de ${name}, Director de Fotografía. Selección de trabajos en ficción, documental, publicidad y videoclips.`
       : `Showreel by ${name}, Cinematographer. A selection of fiction, documentary, commercials and music videos.`;
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") window.history.back();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   useEffect(() => {
     if (!vimeoId) return undefined;
@@ -60,10 +75,13 @@ export default function Showreel() {
 
   if (!url) {
     return (
-      <div className="min-h-screen bg-black text-white pt-32 px-6">
-        <p className="text-neutral-500">{lang === "es" ? "Showreel no disponible." : "Showreel unavailable."}</p>
-        <Link to="/" className="mt-6 inline-block text-sm border-b border-white pb-1">
-          {lang === "es" ? "Volver" : "Back"}
+      <div className="min-h-screen bg-black text-white flex items-center justify-center px-6">
+        <Link
+          to="/"
+          className="text-sm text-white/50 hover:text-white border-b border-white/30 pb-1"
+          aria-label={lang === "es" ? "Volver al inicio" : "Back to home"}
+        >
+          ←
         </Link>
       </div>
     );
@@ -72,26 +90,11 @@ export default function Showreel() {
   return (
     <div
       data-testid="showreel-page"
-      className="min-h-screen bg-black text-white pt-28 sm:pt-32 md:pt-36 pb-16 px-4 sm:px-6 md:px-12"
+      className="fixed inset-0 z-40 bg-black"
     >
-      <div className="max-w-5xl mx-auto">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 text-[11px] tracking-[0.24em] uppercase text-white/50 hover:text-white transition-colors mb-10"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" strokeWidth={1.5} />
-          {lang === "es" ? "Inicio" : "Home"}
-        </Link>
+      <h1 className="sr-only">{title}</h1>
 
-        <header className="mb-8 md:mb-10">
-          <p className="text-[10px] tracking-[0.32em] uppercase text-white/40 mb-3">
-            {tr(T.hero.showreel, lang)}
-          </p>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-light tracking-tight">{name}</h1>
-          <p className="mt-4 text-base md:text-lg text-white/60 max-w-2xl leading-relaxed">{description}</p>
-        </header>
-
-        <div className="relative overflow-hidden rounded-2xl md:rounded-3xl bg-neutral-950 ring-1 ring-white/10 shadow-[0_32px_100px_-24px_rgba(0,0,0,0.9)] aspect-video">
+      <div className="absolute inset-0 bg-black hero-fullscreen">
           <VideoPlayer
             url={url}
             playerKey="showreel-page"
@@ -100,8 +103,15 @@ export default function Showreel() {
             testId="showreel-player"
             interactive
           />
-        </div>
       </div>
+
+      <Link
+        to="/"
+        className="absolute right-4 top-4 sm:right-6 sm:top-6 z-50 flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-black/30 text-white/70 backdrop-blur-md transition hover:border-white/40 hover:text-white"
+        aria-label={lang === "es" ? "Cerrar showreel" : "Close showreel"}
+      >
+        <X className="h-4 w-4" strokeWidth={1.5} />
+      </Link>
     </div>
   );
 }

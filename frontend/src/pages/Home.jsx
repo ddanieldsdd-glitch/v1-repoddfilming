@@ -22,24 +22,43 @@ export default function Home() {
     [content.site.showreel_url],
   );
 
-  // Diferir iframe Vimeo: prioriza LCP (poster + CSS) antes del vídeo pesado
+  // Diferir iframe Vimeo: esperar load + poster pintado para no competir con LCP
   useEffect(() => {
     let cancelled = false;
-    const enable = () => {
-      if (!cancelled) setHeroVideoEnabled(true);
+    let delayTimer;
+
+    const enableVideo = () => {
+      if (cancelled) return;
+      delayTimer = window.setTimeout(() => {
+        if (!cancelled) {
+          ["https://player.vimeo.com", "https://i.vimeocdn.com"].forEach((href) => {
+            if (document.querySelector(`link[rel="preconnect"][href="${href}"]`)) return;
+            const link = document.createElement("link");
+            link.rel = "preconnect";
+            link.href = href;
+            document.head.appendChild(link);
+          });
+          setHeroVideoEnabled(true);
+        }
+      }, 5000);
     };
-    if (typeof window.requestIdleCallback === "function") {
-      const id = window.requestIdleCallback(enable, { timeout: 2800 });
-      return () => {
-        cancelled = true;
-        window.cancelIdleCallback(id);
-      };
+
+    if (document.readyState === "complete") {
+      enableVideo();
+    } else {
+      window.addEventListener("load", enableVideo, { once: true });
     }
-    const t = window.setTimeout(enable, 2200);
+
     return () => {
       cancelled = true;
-      window.clearTimeout(t);
+      window.removeEventListener("load", enableVideo);
+      if (delayTimer) window.clearTimeout(delayTimer);
     };
+  }, []);
+
+  // Quitar poster estático de index.html al montar React (solo servía para LCP)
+  useEffect(() => {
+    document.getElementById("static-hero-poster")?.remove();
   }, []);
 
   // Keep the hero showreel permanently muted, even if global unmute is toggled
