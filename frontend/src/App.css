@@ -194,21 +194,41 @@ a:focus-visible {
   display: none;
 }
 
-/* Fullscreen hero: Vimeo background rellena el contenedor (no 100vh — evita fugas al scroll) */
+/* Fullscreen hero: clip dentro del contenedor */
 .hero-fullscreen {
   isolation: isolate;
   contain: paint;
 }
 
-.hero-fullscreen iframe {
+/* Home — reel en background: cubrir tarjeta (también en móvil vertical) */
+.hero-fullscreen--cover iframe {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  width: 177.78vh !important;
+  height: 100% !important;
+  min-width: 100% !important;
+  min-height: 56.25vw !important;
+  max-width: none !important;
+  transform: translate(-50%, -50%) scale(1.04) !important;
+  transform-origin: center center !important;
+  pointer-events: none !important;
+  border: 0 !important;
+}
+
+/* /showreel — reproductor interactivo con controles Vimeo */
+.hero-player {
+  isolation: isolate;
+}
+
+.hero-player iframe {
   position: absolute !important;
   inset: 0 !important;
   width: 100% !important;
   height: 100% !important;
-  min-width: 100% !important;
-  min-height: 100% !important;
-  transform: scale(1.08) !important;
-  transform-origin: center center !important;
-  pointer-events: none !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  transform: none !important;
+  pointer-events: auto !important;
   border: 0 !important;
 }

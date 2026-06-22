@@ -107,10 +107,10 @@ export default function Home() {
       {/* HERO — tarjeta Apple TV grande */}
       <section
         data-hero
-        className="relative bg-black"
-        style={{ height: "100svh", padding: "8px 8px 0" }}
+        className="relative bg-black px-0 pt-0 sm:px-2 sm:pt-2"
+        style={{ height: "100svh" }}
       >
-        <div className="relative w-full h-full rounded-[1.75rem] sm:rounded-[2rem] md:rounded-[2.5rem] overflow-hidden bg-neutral-950 hero-fullscreen shadow-[0_40px_120px_-20px_rgba(0,0,0,1)]">
+        <div className="relative w-full h-full rounded-none sm:rounded-[2rem] md:rounded-[2.5rem] overflow-hidden bg-neutral-950 hero-fullscreen hero-fullscreen--cover shadow-[0_40px_120px_-20px_rgba(0,0,0,1)]">
           {showreelPoster && (
             <img
               src={showreelPoster}

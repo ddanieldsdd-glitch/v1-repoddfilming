@@ -354,7 +354,7 @@ const extractYoutubeId = (url) => {
   return m ? m[1] : null;
 };
 
-const buildVimeoSrc = (id, { autoplay, background, muted, loop }) => {
+const buildVimeoSrc = (id, { autoplay, background, muted, loop, controls = true }) => {
   const params = new URLSearchParams({
     title: "0",
     byline: "0",
@@ -365,7 +365,12 @@ const buildVimeoSrc = (id, { autoplay, background, muted, loop }) => {
     playsinline: "1",
   });
   if (autoplay) params.set("autoplay", "1");
-  if (background) params.set("background", "1");
+  if (background) {
+    params.set("background", "1");
+  } else if (controls) {
+    params.set("controls", "1");
+    params.set("pip", "1");
+  }
   if (background || muted) params.set("muted", "1");
   else if (getGlobalMuted()) params.set("muted", "1");
   if (loop || background) {
