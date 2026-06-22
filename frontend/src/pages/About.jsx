@@ -4,6 +4,18 @@ import { optimizeCloudinaryUrl, IMG } from "../lib/cloudinary";
 import { ImageLightbox } from "../components/ImageLightbox";
 import { useImageLightbox } from "../hooks/useImageLightbox";
 
+/** Evita que el nombre del autor se parta en dos líneas (p. ej. Roger Deakins). */
+function TaglineText({ text }) {
+  const match = String(text).match(/^(.+\s[—–-]\s)(.+)$/);
+  if (!match) return text;
+  return (
+    <>
+      {match[1]}
+      <span className="whitespace-nowrap">{match[2]}</span>
+    </>
+  );
+}
+
 export default function About() {
   const content = useContent();
   const [lang] = useLang();
@@ -62,21 +74,21 @@ export default function About() {
             </div>
             {tagline && (
               <p className="hidden lg:block text-[13px] text-neutral-400 dark:text-neutral-500 italic max-w-[22rem] text-right leading-relaxed">
-                "{tr(tagline, lang)}"
+                "<TaglineText text={tr(tagline, lang)} />"
               </p>
             )}
           </div>
 
           {/* Grid principal */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-16">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-12 lg:gap-14 md:items-stretch">
 
             {/* ── Columna foto ────────────────────────────────────────── */}
-            <div className="md:col-span-4">
+            <div className="md:col-span-5 flex flex-col">
               {photo && (
-                <div className="group relative">
+                <>
                   <button
                     aria-label={lang === "es" ? "Ampliar foto" : "Expand photo"}
-                    className="block w-full text-left cursor-zoom-in"
+                    className="group relative flex-1 flex flex-col min-h-[min(88vw,560px)] md:min-h-0 text-left cursor-zoom-in"
                     onClick={() =>
                       openLightbox({
                         images: [content.site.about_image],
@@ -85,15 +97,14 @@ export default function About() {
                       })
                     }
                   >
-                    <div className="overflow-hidden rounded-[1.75rem] md:rounded-[2.25rem] bg-neutral-100 dark:bg-neutral-900 aspect-[3/4] shadow-[0_24px_60px_-20px_rgba(0,0,0,0.35)] dark:shadow-[0_24px_60px_-20px_rgba(0,0,0,0.7)]">
+                    <div className="relative flex-1 min-h-[360px] md:min-h-0 overflow-hidden rounded-[1.75rem] md:rounded-[2.25rem] bg-neutral-100 dark:bg-neutral-900 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.35)] dark:shadow-[0_24px_60px_-20px_rgba(0,0,0,0.7)]">
                       <img
                         src={photo}
                         alt={name}
                         data-testid="about-photo"
-                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
                       />
-                      {/* Hint overlay */}
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/25 rounded-[inherit]">
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/25">
                         <span className="bg-white/90 dark:bg-black/75 backdrop-blur-md text-black dark:text-white text-[10px] tracking-[0.26em] uppercase px-5 py-2 rounded-full shadow-lg">
                           {lang === "es" ? "Ampliar" : "Expand"}
                         </span>
@@ -101,15 +112,15 @@ export default function About() {
                     </div>
                   </button>
 
-                  <p className="mt-3 text-[10px] tracking-[0.22em] uppercase text-neutral-400 dark:text-neutral-500 text-center">
+                  <p className="mt-3 shrink-0 text-[10px] tracking-[0.22em] uppercase text-neutral-400 dark:text-neutral-500 text-center">
                     {content.site.about_photo_caption || `${name} · ${tr(title, lang)}`}
                   </p>
-                </div>
+                </>
               )}
             </div>
 
             {/* ── Columna texto ───────────────────────────────────────── */}
-            <div className="md:col-span-7 md:col-start-6">
+            <div className="md:col-span-6 md:col-start-7">
               {/* Primer párrafo destacado */}
               {paragraphs.length > 0 && (
                 <p className="text-xl md:text-2xl font-light leading-[1.55] text-black dark:text-white mb-8">
@@ -128,7 +139,7 @@ export default function About() {
               {/* Tagline móvil */}
               {tagline && (
                 <p className="lg:hidden mt-10 text-[13px] text-neutral-400 dark:text-neutral-500 italic leading-relaxed border-t border-black/10 dark:border-white/10 pt-8">
-                  "{tr(tagline, lang)}"
+                  "<TaglineText text={tr(tagline, lang)} />"
                 </p>
               )}
             </div>

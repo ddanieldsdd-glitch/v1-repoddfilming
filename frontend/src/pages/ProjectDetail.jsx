@@ -112,6 +112,14 @@ export default function ProjectDetail() {
     [openLb, lightboxTypeLabels, project?.title],
   );
 
+  const openStillsGallery = useCallback(
+    (index = 0) => {
+      if (!project?.stills?.length) return;
+      openLightbox(project.stills, index, "stills");
+    },
+    [project?.stills, openLightbox],
+  );
+
   const heroVideoUrl = project
     ? (isVideoUrl(project.preview_url) && project.preview_url) ||
       (isVideoUrl(project.cover) && project.cover) || ""
@@ -137,8 +145,7 @@ export default function ProjectDetail() {
 
   // Refs
   const metaRef    = useReveal([slug]);
-  const stillsRef  = useRevealGrid([slug]);
-  const btsRef     = useRevealGrid([slug, project?.bts?.length ?? 0]);
+  const stillsRef  = useRevealGrid([slug, project?.stills?.length ?? 0]);
   const sameCatRef = useRevealGrid([slug, sameCatProjects.length]);
   const exploreRef = useReveal([slug]);
 
@@ -262,7 +269,6 @@ export default function ProjectDetail() {
 
           {/* Sinopsis + acciones */}
           <div className="min-w-0">
-            {/* Poster flotante en móvil — el texto lo rodea */}
             {project.poster && (
               <button
                 type="button"
@@ -287,67 +293,63 @@ export default function ProjectDetail() {
               {tr(project.synopsis, lang)}
             </p>
 
-            {/* Botones pill con preview — stills y BTS */}
-            {(hasStills || hasBts) && (
-              <div className="mt-6 clear-left md:clear-none flex flex-wrap gap-2.5">
-                {hasStills && (
-                  <button
-                    type="button"
-                    onClick={() => openLightbox(project.stills, 0, "stills")}
-                    className="group inline-flex items-center overflow-hidden rounded-full border border-white/15 hover:border-white/35 transition-all duration-300 outline-none focus:outline-none focus:ring-0"
-                    style={{ WebkitTapHighlightColor: "transparent" }}
-                    aria-label={`Ver fotogramas (${project.stills.length})`}
-                  >
-                    <div className="h-7 w-11 overflow-hidden flex-shrink-0">
-                      <img
-                        src={oimg(project.stills[0], IMG.still)}
-                        alt=""
-                        loading="lazy"
-                        className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-                      />
-                    </div>
-                    <span className="px-3 text-[10px] tracking-[0.24em] uppercase text-white/65 group-hover:text-white transition-colors duration-200 whitespace-nowrap">
-                      {lang === "es" ? "Fotogramas" : "Stills"} · {project.stills.length}
-                    </span>
-                  </button>
-                )}
-
-                {hasBts && (
-                  <button
-                    type="button"
-                    onClick={() => openLightbox(project.bts, 0, "bts")}
-                    className="group inline-flex items-center overflow-hidden rounded-full border border-white/15 hover:border-white/35 transition-all duration-300 outline-none focus:outline-none focus:ring-0"
-                    style={{ WebkitTapHighlightColor: "transparent" }}
-                    aria-label={`Ver BTS (${project.bts.length})`}
-                  >
-                    <div className="h-7 w-11 overflow-hidden flex-shrink-0">
-                      <img
-                        src={oimg(project.bts[0], IMG.stillThumb)}
-                        alt=""
-                        loading="lazy"
-                        className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-                      />
-                    </div>
-                    <span className="px-3 text-[10px] tracking-[0.24em] uppercase text-white/65 group-hover:text-white transition-colors duration-200 whitespace-nowrap">
-                      BTS · {project.bts.length}
-                    </span>
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* Enlace externo */}
-            {project.external_link && (
-              <div className="mt-5">
+            {(project.external_link || hasStills || hasBts) && (
+            <div className="mt-6 clear-left md:clear-none flex flex-wrap gap-2.5 items-center">
+              {project.external_link && (
                 <a
-                  href={project.external_link} target="_blank" rel="noreferrer"
+                  href={project.external_link}
+                  target="_blank"
+                  rel="noreferrer"
                   data-testid="project-external-link"
                   className="rounded-full border border-white/15 px-4 py-1.5 text-[10px] tracking-[0.24em] uppercase text-white/70 hover:text-white hover:border-white/40 transition inline-flex items-center gap-1.5"
                 >
                   {tr(T.project.external, lang)}
                   <ArrowUpRight className="w-3 h-3" strokeWidth={1.5} />
                 </a>
-              </div>
+              )}
+              {hasStills && (
+                <button
+                  type="button"
+                  onClick={() => openStillsGallery(0)}
+                  className="group inline-flex items-center overflow-hidden rounded-full border border-white/15 hover:border-white/35 transition-all duration-300 outline-none focus:outline-none focus:ring-0"
+                  style={{ WebkitTapHighlightColor: "transparent" }}
+                  aria-label={`Ver fotogramas (${project.stills.length})`}
+                >
+                  <div className="h-7 w-11 overflow-hidden flex-shrink-0">
+                    <img
+                      src={oimg(project.stills[0], IMG.still)}
+                      alt=""
+                      loading="lazy"
+                      className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                    />
+                  </div>
+                  <span className="px-3 text-[10px] tracking-[0.24em] uppercase text-white/65 group-hover:text-white transition-colors duration-200 whitespace-nowrap">
+                    {lang === "es" ? "Fotogramas" : "Stills"} · {project.stills.length}
+                  </span>
+                </button>
+              )}
+              {hasBts && (
+                <button
+                  type="button"
+                  onClick={() => openLightbox(project.bts, 0, "bts")}
+                  className="group inline-flex items-center overflow-hidden rounded-full border border-white/15 hover:border-white/35 transition-all duration-300 outline-none focus:outline-none focus:ring-0"
+                  style={{ WebkitTapHighlightColor: "transparent" }}
+                  aria-label={`Ver BTS (${project.bts.length})`}
+                >
+                  <div className="h-7 w-11 overflow-hidden flex-shrink-0">
+                    <img
+                      src={oimg(project.bts[0], IMG.stillThumb)}
+                      alt=""
+                      loading="lazy"
+                      className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                    />
+                  </div>
+                  <span className="px-3 text-[10px] tracking-[0.24em] uppercase text-white/65 group-hover:text-white transition-colors duration-200 whitespace-nowrap">
+                    BTS · {project.bts.length}
+                  </span>
+                </button>
+              )}
+            </div>
             )}
           </div>
 
@@ -390,7 +392,6 @@ export default function ProjectDetail() {
       {/* ── GALERÍA DE STILLS ─────────────────────────────────── */}
       {hasStills && (
         <section className="px-1.5 sm:px-4 md:px-8 lg:px-12 pb-10 md:pb-14">
-          {/* Cabecera */}
           <div className="flex items-center gap-4 mb-3 px-1">
             <p className="text-[10px] tracking-[0.34em] uppercase text-neutral-500 shrink-0">
               {lang === "es" ? "Fotogramas" : "Stills"} — {String(project.stills.length).padStart(2, "0")}
@@ -398,7 +399,7 @@ export default function ProjectDetail() {
             <div className="flex-1 h-px bg-white/6" />
             <button
               type="button"
-              onClick={() => openLightbox(project.stills, 0, "stills")}
+              onClick={() => openStillsGallery(0)}
               className="shrink-0 text-[10px] tracking-[0.24em] uppercase text-neutral-600 hover:text-white/80 transition-colors duration-200"
             >
               {lang === "es" ? "Ver todos →" : "View all →"}
@@ -410,7 +411,7 @@ export default function ProjectDetail() {
             <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr] gap-1.5 sm:gap-2">
               <button
                 type="button"
-                onClick={() => openLightbox(project.stills, 0, "stills")}
+                onClick={() => openStillsGallery(0)}
                 className="reveal-stagger group relative overflow-hidden rounded-2xl md:rounded-[1.75rem] bg-neutral-950 aspect-video cursor-zoom-in outline-none ring-1 ring-white/5 hover:ring-white/15 transition-all duration-500"
                 style={{ "--delay": "0ms" }}
                 aria-label={lang === "es" ? "Ver galería completa" : "View full gallery"}
@@ -439,7 +440,7 @@ export default function ProjectDetail() {
                       <button
                         key={src + i}
                         type="button"
-                        onClick={() => openLightbox(project.stills, i + 1, "stills")}
+                        onClick={() => openStillsGallery(i + 1)}
                         className="reveal-stagger group relative overflow-hidden rounded-2xl bg-neutral-950 aspect-video sm:aspect-auto cursor-zoom-in outline-none ring-1 ring-white/5 hover:ring-white/15 transition-all duration-500"
                         style={{ "--delay": `${(i + 1) * 60}ms` }}
                         aria-label={`${lang === "es" ? "Fotograma" : "Still"} ${i + 2}`}
@@ -474,7 +475,7 @@ export default function ProjectDetail() {
                     <button
                       key={src + i}
                       type="button"
-                      onClick={() => openLightbox(project.stills, showCount ? 0 : i + 3, "stills")}
+                      onClick={() => openStillsGallery(showCount ? 0 : i + 3)}
                       className="reveal-stagger group relative overflow-hidden rounded-xl md:rounded-2xl bg-neutral-950 aspect-video cursor-zoom-in outline-none ring-1 ring-white/5 hover:ring-white/15 transition-all duration-500"
                       style={{ "--delay": `${(i + 3) * 55}ms` }}
                       aria-label={`${lang === "es" ? "Fotograma" : "Still"} ${i + 4}`}
@@ -511,80 +512,6 @@ export default function ProjectDetail() {
                 })}
               </div>
             )}
-          </div>
-        </section>
-      )}
-
-      {/* ── BTS ───────────────────────────────────────────────── */}
-      {hasBts && (
-        <section className="px-1.5 sm:px-4 md:px-8 lg:px-12 pb-10 md:pb-14 border-t border-white/8 pt-8 sm:pt-10">
-          <div className="flex items-center gap-4 mb-3 px-1">
-            <p className="text-[10px] tracking-[0.34em] uppercase text-neutral-500 shrink-0">
-              {lang === "es" ? "Detrás de cámara" : "Behind the scenes"} — {String(project.bts.length).padStart(2, "0")}
-            </p>
-            <div className="flex-1 h-px bg-white/6" />
-            <button
-              type="button"
-              onClick={() => openLightbox(project.bts, 0, "bts")}
-              className="shrink-0 text-[10px] tracking-[0.24em] uppercase text-neutral-600 hover:text-white/80 transition-colors duration-200"
-            >
-              {lang === "es" ? "Ver todos →" : "View all →"}
-            </button>
-          </div>
-
-          <div
-            ref={btsRef}
-            className={`grid gap-1.5 sm:gap-2 ${
-              project.bts.length === 1
-                ? "grid-cols-1 max-w-md"
-                : project.bts.length === 2
-                  ? "grid-cols-2"
-                  : "grid-cols-2 sm:grid-cols-4"
-            }`}
-          >
-            {project.bts.slice(0, 4).map((src, i) => {
-              const isLastSlot = i === 3;
-              const remaining = project.bts.length - 4;
-              const showCount = isLastSlot && remaining > 0;
-              return (
-                <button
-                  key={src + i}
-                  type="button"
-                  onClick={() => openLightbox(project.bts, showCount ? 0 : i, "bts")}
-                  className="reveal-stagger group relative overflow-hidden rounded-xl md:rounded-2xl bg-neutral-950 aspect-[4/3] cursor-zoom-in outline-none ring-1 ring-white/5 hover:ring-white/15 transition-all duration-500"
-                  style={{ "--delay": `${i * 55}ms` }}
-                  aria-label={`BTS ${i + 1}`}
-                >
-                  <img
-                    src={oimg(src, IMG.stillGallery, "good")}
-                    alt=""
-                    loading="lazy"
-                    decoding="async"
-                    className={`w-full h-full object-cover transition-all duration-700 ${
-                      showCount
-                        ? "brightness-[0.35]"
-                        : "group-hover:scale-[1.05] group-hover:brightness-[0.88]"
-                    }`}
-                  />
-                  {showCount ? (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-white text-2xl sm:text-3xl font-extralight tracking-tight">
-                        +{remaining}
-                      </span>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-500" />
-                      <div className="absolute top-2 right-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <span className="text-[9px] tracking-[0.22em] text-white/40">
-                          {String(i + 1).padStart(2, "0")}
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </button>
-              );
-            })}
           </div>
         </section>
       )}

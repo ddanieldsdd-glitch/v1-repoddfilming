@@ -42,7 +42,7 @@ export const IMG = {
   stillRow: 1400,
   stillThumb: 560,
   lightbox: 1920,
-  about: 640,
+  about: 1200,
   avatar: 128,
   logo: 220,
 };
