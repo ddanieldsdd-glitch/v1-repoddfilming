@@ -52,6 +52,28 @@ export function optimizeCloudinaryUrl(
   return `${base}/upload/${segments.join("/")}`;
 }
 
+/** Devuelve la URL sin transforms (solo versión + public_id). */
+export function stripCloudinaryTransforms(url) {
+  if (!url || typeof url !== "string") return url;
+  if (!url.includes("res.cloudinary.com/") || !url.includes("/upload/")) return url;
+
+  const [base, rest] = url.split("/upload/");
+  if (!rest) return url;
+
+  const segments = rest.split("/");
+  const versionIdx = segments.findIndex((s) => /^v\d+$/.test(s));
+  if (versionIdx === -1) return url;
+
+  return `${base}/upload/${segments.slice(versionIdx).join("/")}`;
+}
+
+/** Lightbox: nunca recortar el frame original (sin c_fill / h_ forzados). */
+export function lightboxCloudinaryUrl(url, { width, quality = "best" } = {}) {
+  if (!url) return url;
+  const clean = stripCloudinaryTransforms(url);
+  return optimizeCloudinaryUrl(clean, { width, quality, crop: "limit" });
+}
+
 /** src + srcSet acorde al tamaño real en pantalla (evita descargar 2400px en móvil). */
 export function cloudinaryResponsive(
   url,

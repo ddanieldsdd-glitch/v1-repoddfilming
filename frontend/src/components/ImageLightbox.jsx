@@ -2,8 +2,9 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
-  optimizeCloudinaryUrl,
+  lightboxCloudinaryUrl,
   cloudinaryResponsive,
+  stripCloudinaryTransforms,
   IMG,
   LIGHTBOX_PRESET,
   LIGHTBOX_PREVIEW_WIDTH,
@@ -11,17 +12,18 @@ import {
 
 const lightboxHdSrc = (url) => {
   if (!url) return url;
-  const { src } = cloudinaryResponsive(url, LIGHTBOX_PRESET);
+  const { src } = cloudinaryResponsive(
+    stripCloudinaryTransforms(url),
+    LIGHTBOX_PRESET,
+  );
   return src;
 };
 
 const lightboxPreviewSrc = (url) =>
-  url
-    ? optimizeCloudinaryUrl(url, { width: LIGHTBOX_PREVIEW_WIDTH, quality: "good" })
-    : url;
+  lightboxCloudinaryUrl(url, { width: LIGHTBOX_PREVIEW_WIDTH, quality: "good" });
 
 const thumbSrc = (url) =>
-  url ? optimizeCloudinaryUrl(url, { width: IMG.stillThumb }) : url;
+  url ? lightboxCloudinaryUrl(url, { width: IMG.stillThumb, quality: "good" }) : url;
 
 const prefetchLightboxSrc = (url) => {
   const src = lightboxHdSrc(url);
@@ -31,7 +33,7 @@ const prefetchLightboxSrc = (url) => {
   img.src = src;
 };
 
-function LightboxImage({ src, closing, label, title, index }) {
+function LightboxImage({ src, closing, label, title, index, maxHeight, maxWidth }) {
   const [displaySrc, setDisplaySrc] = useState(() => lightboxPreviewSrc(src));
   const [hdReady, setHdReady] = useState(false);
 
@@ -65,7 +67,8 @@ function LightboxImage({ src, closing, label, title, index }) {
       alt={label ? `${label} ${index + 1}` : title || ""}
       draggable={false}
       decoding="async"
-      className={`max-h-full max-w-full w-auto object-contain rounded-xl md:rounded-2xl shadow-[0_32px_120px_-24px_rgba(0,0,0,0.95)] ring-1 ring-white/10 cursor-default select-none transition-[opacity,transform,filter] duration-300 ${
+      style={{ maxHeight, maxWidth }}
+      className={`block h-auto w-auto max-h-full max-w-full object-contain rounded-xl md:rounded-2xl shadow-[0_32px_120px_-24px_rgba(0,0,0,0.95)] ring-1 ring-white/10 cursor-default select-none transition-[opacity,transform,filter] duration-300 ${
         hdReady ? "blur-0" : "blur-[0.4px]"
       } ${
         closing
@@ -154,13 +157,15 @@ export function ImageLightbox({
   if (!open || !currentSrc) return null;
 
   const stop = (e) => e.stopPropagation();
+  const imageMaxHeight = hasMultiple ? "calc(100svh - 10.5rem)" : "calc(100svh - 8rem)";
+  const imageMaxWidth = "min(100%, calc(100vw - 2rem))";
 
   return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-label={title || label || (lang === "es" ? "Visor de imagen" : "Image viewer")}
-      className={`image-lightbox fixed inset-0 z-[99999] cursor-zoom-out transition-opacity duration-300 ${
+      className={`image-lightbox fixed inset-0 z-[99999] flex flex-col cursor-zoom-out transition-opacity duration-300 ${
         closing ? "opacity-0" : "opacity-100"
       }`}
       onClick={onClose}
@@ -217,21 +222,26 @@ export function ImageLightbox({
 
       {/* Imagen — clic en márgenes (letterbox) cierra; clic en la imagen no */}
       <div
-        className="relative z-10 flex h-full w-full items-center justify-center px-3 sm:px-6 md:px-14"
+        className="relative z-10 flex min-h-0 flex-1 items-center justify-center px-3 sm:px-6 md:px-14"
         style={{
-          paddingTop: "72px",
-          paddingBottom: hasMultiple ? "88px" : "40px",
+          paddingTop: "4.5rem",
+          paddingBottom: hasMultiple ? "6.5rem" : "3rem",
         }}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <div onClick={stop}>
+        <div
+          onClick={stop}
+          className="flex h-full max-h-full w-full max-w-full min-h-0 items-center justify-center"
+        >
           <LightboxImage
             src={currentSrc}
             closing={closing}
             label={label}
             title={title}
             index={index}
+            maxHeight={imageMaxHeight}
+            maxWidth={imageMaxWidth}
           />
         </div>
       </div>

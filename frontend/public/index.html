@@ -166,14 +166,23 @@
             decoding="sync"
             width="1920"
             height="1080"
-            style="position:fixed;top:8px;left:8px;right:8px;width:calc(100% - 16px);height:calc(100svh - 8px);object-fit:cover;border-radius:1.75rem;z-index:1;background:#0a0a0a"
+            style="position:fixed;top:8px;left:8px;right:8px;width:calc(100% - 16px);height:calc(100svh - 8px);object-fit:cover;border-radius:1.75rem;z-index:0;background:#0a0a0a"
         />
         <script>
             (function () {
                 var p = location.pathname;
                 if (p !== "/" && p !== "") {
                     document.getElementById("static-hero-poster")?.remove();
+                    return;
                 }
+                var poster = document.getElementById("static-hero-poster");
+                if (!poster) return;
+                var remove = function () {
+                    poster.remove();
+                };
+                window.addEventListener("scroll", remove, { once: true, passive: true });
+                window.addEventListener("wheel", remove, { once: true, passive: true });
+                window.addEventListener("touchmove", remove, { once: true, passive: true });
             })();
         </script>
         <noscript>

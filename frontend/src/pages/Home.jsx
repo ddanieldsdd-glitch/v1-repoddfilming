@@ -58,12 +58,34 @@ export default function Home() {
     document.head.appendChild(link);
   }, [content.site.showreel_url]);
 
-  // Quitar poster estático de index.html cuando el vídeo ya reproduce
+  // Quitar poster estático de index.html en cuanto React pinta (evita doble capa con el iframe)
   useEffect(() => {
-    if (heroReelReady) {
-      document.getElementById("static-hero-poster")?.remove();
-    }
-  }, [heroReelReady]);
+    document.getElementById("static-hero-poster")?.remove();
+  }, []);
+
+  // Pausar showreel cuando el hero sale del viewport (evita artefactos al scroll)
+  useEffect(() => {
+    const hero = document.querySelector("[data-hero]");
+    if (!hero) return undefined;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const player = getPlayer("hero-showreel");
+        if (!player) return;
+        try {
+          if (entry.isIntersecting) {
+            player.play().catch(() => {});
+          } else {
+            player.pause().catch(() => {});
+          }
+        } catch {}
+      },
+      { threshold: 0.12 },
+    );
+
+    observer.observe(hero);
+    return () => observer.disconnect();
+  }, [heroVideoEnabled, heroReelReady]);
 
   // Keep the hero showreel permanently muted, even if global unmute is toggled
   useEffect(() => {
@@ -97,13 +119,17 @@ export default function Home() {
               decoding="async"
               width={1920}
               height={1080}
-              className={`absolute inset-0 z-0 h-full w-full object-cover transition-opacity duration-700 ${
-                heroReelReady ? "opacity-0" : "opacity-100"
+              className={`absolute inset-0 z-[3] h-full w-full object-cover transition-opacity duration-700 ${
+                heroReelReady ? "opacity-0 pointer-events-none" : "opacity-100"
               }`}
             />
           )}
           {heroVideoEnabled && (
-            <div className="absolute inset-0 pointer-events-none">
+            <div
+              className={`absolute inset-0 z-[1] pointer-events-none overflow-hidden transition-opacity duration-700 ${
+                heroReelReady ? "opacity-100" : "opacity-0"
+              }`}
+            >
               <VideoPlayer
                 url={content.site.showreel_url}
                 playerKey="hero-showreel"
@@ -124,6 +150,11 @@ export default function Home() {
           />
 
           <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+          {/* Oculta título de Vimeo mientras carga el iframe */}
+          {!heroReelReady && (
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[4] h-16 bg-gradient-to-t from-black via-black/95 to-transparent" />
+          )}
 
           <Link
             to="/showreel"
