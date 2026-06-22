@@ -360,7 +360,7 @@ export default function Home() {
                     >
                       {thumb && (
                         <img
-                          src={oimg(thumb, IMG.card)}
+                          src={optimizeCloudinaryUrl(thumb, { width: IMG.card })}
                           alt=""
                           className="pointer-events-none absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-30 transition-opacity duration-500 scale-[1.04] group-hover:scale-100"
                         />
