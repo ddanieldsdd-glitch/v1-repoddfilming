@@ -138,6 +138,7 @@ export default function ProjectDetail() {
   // Refs
   const metaRef    = useReveal([slug]);
   const stillsRef  = useRevealGrid([slug]);
+  const btsRef     = useRevealGrid([slug, project?.bts?.length ?? 0]);
   const sameCatRef = useRevealGrid([slug, sameCatProjects.length]);
   const exploreRef = useReveal([slug]);
 
@@ -511,70 +512,80 @@ export default function ProjectDetail() {
               </div>
             )}
           </div>
+        </section>
+      )}
 
-          {/* BTS — fila inferior */}
-          {hasBts && (
-            <div className="mt-4 sm:mt-5">
-              <div className="flex items-center gap-4 mb-2.5 px-1">
-                <p className="text-[10px] tracking-[0.34em] uppercase text-neutral-600 shrink-0">
-                  {lang === "es" ? "Detrás de cámara" : "Behind the scenes"} — {String(project.bts.length).padStart(2, "0")}
-                </p>
-                <div className="flex-1 h-px bg-white/6" />
+      {/* ── BTS ───────────────────────────────────────────────── */}
+      {hasBts && (
+        <section className="px-1.5 sm:px-4 md:px-8 lg:px-12 pb-10 md:pb-14 border-t border-white/8 pt-8 sm:pt-10">
+          <div className="flex items-center gap-4 mb-3 px-1">
+            <p className="text-[10px] tracking-[0.34em] uppercase text-neutral-500 shrink-0">
+              {lang === "es" ? "Detrás de cámara" : "Behind the scenes"} — {String(project.bts.length).padStart(2, "0")}
+            </p>
+            <div className="flex-1 h-px bg-white/6" />
+            <button
+              type="button"
+              onClick={() => openLightbox(project.bts, 0, "bts")}
+              className="shrink-0 text-[10px] tracking-[0.24em] uppercase text-neutral-600 hover:text-white/80 transition-colors duration-200"
+            >
+              {lang === "es" ? "Ver todos →" : "View all →"}
+            </button>
+          </div>
+
+          <div
+            ref={btsRef}
+            className={`grid gap-1.5 sm:gap-2 ${
+              project.bts.length === 1
+                ? "grid-cols-1 max-w-md"
+                : project.bts.length === 2
+                  ? "grid-cols-2"
+                  : "grid-cols-2 sm:grid-cols-4"
+            }`}
+          >
+            {project.bts.slice(0, 4).map((src, i) => {
+              const isLastSlot = i === 3;
+              const remaining = project.bts.length - 4;
+              const showCount = isLastSlot && remaining > 0;
+              return (
                 <button
+                  key={src + i}
                   type="button"
-                  onClick={() => openLightbox(project.bts, 0, "bts")}
-                  className="shrink-0 text-[10px] tracking-[0.24em] uppercase text-neutral-600 hover:text-white/80 transition-colors duration-200"
+                  onClick={() => openLightbox(project.bts, showCount ? 0 : i, "bts")}
+                  className="reveal-stagger group relative overflow-hidden rounded-xl md:rounded-2xl bg-neutral-950 aspect-[4/3] cursor-zoom-in outline-none ring-1 ring-white/5 hover:ring-white/15 transition-all duration-500"
+                  style={{ "--delay": `${i * 55}ms` }}
+                  aria-label={`BTS ${i + 1}`}
                 >
-                  {lang === "es" ? "Ver todos →" : "View all →"}
+                  <img
+                    src={oimg(src, IMG.stillGallery, "good")}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className={`w-full h-full object-cover transition-all duration-700 ${
+                      showCount
+                        ? "brightness-[0.35]"
+                        : "group-hover:scale-[1.05] group-hover:brightness-[0.88]"
+                    }`}
+                  />
+                  {showCount ? (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-white text-2xl sm:text-3xl font-extralight tracking-tight">
+                        +{remaining}
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-500" />
+                      <div className="absolute top-2 right-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <span className="text-[9px] tracking-[0.22em] text-white/40">
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </button>
-              </div>
-              <div
-                className={`grid gap-1.5 sm:gap-2 ${
-                  Math.min(project.bts.length, 4) === 1 ? "grid-cols-1" :
-                  Math.min(project.bts.length, 4) === 2 ? "grid-cols-2" :
-                  Math.min(project.bts.length, 4) === 3 ? "grid-cols-3" :
-                  "grid-cols-2 sm:grid-cols-4"
-                }`}
-              >
-                {project.bts.slice(0, 4).map((src, i) => {
-                  const isLastSlot = i === 3;
-                  const remaining = project.bts.length - 4;
-                  const showCount = isLastSlot && remaining > 0;
-                  return (
-                    <button
-                      key={src + i}
-                      type="button"
-                      onClick={() => openLightbox(project.bts, showCount ? 0 : i, "bts")}
-                      className="reveal-stagger group relative overflow-hidden rounded-xl md:rounded-2xl bg-neutral-950 aspect-video cursor-zoom-in outline-none ring-1 ring-white/5 hover:ring-white/15 transition-all duration-500"
-                      style={{ "--delay": `${(i + 1) * 55}ms` }}
-                      aria-label={`BTS ${i + 1}`}
-                    >
-                      <img
-                        src={oimg(src, IMG.stillRow, "good")}
-                        alt=""
-                        loading="lazy"
-                        decoding="async"
-                        className={`w-full h-full object-cover transition-all duration-700 ${
-                          showCount
-                            ? "brightness-[0.35]"
-                            : "group-hover:scale-[1.05] group-hover:brightness-[0.88]"
-                        }`}
-                      />
-                      {showCount ? (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-white text-2xl sm:text-3xl font-extralight tracking-tight">
-                            +{remaining}
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-500" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+              );
+            })}
+          </div>
         </section>
       )}
 
