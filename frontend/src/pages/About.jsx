@@ -1,13 +1,23 @@
-import { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 import { optimizeCloudinaryUrl, IMG } from "../lib/cloudinary";
+import { ImageLightbox } from "../components/ImageLightbox";
+import { useImageLightbox } from "../hooks/useImageLightbox";
 
 export default function About() {
   const content = useContent();
   const [lang] = useLang();
-  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const {
+    open: lightboxOpen,
+    closing: lightboxClosing,
+    images: lightboxImages,
+    index: lightboxIndex,
+    setIndex: setLightboxIndex,
+    label: lightboxLabel,
+    title: lightboxTitle,
+    openLightbox,
+    closeLightbox,
+  } = useImageLightbox();
 
   const text = tr(content.about, lang);
   const paragraphs = String(text).split("\n").filter(Boolean);
@@ -15,17 +25,6 @@ export default function About() {
     ? optimizeCloudinaryUrl(content.site.about_image, { width: IMG.about })
     : null;
   const { name, title, tagline, social } = content.site;
-
-  useEffect(() => {
-    if (!lightboxOpen) return;
-    const onKey = (e) => { if (e.key === "Escape") setLightboxOpen(false); };
-    document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [lightboxOpen]);
 
   const socialLinks = [
     social?.email    && { href: `mailto:${social.email}`,    label: social.email,  external: false },
@@ -36,57 +35,17 @@ export default function About() {
 
   return (
     <>
-      {/* ── Lightbox (portal → directo en body) ── */}
-      {lightboxOpen && photo && createPortal(
-        <div
-          role="dialog"
-          aria-modal="true"
-          onClick={() => setLightboxOpen(false)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 99999,
-            backgroundColor: "#000",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "zoom-out",
-          }}
-        >
-          <button
-            aria-label="Cerrar"
-            onClick={() => setLightboxOpen(false)}
-            style={{
-              position: "absolute",
-              top: "20px",
-              right: "24px",
-              background: "none",
-              border: "none",
-              color: "rgba(255,255,255,0.5)",
-              fontSize: "36px",
-              lineHeight: 1,
-              cursor: "pointer",
-              padding: 0,
-            }}
-          >
-            ×
-          </button>
-          <img
-            src={photo}
-            alt={name}
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              maxHeight: "90vh",
-              maxWidth: "90vw",
-              objectFit: "contain",
-              borderRadius: "12px",
-              boxShadow: "0 40px 100px rgba(0,0,0,0.9)",
-              cursor: "default",
-            }}
-          />
-        </div>,
-        document.body,
-      )}
+      <ImageLightbox
+        open={lightboxOpen}
+        closing={lightboxClosing}
+        onClose={closeLightbox}
+        images={lightboxImages}
+        index={lightboxIndex}
+        onIndexChange={setLightboxIndex}
+        label={lightboxLabel}
+        title={lightboxTitle}
+        lang={lang}
+      />
 
       {/* ── Página ─────────────────────────────────────────────────────── */}
       <div
@@ -125,7 +84,13 @@ export default function About() {
                   <button
                     aria-label={lang === "es" ? "Ampliar foto" : "Expand photo"}
                     className="block w-full text-left cursor-zoom-in"
-                    onClick={() => setLightboxOpen(true)}
+                    onClick={() =>
+                      openLightbox({
+                        images: [content.site.about_image],
+                        label: lang === "es" ? "Retrato" : "Portrait",
+                        title: content.site.about_photo_caption || name,
+                      })
+                    }
                   >
                     <div className="overflow-hidden rounded-[1.75rem] md:rounded-[2.25rem] bg-neutral-100 dark:bg-neutral-900 aspect-[3/4] shadow-[0_24px_60px_-20px_rgba(0,0,0,0.35)] dark:shadow-[0_24px_60px_-20px_rgba(0,0,0,0.7)]">
                       <img

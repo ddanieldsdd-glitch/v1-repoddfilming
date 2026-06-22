@@ -1,11 +1,13 @@
 import { useRef, useState, useMemo, useEffect, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowUpRight, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, ArrowRight } from "lucide-react";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 import { VideoPlayer } from "../components/VideoPlayer";
 import { getActiveCategories } from "../lib/contentStore";
 import { ProjectCard } from "../components/ProjectCard";
+import { ImageLightbox } from "../components/ImageLightbox";
+import { useImageLightbox } from "../hooks/useImageLightbox";
 import { optimizeCloudinaryUrl, IMG } from "../lib/cloudinary";
 
 const oimg = (url, width = IMG.still) =>
@@ -72,80 +74,43 @@ export default function ProjectDetail() {
   const [lang] = useLang();
   const [heroMediaReady, setHeroMediaReady] = useState(false);
 
-  // LIGHTBOX
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxClosing, setLightboxClosing] = useState(false);
-  const [lightboxImages, setLightboxImages] = useState([]);
-  const [lightboxIndex, setLightboxIndex] = useState(0);
-  const [lightboxType, setLightboxType] = useState("stills");
-  const [imgKey, setImgKey] = useState(0);
-  const touchStartRef = useRef({ x: 0, y: 0 });
-
-  const openLightbox = useCallback((images, index = 0, type = "stills") => {
-    if (!images || images.length === 0) return;
-    setLightboxImages(images);
-    setLightboxIndex(index);
-    setLightboxType(type);
-    setImgKey((k) => k + 1);
-    setLightboxClosing(false);
-    setLightboxOpen(true);
-  }, []);
-
-  const closeLightbox = useCallback(() => {
-    setLightboxClosing(true);
-    window.setTimeout(() => { setLightboxOpen(false); setLightboxClosing(false); }, 260);
-  }, []);
-
-  const nextImage = useCallback(() => {
-    setImgKey((k) => k + 1);
-    setLightboxIndex((i) => (i + 1) % lightboxImages.length);
-  }, [lightboxImages.length]);
-
-  const prevImage = useCallback(() => {
-    setImgKey((k) => k + 1);
-    setLightboxIndex((i) => (i - 1 + lightboxImages.length) % lightboxImages.length);
-  }, [lightboxImages.length]);
-
-  const handleLightboxTouchStart = (e) => {
-    const touch = e.touches?.[0];
-    if (!touch) return;
-    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
-  };
-
-  const handleLightboxTouchEnd = (e) => {
-    if (lightboxImages.length <= 1) return;
-    const touch = e.changedTouches?.[0];
-    if (!touch) return;
-    const dx = touch.clientX - touchStartRef.current.x;
-    const dy = touch.clientY - touchStartRef.current.y;
-    if (Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
-    if (dx < 0) nextImage(); else prevImage();
-  };
-
-  useEffect(() => {
-    const handleKey = (e) => {
-      if (!lightboxOpen) return;
-      if (e.key === "Escape") closeLightbox();
-      if (e.key === "ArrowRight") nextImage();
-      if (e.key === "ArrowLeft") prevImage();
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [lightboxOpen, closeLightbox, nextImage, prevImage]);
-
-  // Bloquear scroll del body cuando el lightbox está abierto
-  useEffect(() => {
-    if (lightboxOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => { document.body.style.overflow = ""; };
-  }, [lightboxOpen]);
+  const {
+    open: lightboxOpen,
+    closing: lightboxClosing,
+    images: lightboxImages,
+    index: lightboxIndex,
+    setIndex: setLightboxIndex,
+    label: lightboxLabel,
+    title: lightboxTitle,
+    openLightbox: openLb,
+    closeLightbox,
+  } = useImageLightbox();
 
   const projects = content.projects || [];
   const idx = projects.findIndex((p) => p.slug === slug);
   const project = idx >= 0 ? projects[idx] : null;
+
+  const lightboxTypeLabels = useMemo(
+    () => ({
+      stills: tr(T.project.stills, lang),
+      bts: lang === "es" ? "Detrás de cámara" : "Behind the scenes",
+      poster: lang === "es" ? "Póster" : "Poster",
+    }),
+    [lang],
+  );
+
+  const openLightbox = useCallback(
+    (images, index = 0, type = "stills") => {
+      if (!images?.length) return;
+      openLb({
+        images,
+        index,
+        label: lightboxTypeLabels[type] || "",
+        title: project?.title ?? "",
+      });
+    },
+    [openLb, lightboxTypeLabels, project?.title],
+  );
 
   const heroVideoUrl = project
     ? (isVideoUrl(project.preview_url) && project.preview_url) ||
@@ -175,13 +140,6 @@ export default function ProjectDetail() {
   const stillsRef  = useRevealGrid([slug]);
   const sameCatRef = useRevealGrid([slug, sameCatProjects.length]);
   const exploreRef = useReveal([slug]);
-
-  // Label para el lightbox según tipo
-  const lightboxTypeLabel = useMemo(() => ({
-    stills: tr(T.project.stills, lang),
-    bts: lang === "es" ? "Detrás de cámara" : "Behind the scenes",
-    poster: lang === "es" ? "Póster" : "Poster",
-  }[lightboxType] || ""), [lightboxType, lang]);
 
   if (!project) {
     return (
@@ -669,122 +627,17 @@ export default function ProjectDetail() {
         </section>
       )}
 
-      {/* ── LIGHTBOX ──────────────────────────────────────────── */}
-      {lightboxOpen && lightboxImages.length > 0 && (
-        <div
-          className={`fixed inset-0 z-[9999] bg-black transition-opacity duration-300 ${lightboxClosing ? "opacity-0" : "opacity-100"}`}
-          onClick={closeLightbox}
-        >
-          {/* Barra superior */}
-          <div className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
-            <div className="flex items-start justify-between px-5 pt-5 pb-16 md:px-10 md:pt-7 bg-gradient-to-b from-black/85 via-black/40 to-transparent">
-              {/* Título + tipo */}
-              <div className="pointer-events-auto">
-                <p className="text-[9px] tracking-[0.35em] uppercase text-white/35 mb-1.5">
-                  {lightboxTypeLabel}
-                </p>
-                <p className="text-sm sm:text-base font-light text-white/80 tracking-tight">
-                  {project.title}
-                </p>
-              </div>
-
-              {/* Contador + cerrar */}
-              <div className="pointer-events-auto flex items-center gap-3">
-                {lightboxImages.length > 1 && (
-                  <span className="text-[11px] tracking-[0.25em] text-white/40 tabular-nums">
-                    {String(lightboxIndex + 1).padStart(2, "0")}&thinsp;/&thinsp;{String(lightboxImages.length).padStart(2, "0")}
-                  </span>
-                )}
-                <button
-                  onClick={(e) => { e.stopPropagation(); closeLightbox(); }}
-                  className="h-9 w-9 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/10 text-white/60 hover:text-white hover:bg-white/20 hover:border-white/25 transition-all duration-200"
-                  aria-label="Cerrar"
-                >
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <path d="M1 1L11 11M11 1L1 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Área principal de imagen — ocupa todo el ancho en móvil */}
-          <div
-            className="relative flex h-full w-full touch-pan-y items-center justify-center px-0 md:px-16"
-            style={{
-              paddingTop: "64px",
-              paddingBottom: lightboxImages.length > 1 ? "76px" : "32px",
-            }}
-            onClick={(e) => e.stopPropagation()}
-            onTouchStart={handleLightboxTouchStart}
-            onTouchEnd={handleLightboxTouchEnd}
-          >
-            <img
-              key={imgKey}
-              src={lightboxImages[lightboxIndex]}
-              alt={`${lightboxTypeLabel} ${lightboxIndex + 1}`}
-              className={`w-full md:max-w-full max-h-full object-contain md:rounded-lg shadow-[0_32px_100px_-20px_rgba(0,0,0,0.9)] cursor-default transition-opacity duration-200 ${
-                lightboxClosing
-                  ? "opacity-0 scale-[0.97]"
-                  : "opacity-100 scale-100 animate-[ddpFadeUp_320ms_ease-out_both]"
-              }`}
-              style={{ transition: lightboxClosing ? "opacity 0.26s ease, transform 0.26s ease" : undefined }}
-            />
-          </div>
-
-          {/* Flechas de navegación — semitransparentes sobre la imagen en móvil */}
-          {lightboxImages.length > 1 && (
-            <>
-              <button
-                onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                className="absolute left-1 md:left-5 top-1/2 -translate-y-1/2 z-20 h-12 w-9 md:h-14 md:w-14 flex items-center justify-center md:rounded-full bg-black/20 md:bg-white/8 backdrop-blur-sm md:border md:border-white/10 text-white/50 hover:text-white hover:bg-black/40 md:hover:bg-white/18 md:hover:border-white/30 transition-all duration-200"
-                aria-label={lang === "es" ? "Anterior" : "Previous"}
-              >
-                <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" strokeWidth={1.5} />
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                className="absolute right-1 md:right-5 top-1/2 -translate-y-1/2 z-20 h-12 w-9 md:h-14 md:w-14 flex items-center justify-center md:rounded-full bg-black/20 md:bg-white/8 backdrop-blur-sm md:border md:border-white/10 text-white/50 hover:text-white hover:bg-black/40 md:hover:bg-white/18 md:hover:border-white/30 transition-all duration-200"
-                aria-label={lang === "es" ? "Siguiente" : "Next"}
-              >
-                <ChevronRight className="w-5 h-5 md:w-6 md:h-6" strokeWidth={1.5} />
-              </button>
-            </>
-          )}
-
-          {/* Tira de miniaturas inferior */}
-          {lightboxImages.length > 1 && (
-            <div
-              className="absolute bottom-0 left-0 right-0 z-20"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="pt-6 pb-4 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
-                <div
-                  className="flex justify-center gap-1.5 overflow-x-auto px-4"
-                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                >
-                  {lightboxImages.map((src, i) => (
-                    <button
-                      key={src + i}
-                      type="button"
-                      onClick={() => { setImgKey((k) => k + 1); setLightboxIndex(i); }}
-                      aria-label={`Imagen ${i + 1}`}
-                      className={`flex-none overflow-hidden rounded-md transition-all duration-200 ${
-                        i === lightboxIndex
-                          ? "ring-2 ring-white/80 opacity-100 scale-[1.10]"
-                          : "ring-1 ring-white/10 opacity-35 hover:opacity-65 hover:ring-white/30 hover:scale-[1.05]"
-                      }`}
-                      style={{ width: "52px", height: "36px" }}
-                    >
-                      <img src={oimg(src, IMG.stillThumb)} alt="" className="h-full w-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+      <ImageLightbox
+        open={lightboxOpen}
+        closing={lightboxClosing}
+        onClose={closeLightbox}
+        images={lightboxImages}
+        index={lightboxIndex}
+        onIndexChange={setLightboxIndex}
+        label={lightboxLabel}
+        title={lightboxTitle}
+        lang={lang}
+      />
     </div>
   );
 }

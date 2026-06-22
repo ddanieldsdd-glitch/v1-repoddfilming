@@ -108,6 +108,11 @@ a:focus-visible {
   animation: ddpFadeUp 700ms ease-out both;
 }
 
+/* Visor de imagen unificado (Apple TV–style) */
+.image-lightbox__thumbs::-webkit-scrollbar {
+  display: none;
+}
+
 /* Apple TV–style project tiles */
 .apple-tv-card {
   -webkit-tap-highlight-color: transparent;

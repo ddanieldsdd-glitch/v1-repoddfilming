@@ -36,6 +36,7 @@ export const IMG = {
   poster: 480,
   still: 900,
   stillThumb: 420,
+  lightbox: 1920,
   about: 640,
   avatar: 128,
 };
