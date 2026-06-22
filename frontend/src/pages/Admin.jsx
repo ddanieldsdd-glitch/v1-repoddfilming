@@ -364,14 +364,29 @@ const SiteSection = ({ content, onSave, saving }) => {
             onChange={(e) => updSite({ showreel_url: e.target.value })}
           />
         </Field>
-        <Field label="About — foto URL">
+        <Field label="About — foto URL (Cloudinary)">
           <input
             data-testid="site-about-image"
             className={inputCls}
             value={draft.site.about_image || ""}
             onChange={(e) => updSite({ about_image: e.target.value })}
-            placeholder="https://..."
+            placeholder="https://res.cloudinary.com/.../foto.jpg"
           />
+          {draft.site.about_image && (
+            <div className="mt-2 flex items-center gap-3">
+              <div className="w-16 h-20 shrink-0 overflow-hidden rounded-md bg-neutral-800 ring-1 ring-white/10">
+                <img
+                  src={draft.site.about_image}
+                  alt=""
+                  className="w-full h-full object-cover"
+                  onError={(e) => { e.target.style.display = "none"; }}
+                />
+              </div>
+              <p className="text-[10px] text-neutral-600 leading-relaxed">
+                Vista previa · Sobre mí
+              </p>
+            </div>
+          )}
         </Field>
         <Field label="About — pie de foto">
           <input
@@ -380,6 +395,28 @@ const SiteSection = ({ content, onSave, saving }) => {
             onChange={(e) => updSite({ about_photo_caption: e.target.value })}
             placeholder="Ej: Nave Soviética"
           />
+        </Field>
+        <Field label="Meta description ES (Google)">
+          <textarea
+            className={textareaCls + " min-h-[88px]"}
+            value={draft.site.meta_description?.es || ""}
+            onChange={(e) => updI18n("meta_description", "es", e.target.value)}
+            placeholder="Texto biográfico breve para resultados de búsqueda (~150–320 caracteres)"
+          />
+          <p className="text-[9px] text-neutral-600 mt-1">
+            {(draft.site.meta_description?.es || "").length} caracteres
+          </p>
+        </Field>
+        <Field label="Meta description EN (Google)">
+          <textarea
+            className={textareaCls + " min-h-[88px]"}
+            value={draft.site.meta_description?.en || ""}
+            onChange={(e) => updI18n("meta_description", "en", e.target.value)}
+            placeholder="Short bio for search results (~150–320 characters)"
+          />
+          <p className="text-[9px] text-neutral-600 mt-1">
+            {(draft.site.meta_description?.en || "").length} caracteres
+          </p>
         </Field>
         <Field label="Title ES">
           <input

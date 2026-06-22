@@ -7,6 +7,7 @@ import { Toaster } from "sonner";
 import { useTheme } from "./lib/useTheme";
 import { Nav } from "./components/Nav";
 import { Footer } from "./components/Footer";
+import { SeoHead } from "./components/SeoHead";
 import Home from "./pages/Home";
 
 const Work = lazy(() => import("./pages/Work"));
@@ -62,6 +63,7 @@ function App() {
       <BrowserRouter>
         <SpeedInsightsBridge />
         <GA4Tracker />
+        <SeoHead />
         <ScrollToTop />
         <Nav />
         <main>
