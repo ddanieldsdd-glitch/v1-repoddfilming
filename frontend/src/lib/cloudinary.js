@@ -25,7 +25,7 @@ export function optimizeCloudinaryUrl(
   const first = segments[0];
 
   const buildTransforms = () => {
-    let transforms = `w_${width},${qParam},f_auto,c_${crop}`;
+    let transforms = `w_${width},${qParam},f_auto,c_${crop},fl_progressive`;
     if (height) transforms += `,h_${height}`;
     if (gravity && crop === "fill") transforms += `,g_${gravity}`;
     return transforms;
@@ -40,6 +40,7 @@ export function optimizeCloudinaryUrl(
   if (height && !/\bh_\d+/.test(transforms)) transforms += `,h_${height}`;
   if (!/q_auto/.test(transforms)) transforms += `,${qParam}`;
   if (!/f_auto/.test(transforms)) transforms += ",f_auto";
+  if (!/fl_progressive/.test(transforms)) transforms += ",fl_progressive";
   if (!/\bc_(limit|fill|pad|fit|scale)/.test(transforms)) {
     transforms += `,c_${crop}`;
   }
@@ -71,11 +72,26 @@ export function cloudinaryResponsive(
     return optimizeCloudinaryUrl(url, opts);
   };
 
+  // Fallback `src` en ancho medio — evita descargar el máximo antes de que el navegador elija srcSet
+  const srcIndex = Math.max(0, Math.min(widths.length - 1, Math.floor(widths.length / 2)));
+
   return {
-    src: build(widths[widths.length - 1]),
+    src: build(widths[srcIndex]),
     srcSet: widths.map((w) => `${build(w)} ${w}w`).join(", "),
     sizes: sizes || "100vw",
   };
+}
+
+/** Precarga en caché del navegador (idle) para galerías. */
+export function prefetchCloudinaryImages(urls, preset, { limit = 8 } = {}) {
+  if (!urls?.length || !preset) return;
+  urls.slice(0, limit).forEach((url) => {
+    const { src } = cloudinaryResponsive(url, preset);
+    if (!src) return;
+    const img = new Image();
+    img.decoding = "async";
+    img.src = src;
+  });
 }
 
 /** Ancho recomendado según contexto de uso */
@@ -133,7 +149,7 @@ export const STILL_PRESETS = {
     widths: [480, 720, 1080, 1400, 1800],
     sizes: "(min-width: 1024px) 58vw, (min-width: 768px) 92vw, 100vw",
     aspect: 16 / 9,
-    quality: "best",
+    quality: "good",
   },
   side: {
     widths: [360, 540, 720, 1000],
@@ -148,3 +164,13 @@ export const STILL_PRESETS = {
     quality: "good",
   },
 };
+
+/** Lightbox — calidad máxima con srcSet (no descargar 2400px en móvil). */
+export const LIGHTBOX_PRESET = {
+  widths: [960, 1280, 1600, 1920, 2400],
+  sizes: "100vw",
+  quality: "best",
+};
+
+/** Vista rápida del lightbox mientras llega la versión HD. */
+export const LIGHTBOX_PREVIEW_WIDTH = 1400;

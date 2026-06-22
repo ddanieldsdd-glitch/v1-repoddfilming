@@ -250,6 +250,7 @@ export const VideoPlayer = ({
           title="Video player"
           allow="autoplay; fullscreen; picture-in-picture"
           allowFullScreen
+          onLoad={background ? handleReady : undefined}
           className={iframeCls}
         />
       ) : useYtApi ? (
@@ -268,9 +269,11 @@ export const VideoPlayer = ({
           className={iframeCls}
         />
       )}
-      <div
-        className={`pointer-events-none absolute inset-0 z-[1] bg-black transition-opacity duration-500 ${ready ? "opacity-0 pointer-events-none" : "opacity-100"}`}
-      />
+      {!background && (
+        <div
+          className={`pointer-events-none absolute inset-0 z-[1] bg-black transition-opacity duration-500 ${ready ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+        />
+      )}
     </div>
   );
 };

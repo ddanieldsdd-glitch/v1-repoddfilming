@@ -1,13 +1,80 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { optimizeCloudinaryUrl, IMG } from "../lib/cloudinary";
+import {
+  optimizeCloudinaryUrl,
+  cloudinaryResponsive,
+  IMG,
+  LIGHTBOX_PRESET,
+  LIGHTBOX_PREVIEW_WIDTH,
+} from "../lib/cloudinary";
 
-const lightboxSrc = (url) =>
-  url ? optimizeCloudinaryUrl(url, { width: IMG.lightbox, quality: "best" }) : url;
+const lightboxHdSrc = (url) => {
+  if (!url) return url;
+  const { src } = cloudinaryResponsive(url, LIGHTBOX_PRESET);
+  return src;
+};
+
+const lightboxPreviewSrc = (url) =>
+  url
+    ? optimizeCloudinaryUrl(url, { width: LIGHTBOX_PREVIEW_WIDTH, quality: "good" })
+    : url;
 
 const thumbSrc = (url) =>
   url ? optimizeCloudinaryUrl(url, { width: IMG.stillThumb }) : url;
+
+const prefetchLightboxSrc = (url) => {
+  const src = lightboxHdSrc(url);
+  if (!src) return;
+  const img = new Image();
+  img.decoding = "async";
+  img.src = src;
+};
+
+function LightboxImage({ src, closing, label, title, index }) {
+  const [displaySrc, setDisplaySrc] = useState(() => lightboxPreviewSrc(src));
+  const [hdReady, setHdReady] = useState(false);
+
+  useEffect(() => {
+    const preview = lightboxPreviewSrc(src);
+    const hd = lightboxHdSrc(src);
+    setDisplaySrc(preview);
+    setHdReady(false);
+
+    if (!hd || hd === preview) {
+      setHdReady(true);
+      return undefined;
+    }
+
+    const img = new Image();
+    img.decoding = "async";
+    img.onload = () => {
+      setDisplaySrc(hd);
+      setHdReady(true);
+    };
+    img.src = hd;
+
+    return () => {
+      img.onload = null;
+    };
+  }, [src]);
+
+  return (
+    <img
+      src={displaySrc}
+      alt={label ? `${label} ${index + 1}` : title || ""}
+      draggable={false}
+      decoding="async"
+      className={`max-h-full max-w-full w-auto object-contain rounded-xl md:rounded-2xl shadow-[0_32px_120px_-24px_rgba(0,0,0,0.95)] ring-1 ring-white/10 cursor-default select-none transition-[opacity,transform,filter] duration-300 ${
+        hdReady ? "blur-0" : "blur-[0.4px]"
+      } ${
+        closing
+          ? "opacity-0 scale-[0.97]"
+          : "opacity-100 scale-100 animate-[ddpFadeUp_320ms_ease-out_both]"
+      }`}
+    />
+  );
+}
 
 export function ImageLightbox({
   open,
@@ -21,7 +88,6 @@ export function ImageLightbox({
   lang = "es",
 }) {
   const touchStartRef = useRef({ x: 0, y: 0 });
-  const imgKeyRef = useRef(0);
 
   const count = images.length;
   const hasMultiple = count > 1;
@@ -30,7 +96,6 @@ export function ImageLightbox({
   const goTo = useCallback(
     (nextIndex) => {
       if (!onIndexChange || count <= 1) return;
-      imgKeyRef.current += 1;
       onIndexChange(nextIndex);
     },
     [count, onIndexChange],
@@ -78,6 +143,13 @@ export function ImageLightbox({
       document.body.style.overflow = "";
     };
   }, [open, onClose, nextImage, prevImage]);
+
+  // Precargar fotogramas adyacentes en lightbox
+  useEffect(() => {
+    if (!open || count <= 1) return;
+    prefetchLightboxSrc(images[(index + 1) % count]);
+    prefetchLightboxSrc(images[(index - 1 + count) % count]);
+  }, [open, index, images, count]);
 
   if (!open || !currentSrc) return null;
 
@@ -153,18 +225,15 @@ export function ImageLightbox({
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <img
-          key={`${imgKeyRef.current}-${index}`}
-          src={lightboxSrc(currentSrc)}
-          alt={label ? `${label} ${index + 1}` : title || ""}
-          draggable={false}
-          onClick={stop}
-          className={`max-h-full max-w-full w-auto object-contain rounded-xl md:rounded-2xl shadow-[0_32px_120px_-24px_rgba(0,0,0,0.95)] ring-1 ring-white/10 cursor-default select-none transition-[opacity,transform] duration-300 ${
-            closing
-              ? "opacity-0 scale-[0.97]"
-              : "opacity-100 scale-100 animate-[ddpFadeUp_320ms_ease-out_both]"
-          }`}
-        />
+        <div onClick={stop}>
+          <LightboxImage
+            src={currentSrc}
+            closing={closing}
+            label={label}
+            title={title}
+            index={index}
+          />
+        </div>
       </div>
 
       {/* Navegación */}
@@ -220,7 +289,7 @@ export function ImageLightbox({
                   }`}
                   style={{ width: "56px", height: "38px" }}
                 >
-                  <img src={thumbSrc(src)} alt="" className="h-full w-full object-cover" />
+                  <img src={thumbSrc(src)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                 </button>
               ))}
             </div>

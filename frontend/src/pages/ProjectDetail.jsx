@@ -8,15 +8,16 @@ import { getActiveCategories } from "../lib/contentStore";
 import { ProjectCard } from "../components/ProjectCard";
 import { ImageLightbox } from "../components/ImageLightbox";
 import { useImageLightbox } from "../hooks/useImageLightbox";
-import { optimizeCloudinaryUrl, cloudinaryResponsive, IMG, STILL_PRESETS, COVER_PRESET } from "../lib/cloudinary";
+import { optimizeCloudinaryUrl, cloudinaryResponsive, IMG, STILL_PRESETS, COVER_PRESET, prefetchCloudinaryImages } from "../lib/cloudinary";
 
 const oimg = (url, width = IMG.still, quality = "good") =>
   url ? optimizeCloudinaryUrl(url, { width, quality }) : url;
 
-function ResponsiveImg({ src, preset, eager = false, className = "", alt = "", ...rest }) {
+function ResponsiveImg({ src, preset, eager = false, priority, className = "", alt = "", ...rest }) {
   const cfg =
     preset === "cover" ? COVER_PRESET : STILL_PRESETS[preset] || STILL_PRESETS.row;
   const { src: imgSrc, srcSet, sizes } = cloudinaryResponsive(src, cfg);
+  const fetchPriority = eager ? "high" : priority === "low" ? "low" : "auto";
 
   return (
     <img
@@ -26,17 +27,42 @@ function ResponsiveImg({ src, preset, eager = false, className = "", alt = "", .
       alt={alt}
       loading={eager ? "eager" : "lazy"}
       decoding="async"
-      fetchPriority={eager ? "high" : "auto"}
+      fetchPriority={fetchPriority}
       className={className}
       {...rest}
     />
   );
 }
 
-function StillImg({ src, preset = "row", eager = false, className = "" }) {
+function StillImg({ src, preset = "row", eager = false, priority, className = "" }) {
   return (
-    <ResponsiveImg src={src} preset={preset} eager={eager} className={className} />
+    <ResponsiveImg src={src} preset={preset} eager={eager} priority={priority} className={className} />
   );
+}
+
+/** Precarga stills/BTS en segundo plano tras cargar la ficha. */
+function usePrefetchGalleryImages(stills, bts, slug) {
+  useEffect(() => {
+    const run = () => {
+      if (stills?.length) {
+        stills.slice(0, 8).forEach((url, i) => {
+          const preset =
+            i === 0 ? STILL_PRESETS.hero : i <= 2 ? STILL_PRESETS.side : STILL_PRESETS.row;
+          prefetchCloudinaryImages([url], preset);
+        });
+      }
+      if (bts?.length) {
+        prefetchCloudinaryImages(bts, STILL_PRESETS.row, { limit: 6 });
+      }
+    };
+
+    if (typeof requestIdleCallback === "function") {
+      const id = requestIdleCallback(run, { timeout: 1200 });
+      return () => cancelIdleCallback(id);
+    }
+    const t = window.setTimeout(run, 500);
+    return () => window.clearTimeout(t);
+  }, [slug, stills, bts]);
 }
 
 const isVideoUrl = (url) =>
@@ -152,6 +178,8 @@ export default function ProjectDetail() {
     : "";
 
   useEffect(() => { setHeroMediaReady(false); }, [slug]);
+
+  usePrefetchGalleryImages(project?.stills, project?.bts, slug);
 
   useEffect(() => {
     if (!heroVideoUrl) return undefined;
@@ -360,9 +388,10 @@ export default function ProjectDetail() {
                 >
                   <div className="h-7 w-11 overflow-hidden flex-shrink-0">
                     <img
-                      src={oimg(project.stills[0], IMG.still)}
+                      src={oimg(project.stills[0], IMG.stillThumb)}
                       alt=""
-                      loading="lazy"
+                      loading="eager"
+                      decoding="async"
                       className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
                     />
                   </div>
@@ -490,6 +519,7 @@ export default function ProjectDetail() {
                         <StillImg
                           src={src}
                           preset="side"
+                          eager
                           className="w-full h-full object-cover transition-all duration-700 group-hover:scale-[1.05] group-hover:brightness-[0.88]"
                         />
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-500" />
@@ -523,6 +553,7 @@ export default function ProjectDetail() {
                       <StillImg
                         src={src}
                         preset="row"
+                        priority="low"
                         className={`w-full h-full object-cover transition-all duration-700 ${
                           showCount
                             ? "brightness-[0.35]"

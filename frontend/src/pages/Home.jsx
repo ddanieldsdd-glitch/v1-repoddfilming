@@ -7,7 +7,7 @@ import { VideoPlayer } from "../components/VideoPlayer";
 import { ProjectCard } from "../components/ProjectCard";
 import { getActiveCategories } from "../lib/contentStore";
 import { getPlayer, subscribeGlobalMuted } from "../lib/videoStore";
-import { getVimeoPosterUrl } from "../lib/vimeo";
+import { getVimeoPosterUrl, getVimeoBackgroundPlayerUrl } from "../lib/vimeo";
 import { cloudinaryResponsive, DECOR_PRESET } from "../lib/cloudinary";
 
 export default function Home() {
@@ -22,44 +22,48 @@ export default function Home() {
     [content.site.showreel_url],
   );
 
-  // Diferir iframe Vimeo: esperar load + poster pintado para no competir con LCP
+  // Cargar iframe del showreel pronto tras el primer pintado (el poster estático cubre LCP)
   useEffect(() => {
     let cancelled = false;
-    let delayTimer;
+    let timer;
 
     const enableVideo = () => {
       if (cancelled) return;
-      delayTimer = window.setTimeout(() => {
-        if (!cancelled) {
-          ["https://player.vimeo.com", "https://i.vimeocdn.com"].forEach((href) => {
-            if (document.querySelector(`link[rel="preconnect"][href="${href}"]`)) return;
-            const link = document.createElement("link");
-            link.rel = "preconnect";
-            link.href = href;
-            document.head.appendChild(link);
-          });
-          setHeroVideoEnabled(true);
-        }
-      }, 5000);
+      setHeroVideoEnabled(true);
     };
 
-    if (document.readyState === "complete") {
-      enableVideo();
+    const schedule = () => {
+      timer = window.setTimeout(enableVideo, 400);
+    };
+
+    if (typeof requestAnimationFrame === "function") {
+      requestAnimationFrame(() => requestAnimationFrame(schedule));
     } else {
-      window.addEventListener("load", enableVideo, { once: true });
+      schedule();
     }
 
     return () => {
       cancelled = true;
-      window.removeEventListener("load", enableVideo);
-      if (delayTimer) window.clearTimeout(delayTimer);
+      if (timer) window.clearTimeout(timer);
     };
   }, []);
 
-  // Quitar poster estático de index.html al montar React (solo servía para LCP)
+  // Prefetch del player Vimeo en cuanto conocemos la URL
   useEffect(() => {
-    document.getElementById("static-hero-poster")?.remove();
-  }, []);
+    const href = getVimeoBackgroundPlayerUrl(content.site.showreel_url);
+    if (!href || document.querySelector(`link[rel="prefetch"][href="${href}"]`)) return;
+    const link = document.createElement("link");
+    link.rel = "prefetch";
+    link.href = href;
+    document.head.appendChild(link);
+  }, [content.site.showreel_url]);
+
+  // Quitar poster estático de index.html cuando el vídeo ya reproduce
+  useEffect(() => {
+    if (heroReelReady) {
+      document.getElementById("static-hero-poster")?.remove();
+    }
+  }, [heroReelReady]);
 
   // Keep the hero showreel permanently muted, even if global unmute is toggled
   useEffect(() => {
@@ -109,7 +113,7 @@ export default function Home() {
                 className="w-full h-full"
                 testId="hero-showreel"
                 interactive={false}
-                onReady={() => setHeroReelReady(true)}
+                onPlay={() => setHeroReelReady(true)}
               />
             </div>
           )}
