@@ -8,10 +8,30 @@ import { getActiveCategories } from "../lib/contentStore";
 import { ProjectCard } from "../components/ProjectCard";
 import { ImageLightbox } from "../components/ImageLightbox";
 import { useImageLightbox } from "../hooks/useImageLightbox";
-import { optimizeCloudinaryUrl, IMG } from "../lib/cloudinary";
+import { optimizeCloudinaryUrl, cloudinaryResponsive, IMG, STILL_PRESETS } from "../lib/cloudinary";
 
 const oimg = (url, width = IMG.still, quality = "auto") =>
   url ? optimizeCloudinaryUrl(url, { width, quality }) : url;
+
+function StillImg({ src, preset = "row", eager = false, className = "" }) {
+  const { src: imgSrc, srcSet, sizes } = cloudinaryResponsive(src, {
+    ...STILL_PRESETS[preset],
+    quality: "good",
+  });
+
+  return (
+    <img
+      src={imgSrc}
+      srcSet={srcSet}
+      sizes={sizes}
+      alt=""
+      loading={eager ? "eager" : "lazy"}
+      decoding="async"
+      fetchPriority={eager ? "high" : "auto"}
+      className={className}
+    />
+  );
+}
 
 const isVideoUrl = (url) =>
   /vimeo\.com|youtube\.com|youtu\.be/.test(String(url || ""));
@@ -416,11 +436,10 @@ export default function ProjectDetail() {
                 style={{ "--delay": "0ms" }}
                 aria-label={lang === "es" ? "Ver galería completa" : "View full gallery"}
               >
-                <img
-                  src={oimg(project.stills[0], IMG.stillGallery, "good")}
-                  alt=""
-                  loading="eager"
-                  decoding="async"
+                <StillImg
+                  src={project.stills[0]}
+                  preset="hero"
+                  eager
                   className="w-full h-full object-cover transition-all duration-700 group-hover:scale-[1.04] group-hover:brightness-[0.88]"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -445,11 +464,9 @@ export default function ProjectDetail() {
                         style={{ "--delay": `${(i + 1) * 60}ms` }}
                         aria-label={`${lang === "es" ? "Fotograma" : "Still"} ${i + 2}`}
                       >
-                        <img
-                          src={oimg(src, IMG.stillGallery, "good")}
-                          alt=""
-                          loading="lazy"
-                          decoding="async"
+                        <StillImg
+                          src={src}
+                          preset="side"
                           className="w-full h-full object-cover transition-all duration-700 group-hover:scale-[1.05] group-hover:brightness-[0.88]"
                         />
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-500" />
@@ -480,11 +497,9 @@ export default function ProjectDetail() {
                       style={{ "--delay": `${(i + 3) * 55}ms` }}
                       aria-label={`${lang === "es" ? "Fotograma" : "Still"} ${i + 4}`}
                     >
-                      <img
-                        src={oimg(src, IMG.stillRow, "good")}
-                        alt=""
-                        loading="lazy"
-                        decoding="async"
+                      <StillImg
+                        src={src}
+                        preset="row"
                         className={`w-full h-full object-cover transition-all duration-700 ${
                           showCount
                             ? "brightness-[0.35]"

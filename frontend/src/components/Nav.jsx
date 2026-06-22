@@ -2,7 +2,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
-import { optimizeCloudinaryUrl, IMG } from "../lib/cloudinary";
+import { SITE_NAV_LOGO, SITE_NAV_LOGO_SRCSET } from "../lib/siteAssets";
 
 export const Nav = () => {
   const content = useContent();
@@ -54,9 +54,7 @@ export const Nav = () => {
   const isTransparent = overHero && !open;
   const isHidden      = isFullscreen;
 
-  const logoUrl = content.site.logo_white
-    ? optimizeCloudinaryUrl(content.site.logo_white, { width: IMG.logo })
-    : null;
+  const logoUrl = SITE_NAV_LOGO;
 
   const linkClass = ({ isActive }) =>
     `text-[12px] tracking-[0.22em] uppercase transition-all duration-300 px-3.5 py-2 rounded-full ${
@@ -83,6 +81,7 @@ export const Nav = () => {
           {logoUrl && (
             <img
               src={logoUrl}
+              srcSet={SITE_NAV_LOGO_SRCSET}
               alt="DD"
               width={88}
               height={44}

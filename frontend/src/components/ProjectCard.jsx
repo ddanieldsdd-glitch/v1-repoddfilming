@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { tr } from "../lib/i18n";
 import { VideoPlayer } from "./VideoPlayer";
 import { pauseAllExcept, resumePlayer } from "../lib/videoStore";
-import { optimizeCloudinaryUrl, IMG } from "../lib/cloudinary";
+import { cloudinaryResponsive, CARD_PRESETS } from "../lib/cloudinary";
 
 const isVideoUrl = (url) =>
   /vimeo\.com|youtube\.com|youtu\.be/.test(String(url || ""));
@@ -42,11 +42,10 @@ export const ProjectCard = ({
     rawPreviewUrl && !isYoutubeUrl(rawPreviewUrl) ? rawPreviewUrl : null;
 
   const coverIsImage  = project.cover && !isVideoUrl(project.cover);
-  const imgWidth      = eager ? IMG.cardEager : IMG.card;
-  const fallbackImage = optimizeCloudinaryUrl(
-    coverIsImage ? project.cover : project.poster,
-    { width: imgWidth },
-  );
+  const imageUrl      = coverIsImage ? project.cover : project.poster;
+  const cardImage     = imageUrl
+    ? cloudinaryResponsive(imageUrl, eager ? CARD_PRESETS.eager : CARD_PRESETS.lazy)
+    : null;
 
   // Observer 1: preloading (wide margin — carga antes de entrar en pantalla)
   useEffect(() => {
@@ -144,9 +143,11 @@ export const ProjectCard = ({
       >
         <div className="absolute inset-0 z-0 bg-neutral-950" />
 
-        {fallbackImage && (
+        {cardImage && (
           <img
-            src={fallbackImage}
+            src={cardImage.src}
+            srcSet={cardImage.srcSet}
+            sizes={cardImage.sizes}
             alt={project.title}
             loading={eager ? "eager" : "lazy"}
             decoding="async"

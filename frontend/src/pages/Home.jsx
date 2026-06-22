@@ -8,7 +8,7 @@ import { ProjectCard } from "../components/ProjectCard";
 import { getActiveCategories } from "../lib/contentStore";
 import { getPlayer, subscribeGlobalMuted } from "../lib/videoStore";
 import { getVimeoPosterUrl } from "../lib/vimeo";
-import { optimizeCloudinaryUrl, IMG } from "../lib/cloudinary";
+import { cloudinaryResponsive, DECOR_PRESET } from "../lib/cloudinary";
 
 export default function Home() {
   const content = useContent();
@@ -297,15 +297,18 @@ export default function Home() {
                     (p) => p.category === c.id && p.published !== false
                   );
                   const thumb = catProjects[0]?.poster || catProjects[0]?.cover || null;
+                  const decor = thumb ? cloudinaryResponsive(thumb, DECOR_PRESET) : null;
                   return (
                     <Link
                       key={c.id}
                       to={`/work/${c.id}`}
                       className="group relative overflow-hidden rounded-2xl bg-neutral-950 ring-1 ring-white/10 hover:ring-white/25 transition-all duration-500 hover:scale-[1.02] p-5 flex flex-col justify-end min-h-[100px] sm:min-h-[120px]"
                     >
-                      {thumb && (
+                      {decor && (
                         <img
-                          src={optimizeCloudinaryUrl(thumb, { width: IMG.card })}
+                          src={decor.src}
+                          srcSet={decor.srcSet}
+                          sizes={decor.sizes}
                           alt=""
                           loading="lazy"
                           decoding="async"
