@@ -1,12 +1,14 @@
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { ArrowUpRight, ArrowRight, ChevronDown, X } from "lucide-react";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 import { VideoPlayer } from "../components/VideoPlayer";
 import { ProjectCard } from "../components/ProjectCard";
-import { CATEGORIES, getActiveCategories } from "../lib/contentStore";
+import { getActiveCategories } from "../lib/contentStore";
 import { getPlayer, subscribeGlobalMuted } from "../lib/videoStore";
+import { getVimeoPosterUrl } from "../lib/vimeo";
+import { optimizeCloudinaryUrl, IMG } from "../lib/cloudinary";
 
 export default function Home() {
   const content = useContent();
@@ -15,8 +17,33 @@ export default function Home() {
   const [showReelClosing, setShowReelClosing] = useState(false);
   const [heroReelReady, setHeroReelReady] = useState(false);
   const [modalReelReady, setModalReelReady] = useState(false);
+  const [heroVideoEnabled, setHeroVideoEnabled] = useState(false);
 
   const featured = (content.projects || []).slice(0, 6);
+  const showreelPoster = useMemo(
+    () => getVimeoPosterUrl(content.site.showreel_url),
+    [content.site.showreel_url],
+  );
+
+  // Diferir iframe Vimeo: prioriza LCP (poster + CSS) antes del vídeo pesado
+  useEffect(() => {
+    let cancelled = false;
+    const enable = () => {
+      if (!cancelled) setHeroVideoEnabled(true);
+    };
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(enable, { timeout: 2800 });
+      return () => {
+        cancelled = true;
+        window.cancelIdleCallback(id);
+      };
+    }
+    const t = window.setTimeout(enable, 2200);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
+  }, []);
 
   const openShowReel = () => {
     setShowReelClosing(false);
@@ -67,22 +94,37 @@ export default function Home() {
       >
         {/* Tarjeta redondeada que ocupa casi toda la pantalla */}
         <div className="relative w-full h-full rounded-[1.75rem] sm:rounded-[2rem] md:rounded-[2.5rem] overflow-hidden bg-neutral-950 hero-fullscreen shadow-[0_40px_120px_-20px_rgba(0,0,0,1)]">
-          <div className="absolute inset-0 pointer-events-none">
-            <VideoPlayer
-              url={content.site.showreel_url}
-              playerKey="hero-showreel"
-              autoplay
-              background
-              muted={true}
-              className="w-full h-full"
-              testId="hero-showreel"
-              interactive={false}
-              onReady={() => setHeroReelReady(true)}
+          {showreelPoster && (
+            <img
+              src={showreelPoster}
+              alt=""
+              fetchPriority="high"
+              decoding="async"
+              className={`absolute inset-0 z-0 h-full w-full object-cover transition-opacity duration-700 ${
+                heroReelReady ? "opacity-0" : "opacity-100"
+              }`}
             />
-          </div>
-          {/* Overlay que se desvanece cuando el SDK está listo y el thumbnail es visible */}
+          )}
+          {heroVideoEnabled && (
+            <div className="absolute inset-0 pointer-events-none">
+              <VideoPlayer
+                url={content.site.showreel_url}
+                playerKey="hero-showreel"
+                autoplay
+                background
+                muted={true}
+                className="w-full h-full"
+                testId="hero-showreel"
+                interactive={false}
+                onReady={() => setHeroReelReady(true)}
+              />
+            </div>
+          )}
+          {/* Overlay que se desvanece cuando el vídeo está listo */}
           <div
-            className={`pointer-events-none absolute inset-0 z-[1] bg-neutral-950 transition-opacity duration-700 ${heroReelReady ? "opacity-0" : "opacity-100"}`}
+            className={`pointer-events-none absolute inset-0 z-[1] bg-neutral-950 transition-opacity duration-700 ${
+              heroReelReady ? "opacity-0" : showreelPoster ? "opacity-0" : "opacity-100"
+            }`}
           />
 
           {/* Gradiente inferior para legibilidad */}
@@ -318,7 +360,7 @@ export default function Home() {
                     >
                       {thumb && (
                         <img
-                          src={thumb}
+                          src={oimg(thumb, IMG.card)}
                           alt=""
                           className="pointer-events-none absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-30 transition-opacity duration-500 scale-[1.04] group-hover:scale-100"
                         />

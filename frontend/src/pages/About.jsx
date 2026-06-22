@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
+import { optimizeCloudinaryUrl, IMG } from "../lib/cloudinary";
 
 export default function About() {
   const content = useContent();
@@ -10,7 +11,9 @@ export default function About() {
 
   const text = tr(content.about, lang);
   const paragraphs = String(text).split("\n").filter(Boolean);
-  const photo = content.site.about_image;
+  const photo = content.site.about_image
+    ? optimizeCloudinaryUrl(content.site.about_image, { width: IMG.about })
+    : null;
   const { name, title, tagline, social } = content.site;
 
   useEffect(() => {

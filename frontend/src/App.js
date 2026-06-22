@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import "@/App.css";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react";
@@ -8,11 +8,12 @@ import { useTheme } from "./lib/useTheme";
 import { Nav } from "./components/Nav";
 import { Footer } from "./components/Footer";
 import Home from "./pages/Home";
-import Work from "./pages/Work";
-import ProjectDetail from "./pages/ProjectDetail";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Admin from "./pages/Admin";
+
+const Work = lazy(() => import("./pages/Work"));
+const ProjectDetail = lazy(() => import("./pages/ProjectDetail"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Admin = lazy(() => import("./pages/Admin"));
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -64,15 +65,17 @@ function App() {
         <ScrollToTop />
         <Nav />
         <main>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/work" element={<Work />} />
-            <Route path="/work/:category" element={<Work />} />
-            <Route path="/project/:slug" element={<ProjectDetail />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/admin" element={<Admin />} />
-          </Routes>
+          <Suspense fallback={null}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/work" element={<Work />} />
+              <Route path="/work/:category" element={<Work />} />
+              <Route path="/project/:slug" element={<ProjectDetail />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/admin" element={<Admin />} />
+            </Routes>
+          </Suspense>
         </main>
         <Footer />
         <Toaster position="bottom-right" theme={theme === "dark" ? "dark" : "light"} />

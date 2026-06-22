@@ -6,6 +6,10 @@ import { T, tr } from "../lib/i18n";
 import { VideoPlayer } from "../components/VideoPlayer";
 import { getActiveCategories } from "../lib/contentStore";
 import { ProjectCard } from "../components/ProjectCard";
+import { optimizeCloudinaryUrl, IMG } from "../lib/cloudinary";
+
+const oimg = (url, width = IMG.still) =>
+  url ? optimizeCloudinaryUrl(url, { width }) : url;
 
 const isVideoUrl = (url) =>
   /vimeo\.com|youtube\.com|youtu\.be/.test(String(url || ""));
@@ -216,7 +220,7 @@ export default function ProjectDetail() {
                 <div className="pointer-events-none absolute inset-0 z-10 bg-neutral-950">
                   {(project.cover && !isVideoUrl(project.cover)) || project.poster ? (
                     <img
-                      src={project.cover && !isVideoUrl(project.cover) ? project.cover : project.poster}
+                      src={oimg(project.cover && !isVideoUrl(project.cover) ? project.cover : project.poster, IMG.hero)}
                       alt="" className="w-full h-full object-cover opacity-60"
                     />
                   ) : null}
@@ -224,9 +228,9 @@ export default function ProjectDetail() {
               )}
             </>
           ) : project.cover && !isVideoUrl(project.cover) ? (
-            <img src={project.cover} alt={project.title} data-testid="project-cover-image" className="w-full aspect-video object-cover" />
+            <img src={oimg(project.cover, IMG.hero)} alt={project.title} data-testid="project-cover-image" className="w-full aspect-video object-cover" />
           ) : project.poster ? (
-            <img src={project.poster} alt={project.title} data-testid="project-cover-image" className="w-full aspect-video object-cover" />
+            <img src={oimg(project.poster, IMG.hero)} alt={project.title} data-testid="project-cover-image" className="w-full aspect-video object-cover" />
           ) : (
             <div className="w-full aspect-video bg-neutral-950" />
           )}
@@ -279,7 +283,7 @@ export default function ProjectDetail() {
               style={{ WebkitTapHighlightColor: "transparent" }}
             >
               <img
-                src={project.poster}
+                src={oimg(project.poster, IMG.poster)}
                 alt="poster"
                 loading="eager"
                 className="w-full h-auto object-cover transition duration-500 group-hover:scale-[1.04] group-hover:brightness-90"
@@ -309,7 +313,7 @@ export default function ProjectDetail() {
                 aria-label={lang === "es" ? "Ampliar póster" : "Expand poster"}
               >
                 <img
-                  src={project.poster}
+                  src={oimg(project.poster, IMG.poster)}
                   alt="poster"
                   loading="eager"
                   className="w-full h-auto object-cover transition duration-300 group-hover:brightness-90"
@@ -337,7 +341,7 @@ export default function ProjectDetail() {
                   >
                     <div className="h-7 w-11 overflow-hidden flex-shrink-0">
                       <img
-                        src={project.stills[0]}
+                        src={oimg(project.stills[0], IMG.still)}
                         alt=""
                         loading="lazy"
                         className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
@@ -359,7 +363,7 @@ export default function ProjectDetail() {
                   >
                     <div className="h-7 w-11 overflow-hidden flex-shrink-0">
                       <img
-                        src={project.bts[0]}
+                        src={oimg(project.bts[0], IMG.stillThumb)}
                         alt=""
                         loading="lazy"
                         className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
@@ -455,7 +459,7 @@ export default function ProjectDetail() {
                 aria-label={lang === "es" ? "Ver galería completa" : "View full gallery"}
               >
                 <img
-                  src={project.stills[0]}
+                  src={oimg(project.stills[0], IMG.still)}
                   alt=""
                   loading="eager"
                   className="w-full h-full object-cover transition-all duration-700 group-hover:scale-[1.04] group-hover:brightness-[0.88]"
@@ -491,7 +495,7 @@ export default function ProjectDetail() {
                       aria-label={`${lang === "es" ? "Fotograma" : "Still"} ${i + 2}`}
                     >
                       <img
-                        src={src}
+                        src={oimg(src, IMG.stillThumb)}
                         alt=""
                         loading="lazy"
                         className="w-full h-full object-cover transition-all duration-700 group-hover:scale-[1.05] group-hover:brightness-[0.88]"
@@ -532,7 +536,7 @@ export default function ProjectDetail() {
                       aria-label={`${lang === "es" ? "Fotograma" : "Still"} ${i + 4}`}
                     >
                       <img
-                        src={src}
+                        src={oimg(src, IMG.stillThumb)}
                         alt=""
                         loading="lazy"
                         className={`w-full h-full object-cover transition-all duration-700 ${
@@ -584,7 +588,7 @@ export default function ProjectDetail() {
                     aria-label={`BTS ${i + 1}`}
                   >
                     <img
-                      src={src}
+                      src={oimg(src, IMG.stillThumb)}
                       alt=""
                       loading="lazy"
                       className="w-full h-full object-cover transition-all duration-500 group-hover:scale-[1.06] group-hover:brightness-90"
@@ -648,7 +652,7 @@ export default function ProjectDetail() {
                 >
                   {thumb && (
                     <img
-                      src={thumb} alt=""
+                      src={oimg(thumb, IMG.card)} alt=""
                       className="pointer-events-none absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-30 transition-opacity duration-500 scale-[1.04] group-hover:scale-100"
                     />
                   )}
@@ -772,7 +776,7 @@ export default function ProjectDetail() {
                       }`}
                       style={{ width: "52px", height: "36px" }}
                     >
-                      <img src={src} alt="" className="h-full w-full object-cover" />
+                      <img src={oimg(src, IMG.stillThumb)} alt="" className="h-full w-full object-cover" />
                     </button>
                   ))}
                 </div>

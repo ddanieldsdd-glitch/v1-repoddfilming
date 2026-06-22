@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { tr } from "../lib/i18n";
 import { VideoPlayer } from "./VideoPlayer";
 import { pauseAllExcept, resumePlayer } from "../lib/videoStore";
+import { optimizeCloudinaryUrl, IMG } from "../lib/cloudinary";
 
 const isVideoUrl = (url) =>
   /vimeo\.com|youtube\.com|youtu\.be/.test(String(url || ""));
@@ -41,7 +42,11 @@ export const ProjectCard = ({
     rawPreviewUrl && !isYoutubeUrl(rawPreviewUrl) ? rawPreviewUrl : null;
 
   const coverIsImage  = project.cover && !isVideoUrl(project.cover);
-  const fallbackImage = coverIsImage ? project.cover : project.poster;
+  const imgWidth      = eager ? IMG.cardEager : IMG.card;
+  const fallbackImage = optimizeCloudinaryUrl(
+    coverIsImage ? project.cover : project.poster,
+    { width: imgWidth },
+  );
 
   // Observer 1: preloading (wide margin — carga antes de entrar en pantalla)
   useEffect(() => {
@@ -144,6 +149,10 @@ export const ProjectCard = ({
             src={fallbackImage}
             alt={project.title}
             loading={eager ? "eager" : "lazy"}
+            decoding="async"
+            fetchPriority={eager ? "high" : "auto"}
+            width={16}
+            height={9}
             className={`absolute inset-0 z-[3] w-full h-full object-cover transition-all duration-300 ease-out ${
               previewVisible ? "opacity-0 scale-[1.03]" : "opacity-100 scale-100"
             }`}
