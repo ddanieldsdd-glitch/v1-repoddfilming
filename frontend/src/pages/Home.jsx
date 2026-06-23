@@ -75,14 +75,37 @@ export default function Home() {
     tryPlay();
   }, []);
 
-  // Prefetch del player Vimeo en cuanto conocemos la URL
+  // Prefetch del player Vimeo cuando el navegador está idle (no compite con LCP)
   useEffect(() => {
     const href = getVimeoBackgroundPlayerUrl(content.site.showreel_url);
-    if (!href || document.querySelector(`link[rel="prefetch"][href="${href}"]`)) return;
-    const link = document.createElement("link");
-    link.rel = "prefetch";
-    link.href = href;
-    document.head.appendChild(link);
+    if (!href) return undefined;
+
+    let cancelled = false;
+    const inject = () => {
+      if (cancelled || document.querySelector(`link[rel="prefetch"][href="${href}"]`)) return;
+      const link = document.createElement("link");
+      link.rel = "prefetch";
+      link.href = href;
+      document.head.appendChild(link);
+    };
+
+    let idleId;
+    let usedIdleCallback = false;
+    if (typeof window.requestIdleCallback === "function") {
+      usedIdleCallback = true;
+      idleId = window.requestIdleCallback(inject, { timeout: 5000 });
+    } else {
+      idleId = window.setTimeout(inject, 4000);
+    }
+
+    return () => {
+      cancelled = true;
+      if (usedIdleCallback) {
+        window.cancelIdleCallback(idleId);
+      } else {
+        window.clearTimeout(idleId);
+      }
+    };
   }, [content.site.showreel_url]);
 
   // Quitar poster estático de index.html en cuanto React pinta (evita doble capa con el iframe)

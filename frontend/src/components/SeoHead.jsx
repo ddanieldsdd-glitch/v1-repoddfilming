@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useContent, useLang } from "../lib/useContent";
 import { getPageSeo } from "../lib/seo";
-import { getVimeoPosterUrl } from "../lib/vimeo";
 
 const setMeta = (key, value, property = false) => {
   if (!value) return;
@@ -26,8 +25,6 @@ const setCanonical = (href) => {
   }
   el.setAttribute("href", href);
 };
-
-const PRELOAD_ID = "ddp-lcp-poster";
 
 /** Sincroniza title, description, imagen social y canonical en cada ruta pública. */
 export function SeoHead() {
@@ -65,30 +62,6 @@ export function SeoHead() {
 
     setCanonical(canonical);
   }, [content, lang, pathname]);
-
-  // Preload del poster LCP en home (mejora PageSpeed)
-  useEffect(() => {
-    if (pathname !== "/") {
-      document.getElementById(PRELOAD_ID)?.remove();
-      return undefined;
-    }
-
-    const poster = getVimeoPosterUrl(content.site?.showreel_url);
-    if (!poster) return undefined;
-
-    let link = document.getElementById(PRELOAD_ID);
-    if (!link) {
-      link = document.createElement("link");
-      link.id = PRELOAD_ID;
-      link.rel = "preload";
-      link.as = "image";
-      link.setAttribute("fetchpriority", "high");
-      document.head.appendChild(link);
-    }
-    link.href = poster;
-
-    return () => document.getElementById(PRELOAD_ID)?.remove();
-  }, [pathname, content.site?.showreel_url]);
 
   return null;
 }

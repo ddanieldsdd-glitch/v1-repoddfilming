@@ -55,6 +55,37 @@ module.exports = {
         ],
       };
 
+      // CSS principal no bloqueante: el hero usa estilos inline + critical-shell
+      try {
+        const HtmlWebpackPlugin = require("html-webpack-plugin");
+        webpackConfig.plugins.forEach((plugin) => {
+          if (plugin instanceof HtmlWebpackPlugin) {
+            plugin.hooks.alterAssetTags.tap("DeferMainCss", (data) => {
+              data.assetTags.styles = data.assetTags.styles.map((tag) => {
+                if (
+                  tag.tagName === "link" &&
+                  tag.attributes.rel === "stylesheet" &&
+                  String(tag.attributes.href || "").includes("/static/css/")
+                ) {
+                  return {
+                    ...tag,
+                    attributes: {
+                      ...tag.attributes,
+                      media: "print",
+                      onload: "this.media='all'",
+                    },
+                  };
+                }
+                return tag;
+              });
+              return data;
+            });
+          }
+        });
+      } catch {
+        // no bloquear el build si html-webpack-plugin no está disponible
+      }
+
       // Añadir plugin de health check si está disponible y habilitado
       if (config.enableHealthCheck && healthPluginInstance && webpackConfig.plugins) {
         try {
