@@ -215,7 +215,7 @@ function buildShowreelOG(content) {
 
 /**
  * Construye los datos OG de un proyecto.
- * Prioridad de imagen: poster (cartel) → cover (si no es vídeo) → logo blanco.
+ * Prioridad de imagen: cover (si no es vídeo) → poster (cartel) → logo blanco.
  */
 function buildOGData(project) {
   const title       = esc(`${project.title} — Dani Díaz`);
@@ -224,13 +224,13 @@ function buildOGData(project) {
   );
 
   let image = OG_LOGO;
-  const poster = project.poster && String(project.poster).trim();
-  if (poster) {
-    image = toOGImage(poster, 'pad');
+  const cover = project.cover && String(project.cover).trim();
+  if (cover && !isVideoUrl(cover)) {
+    image = toOGImage(cover, 'fill');
   } else {
-    const cover = project.cover && String(project.cover).trim();
-    if (cover && !isVideoUrl(cover)) {
-      image = toOGImage(cover, 'fill');
+    const poster = project.poster && String(project.poster).trim();
+    if (poster) {
+      image = toOGImage(poster, 'pad');
     }
   }
 

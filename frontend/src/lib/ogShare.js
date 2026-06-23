@@ -37,18 +37,18 @@ export function getHomeShareImage(content) {
   return SITE_OG_LOGO;
 }
 
-/** Proyecto → cartel (poster) o cover si no hay cartel. */
+/** Proyecto → cover (imagen principal) o cartel si no hay cover. */
 export function getProjectShareImage(project) {
   if (!project) return SITE_OG_LOGO;
-
-  const poster = project.poster && String(project.poster).trim();
-  if (poster) {
-    return toOgShareImage(poster, "pad") || SITE_OG_LOGO;
-  }
 
   const cover = project.cover && String(project.cover).trim();
   if (cover && !isVideoUrl(cover)) {
     return toOgShareImage(cover, "fill") || SITE_OG_LOGO;
+  }
+
+  const poster = project.poster && String(project.poster).trim();
+  if (poster) {
+    return toOgShareImage(poster, "pad") || SITE_OG_LOGO;
   }
 
   return SITE_OG_LOGO;
