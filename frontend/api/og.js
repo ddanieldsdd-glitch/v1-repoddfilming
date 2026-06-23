@@ -18,6 +18,15 @@ const defaultContent = require('../src/data/content.json');
 const MONGO_URL = process.env.MONGO_URL;
 const DB_NAME   = process.env.DB_NAME || 'ddp_portfolio';
 const BASE_URL  = 'https://ddanidiaz.com';
+const OG_LOGO   = 'https://res.cloudinary.com/dsphxo7mx/image/upload/c_scale,w_700/q_auto,f_jpg/e_negate/c_pad,b_rgb:000000,w_1200,h_630,g_center/v1777731841/DD_BLANCO_l8xqal.png';
+
+function buildOgLogoUrl(logoUrl) {
+  if (!logoUrl || !logoUrl.includes('cloudinary.com')) return OG_LOGO;
+  if (logoUrl.includes('w_1200,h_630')) return logoUrl;
+  const asset = logoUrl.split('/upload/').pop();
+  if (!asset) return OG_LOGO;
+  return `https://res.cloudinary.com/dsphxo7mx/image/upload/c_scale,w_700/q_auto,f_jpg/e_negate/c_pad,b_rgb:000000,w_1200,h_630,g_center/${asset}`;
+}
 
 // ─── MongoDB ──────────────────────────────────────────────────────────────────
 
@@ -51,7 +60,7 @@ async function getBaseHtml() {
   const now = Date.now();
   if (_baseHtml && now - _baseHtmlFetchedAt < BASE_HTML_TTL) return _baseHtml;
   try {
-    const r = await fetch(`${BASE_URL}/`, { headers: { 'User-Agent': 'og-injector/1.0' } });
+    const r = await fetch(`${BASE_URL}/index.html`, { headers: { 'User-Agent': 'og-injector/1.0' } });
     if (r.ok) {
       _baseHtml = await r.text();
       _baseHtmlFetchedAt = now;
@@ -86,10 +95,14 @@ function esc(str) {
  *                  Ideal para mantener la composición del cartel intacta.
  * mode = 'fill' → cover horizontal (landscape): recorte inteligente.
  */
+function isVideoUrl(url) {
+  return /vimeo\.com|youtube\.com|youtu\.be/i.test(String(url || ''));
+}
+
 function toOGImage(url, mode = 'pad') {
   if (!url || !url.includes('res.cloudinary.com')) return url;
   // Evitar doble transformación
-  if (url.includes('/upload/w_1200')) return url;
+  if (url.includes('w_1200')) return url;
   const t = mode === 'fill'
     ? 'w_1200,h_630,c_fill,g_auto,q_auto,f_jpg'
     : 'w_1200,h_630,c_pad,b_rgb:000000,q_auto,f_jpg';
@@ -155,7 +168,7 @@ function buildShowreelJsonLd(content, pageUrl) {
     content.site?.meta_description?.es
     || defaultContent.site?.meta_description?.es
     || 'Showreel de Dani Díaz, Director de Fotografía.';
-  const thumb = id ? `https://vumbnail.com/${id}.jpg` : toOGImage(content.site?.logo_white || '');
+  const thumb = id ? `https://vumbnail.com/${id}.jpg` : buildOgLogoUrl(content.site?.logo_white);
 
   const graph = [
     {
@@ -195,14 +208,14 @@ function buildShowreelOG(content) {
   );
   const image = id
     ? `https://vumbnail.com/${id}.jpg`
-    : toOGImage(content.site?.logo_white || `${BASE_URL}/og-fallback.jpg`);
+    : buildOgLogoUrl(content.site?.logo_white);
   const url = `${BASE_URL}/showreel`;
-  return { title, description, image, url };
+  return { title, description, image, url, ogType: 'video.other', imageAlt: title };
 }
 
 /**
  * Construye los datos OG de un proyecto.
- * Prioridad de imagen: poster (cartel) → cover → fallback logo.
+ * Prioridad de imagen: poster (cartel) → cover (si no es vídeo) → logo blanco.
  */
 function buildOGData(project) {
   const title       = esc(`${project.title} — Dani Díaz`);
@@ -210,21 +223,24 @@ function buildOGData(project) {
     project.synopsis?.es || project.synopsis?.en || 'Proyecto cinematográfico de Dani Díaz, Director de Fotografía.'
   );
 
-  // Poster (cartel, portrait) → c_pad con fondo negro para respetar composición
-  // Cover (landscape) → c_fill con recorte inteligente
-  const image = project.poster
-    ? toOGImage(project.poster, 'pad')
-    : project.cover
-    ? toOGImage(project.cover, 'fill')
-    : `${BASE_URL}/og-fallback.jpg`;
+  let image = OG_LOGO;
+  const poster = project.poster && String(project.poster).trim();
+  if (poster) {
+    image = toOGImage(poster, 'pad');
+  } else {
+    const cover = project.cover && String(project.cover).trim();
+    if (cover && !isVideoUrl(cover)) {
+      image = toOGImage(cover, 'fill');
+    }
+  }
 
   const url = `${BASE_URL}/project/${project.slug}`;
 
-  return { title, description, image, url };
+  return { title, description, image, url, ogType: 'article', imageAlt: esc(`${project.title} — Dani Díaz`) };
 }
 
 /** HTML mínimo para bots: solo necesitan los meta tags, no ejecutan JS. */
-function buildBotHTML({ title, description, image, url }, jsonLd = '') {
+function buildBotHTML({ title, description, image, url, ogType = 'article', imageAlt = title }, jsonLd = '') {
   const favicon = 'https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_32,h_32,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png';
   return `<!DOCTYPE html>
 <html lang="es">
@@ -238,13 +254,14 @@ function buildBotHTML({ title, description, image, url }, jsonLd = '') {
   <link rel="canonical" href="${url}" />
   <link rel="icon" type="image/png" sizes="32x32" href="${favicon}" />
   ${jsonLd ? `<script type="application/ld+json">${jsonLd}</script>` : ''}
-  <meta property="og:type" content="article" />
+  <meta property="og:type" content="${ogType}" />
   <meta property="og:site_name" content="Dani Díaz — Director de Fotografía" />
   <meta property="og:title" content="${title}" />
   <meta property="og:description" content="${description}" />
   <meta property="og:image" content="${image}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="${imageAlt}" />
   <meta property="og:url" content="${url}" />
   <meta property="og:locale" content="es_ES" />
   <meta name="twitter:card" content="summary_large_image" />
@@ -252,6 +269,7 @@ function buildBotHTML({ title, description, image, url }, jsonLd = '') {
   <meta name="twitter:title" content="${title}" />
   <meta name="twitter:description" content="${description}" />
   <meta name="twitter:image" content="${image}" />
+  <meta name="twitter:image:alt" content="${imageAlt}" />
 </head>
 <body style="background:#000000;">
   <noscript>Necesitas habilitar JavaScript para ver esta web.</noscript>
@@ -264,7 +282,7 @@ function buildBotHTML({ title, description, image, url }, jsonLd = '') {
  * Inyecta meta tags OG de proyecto en el HTML real del SPA.
  * Elimina los meta tags genéricos del home y añade los del proyecto.
  */
-function injectOGTags(html, { title, description, image, url }, jsonLd = '') {
+function injectOGTags(html, { title, description, image, url, ogType = 'article', imageAlt = title }, jsonLd = '') {
   let out = html;
 
   // Reemplazar <title>
@@ -281,13 +299,14 @@ function injectOGTags(html, { title, description, image, url }, jsonLd = '') {
   const tags = `
   <link rel="canonical" href="${url}" />
   <meta name="description" content="${description}" />
-  <meta property="og:type" content="article" />
+  <meta property="og:type" content="${ogType}" />
   <meta property="og:site_name" content="Dani Díaz — Director de Fotografía" />
   <meta property="og:title" content="${title}" />
   <meta property="og:description" content="${description}" />
   <meta property="og:image" content="${image}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="${imageAlt}" />
   <meta property="og:url" content="${url}" />
   <meta property="og:locale" content="es_ES" />
   <meta name="twitter:card" content="summary_large_image" />
@@ -295,6 +314,7 @@ function injectOGTags(html, { title, description, image, url }, jsonLd = '') {
   <meta name="twitter:title" content="${title}" />
   <meta name="twitter:description" content="${description}" />
   <meta name="twitter:image" content="${image}" />
+  <meta name="twitter:image:alt" content="${imageAlt}" />
   ${jsonLd ? `<script type="application/ld+json">${jsonLd}</script>` : ''}`;
 
   out = out.replace('</head>', `${tags}\n</head>`);

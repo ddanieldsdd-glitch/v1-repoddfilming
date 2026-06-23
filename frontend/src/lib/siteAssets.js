@@ -1,5 +1,5 @@
 const LOGO_ID = "v1777731841/DD_BLANCO_l8xqal";
-const LOGO_BASE = "https://res.cloudinary.com/dsphxo7mx/image/upload";
+export const LOGO_BASE = "https://res.cloudinary.com/dsphxo7mx/image/upload";
 
 /** Nav: h-8 (32px) móvil, h-11 (44px) desktop — WebP/AVIF vía f_auto. */
 export const SITE_NAV_LOGO =
@@ -19,5 +19,6 @@ export const SITE_FAVICON_192 =
 export const SITE_APPLE_TOUCH_ICON =
   `https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_180,h_180,c_pad,b_rgb:000000,q_auto,f_png/${LOGO_ID}.png`;
 
+/** OG 1200×630 — logo blanco visible (e_negate invierte el PNG oscuro de Cloudinary). */
 export const SITE_OG_LOGO =
-  `https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_1200,h_630,c_pad,b_rgb:000000,q_auto,f_png/${LOGO_ID}.png`;
+  `${LOGO_BASE}/c_scale,w_700/q_auto,f_jpg/e_negate/c_pad,b_rgb:000000,w_1200,h_630,g_center/${LOGO_ID}.png`;

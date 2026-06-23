@@ -29,24 +29,40 @@ const setCanonical = (href) => {
 
 const PRELOAD_ID = "ddp-lcp-poster";
 
-/** Sincroniza title, description y canonical en cada ruta pública. */
+/** Sincroniza title, description, imagen social y canonical en cada ruta pública. */
 export function SeoHead() {
   const content = useContent();
   const [lang] = useLang();
   const { pathname } = useLocation();
 
   useEffect(() => {
-    if (pathname.startsWith("/admin") || pathname.startsWith("/project/")) return;
+    if (pathname.startsWith("/admin")) return;
 
-    const { title, description, canonical } = getPageSeo(pathname, content, lang);
+    const { title, description, canonical, image, imageAlt, ogType } = getPageSeo(
+      pathname,
+      content,
+      lang,
+    );
 
     document.title = title;
     setMeta("description", description);
     setMeta("og:title", title, true);
     setMeta("og:description", description, true);
     setMeta("og:url", canonical, true);
+    setMeta("og:type", ogType || "website", true);
     setMeta("twitter:title", title);
     setMeta("twitter:description", description);
+    setMeta("twitter:card", "summary_large_image");
+
+    if (image) {
+      setMeta("og:image", image, true);
+      setMeta("og:image:width", "1200", true);
+      setMeta("og:image:height", "630", true);
+      setMeta("og:image:alt", imageAlt || title, true);
+      setMeta("twitter:image", image);
+      setMeta("twitter:image:alt", imageAlt || title);
+    }
+
     setCanonical(canonical);
   }, [content, lang, pathname]);
 

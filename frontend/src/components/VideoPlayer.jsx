@@ -79,8 +79,20 @@ export const VideoPlayer = ({
 
         const shouldAutoplay =
           playing !== false && (autoplay || background || playing === true);
+
+        const attemptAutoplay = (retries = 0) => {
+          if (playerRef.current !== player || !shouldAutoplay) return;
+          player
+            .play()
+            .catch(() => {
+              if (retries < 8) {
+                window.setTimeout(() => attemptAutoplay(retries + 1), 180 + retries * 120);
+              }
+            });
+        };
+
         if (shouldAutoplay) {
-          player.play().catch(() => {});
+          attemptAutoplay();
         }
       })
       .catch(() => {
@@ -93,10 +105,18 @@ export const VideoPlayer = ({
       console.warn("[VideoPlayer] error:", err?.message || err);
       onError?.(err);
     };
+    const onLoadedEvent = () => {
+      const shouldAutoplay =
+        playing !== false && (autoplay || background || playing === true);
+      if (shouldAutoplay) {
+        player.play().catch(() => {});
+      }
+    };
 
     player.on("play", onPlayEvent);
     player.on("pause", onPauseEvent);
     player.on("error", onErrorEvent);
+    player.on("loaded", onLoadedEvent);
 
     return () => {
       clearTimeout(safetyTimer);

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { ArrowUpRight, ArrowRight, ChevronDown } from "lucide-react";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
@@ -33,7 +33,7 @@ export default function Home() {
     };
 
     const schedule = () => {
-      timer = window.setTimeout(enableVideo, 400);
+      timer = window.setTimeout(enableVideo, 150);
     };
 
     if (typeof requestAnimationFrame === "function") {
@@ -46,6 +46,33 @@ export default function Home() {
       cancelled = true;
       if (timer) window.clearTimeout(timer);
     };
+  }, []);
+
+  const startHeroShowreel = useCallback(() => {
+    const player = getPlayer("hero-showreel");
+    if (!player) return;
+
+    try {
+      player.setMuted(true).catch(() => {});
+      player.setLoop(true).catch(() => {});
+    } catch {}
+
+    const tryPlay = (attempt = 0) => {
+      player
+        .play()
+        .then(() => {
+          player.getPaused().then((paused) => {
+            if (!paused) setHeroReelReady(true);
+          }).catch(() => {});
+        })
+        .catch(() => {
+          if (attempt < 10) {
+            window.setTimeout(() => tryPlay(attempt + 1), 200 + attempt * 120);
+          }
+        });
+    };
+
+    tryPlay();
   }, []);
 
   // Prefetch del player Vimeo en cuanto conocemos la URL
@@ -65,6 +92,8 @@ export default function Home() {
 
   // Pausar showreel cuando el hero sale del viewport (evita artefactos al scroll)
   useEffect(() => {
+    if (!heroVideoEnabled) return undefined;
+
     const hero = document.querySelector("[data-hero]");
     if (!hero) return undefined;
 
@@ -85,22 +114,23 @@ export default function Home() {
 
     observer.observe(hero);
     return () => observer.disconnect();
-  }, [heroVideoEnabled, heroReelReady]);
+  }, [heroVideoEnabled]);
 
   // Keep the hero showreel permanently muted, even if global unmute is toggled
   useEffect(() => {
-    const hero = getPlayer("hero-showreel");
-    if (hero) {
-      try { hero.setMuted(true).catch(() => {}); } catch {}
-    }
-    const unsubscribe = subscribeGlobalMuted(() => {
-      const h = getPlayer("hero-showreel");
-      if (h) {
-        try { h.setMuted(true).catch(() => {}); } catch {}
+    if (!heroVideoEnabled) return undefined;
+
+    const syncMuted = () => {
+      const hero = getPlayer("hero-showreel");
+      if (hero) {
+        try { hero.setMuted(true).catch(() => {}); } catch {}
       }
-    });
+    };
+
+    syncMuted();
+    const unsubscribe = subscribeGlobalMuted(syncMuted);
     return unsubscribe;
-  }, []);
+  }, [heroVideoEnabled]);
 
   return (
     <div data-testid="home-page" className="bg-white dark:bg-black transition-colors duration-500">
@@ -136,9 +166,11 @@ export default function Home() {
                 autoplay
                 background
                 muted={true}
+                playing={true}
                 className="w-full h-full"
                 testId="hero-showreel"
                 interactive={false}
+                onReady={startHeroShowreel}
                 onPlay={() => setHeroReelReady(true)}
               />
             </div>

@@ -1,6 +1,7 @@
 import defaultContent from "../data/content.json";
 import { T, tr } from "./i18n";
 import { getActiveCategories } from "./contentStore";
+import { getHomeShareImage, getProjectShareImage, SITE_OG_LOGO } from "./ogShare";
 
 const BASE_URL = "https://ddanidiaz.com";
 
@@ -28,9 +29,45 @@ export function getPageSeo(pathname, content, lang) {
   const name = content?.site?.name || "Dani Díaz";
   const siteDesc = getSiteDescription(content, lang);
   const canonical = `${BASE_URL}${pathname === "/" ? "/" : pathname}`;
+  const logoAlt =
+    lang === "es"
+      ? "Logotipo DD de Dani Díaz, Director de Fotografía"
+      : "DD logo — Dani Díaz, Cinematographer";
+
+  const withImage = (base, image, imageAlt = logoAlt) => ({
+    ...base,
+    image,
+    imageAlt,
+  });
 
   if (pathname === "/") {
-    return { title: getSiteTitle(content, lang), description: siteDesc, canonical };
+    return withImage(
+      { title: getSiteTitle(content, lang), description: siteDesc, canonical, ogType: "website" },
+      getHomeShareImage(content),
+      logoAlt,
+    );
+  }
+
+  const projectMatch = pathname.match(/^\/project\/([^/]+)/);
+  if (projectMatch) {
+    const project = (content.projects || []).find((p) => p.slug === projectMatch[1]);
+    if (project) {
+      const description =
+        tr(project.synopsis, lang) ||
+        (lang === "es"
+          ? `${project.title} — proyecto de ${name}, Director de Fotografía.`
+          : `${project.title} — project by ${name}, Cinematographer.`);
+      return withImage(
+        {
+          title: `${project.title} — ${name}`,
+          description,
+          canonical: `${BASE_URL}/project/${project.slug}`,
+          ogType: "article",
+        },
+        getProjectShareImage(project),
+        `${project.title} — ${name}`,
+      );
+    }
   }
 
   if (pathname === "/work" || pathname.startsWith("/work/")) {
@@ -40,42 +77,61 @@ export function getPageSeo(pathname, content, lang) {
       const cat = getActiveCategories(content.projects || []).find((c) => c.id === catMatch[1]);
       if (cat) title = `${cat[lang]} — ${name}`;
     }
-    return {
-      title,
-      description:
-        lang === "es"
-          ? `Obra seleccionada de ${name}, Director de Fotografía. Ficción, documental, publicidad y videoclips.`
-          : `Selected work by ${name}, Cinematographer. Fiction, documentary, commercials and music videos.`,
-      canonical: `${BASE_URL}${pathname}`,
-    };
+    return withImage(
+      {
+        title,
+        description:
+          lang === "es"
+            ? `Obra seleccionada de ${name}, Director de Fotografía. Ficción, documental, publicidad y videoclips.`
+            : `Selected work by ${name}, Cinematographer. Fiction, documentary, commercials and music videos.`,
+        canonical: `${BASE_URL}${pathname}`,
+        ogType: "website",
+      },
+      getHomeShareImage(content),
+    );
   }
 
   if (pathname === "/about") {
-    return {
-      title: `${tr(T.about.title, lang)} — ${name}`,
-      description: getSiteDescription(content, lang),
-      canonical: `${BASE_URL}/about`,
-    };
+    return withImage(
+      {
+        title: `${tr(T.about.title, lang)} — ${name}`,
+        description: siteDesc,
+        canonical: `${BASE_URL}/about`,
+        ogType: "website",
+      },
+      getHomeShareImage(content),
+    );
   }
 
   if (pathname === "/contact") {
-    return {
-      title: `${tr(T.contact.title, lang)} — ${name}`,
-      description: tr(T.contact.intro, lang),
-      canonical: `${BASE_URL}/contact`,
-    };
+    return withImage(
+      {
+        title: `${tr(T.contact.title, lang)} — ${name}`,
+        description: tr(T.contact.intro, lang),
+        canonical: `${BASE_URL}/contact`,
+        ogType: "website",
+      },
+      getHomeShareImage(content),
+    );
   }
 
   if (pathname === "/showreel") {
-    return {
-      title: `${tr(T.hero.showreel, lang)} — ${name}`,
-      description:
-        lang === "es"
-          ? `Showreel de ${name}, Director de Fotografía. Selección de trabajos en ficción, documental, publicidad y videoclips.`
-          : `Showreel by ${name}, Cinematographer. A selection of fiction, documentary, commercials and music videos.`,
-      canonical: `${BASE_URL}/showreel`,
-    };
+    return withImage(
+      {
+        title: `${tr(T.hero.showreel, lang)} — ${name}`,
+        description:
+          lang === "es"
+            ? `Showreel de ${name}, Director de Fotografía. Selección de trabajos en ficción, documental, publicidad y videoclips.`
+            : `Showreel by ${name}, Cinematographer. A selection of fiction, documentary, commercials and music videos.`,
+        canonical: `${BASE_URL}/showreel`,
+        ogType: "video.other",
+      },
+      getHomeShareImage(content),
+    );
   }
 
-  return { title: getSiteTitle(content, lang), description: siteDesc, canonical };
+  return withImage(
+    { title: getSiteTitle(content, lang), description: siteDesc, canonical, ogType: "website" },
+    SITE_OG_LOGO,
+  );
 }
