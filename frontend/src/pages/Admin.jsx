@@ -14,6 +14,7 @@ import {
   getDefaultContent,
   saveContent,
 } from "../lib/contentStore";
+import { getProjectVideoSeoLabel } from "../lib/videoSeo";
 
 const Field = ({ label, children }) => (
   <label className="block">
@@ -248,8 +249,11 @@ const ProjectForm = ({ value, onChange }) => {
           className={inputCls}
           value={value.preview_url || ""}
           onChange={(e) => update({ preview_url: e.target.value })}
-          placeholder="https://vimeo.com/..."
+          placeholder="https://vimeo.com/... o https://youtube.com/watch?v=..."
         />
+        <p className="mt-1 text-[11px] text-neutral-500">
+          Con URL de vídeo, la página del proyecto se indexa automáticamente como watch page en Google.
+        </p>
       </Field>
       <Field label="Poster image URL (optional)">
         <input
@@ -849,7 +853,9 @@ export default function Admin() {
           )}
 
           <ul className="divide-y divide-white/10">
-            {content.projects.map((p, i) => (
+            {content.projects.map((p, i) => {
+              const videoSeo = getProjectVideoSeoLabel(p);
+              return (
               <li
                 key={p.id}
                 data-testid={`admin-row-${p.slug}`}
@@ -865,13 +871,25 @@ export default function Admin() {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm truncate">{p.title || <em>untitled</em>}</p>
                     {p.published === false && (
                       <span className="shrink-0 text-[9px] tracking-[0.2em] uppercase text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5">
                         Draft
                       </span>
                     )}
+                    <span
+                      title={videoSeo.title}
+                      className={`shrink-0 text-[9px] tracking-[0.18em] uppercase px-1.5 py-0.5 border ${
+                        videoSeo.status === "ok"
+                          ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+                          : videoSeo.status === "draft"
+                            ? "text-neutral-500 bg-neutral-100 border-neutral-200"
+                            : "text-neutral-500 bg-neutral-50 border-neutral-200"
+                      }`}
+                    >
+                      {videoSeo.label}
+                    </span>
                   </div>
                   <p className="text-[11px] tracking-[0.2em] uppercase text-neutral-400 truncate">
                     {p.category} · {p.year} · {p.director}
@@ -911,7 +929,8 @@ export default function Admin() {
                   </button>
                 </div>
               </li>
-            ))}
+            );
+            })}
           </ul>
         </div>
       </div>

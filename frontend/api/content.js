@@ -1,36 +1,10 @@
-const { MongoClient } = require('mongodb');
 const verifyToken = require('./_verifyToken');
 const applyCors = require('./_cors');
-const defaultContent = require('../src/data/content.json');
+const { getMergedContent, getPublishedProjects, DB_NAME, COLLECTION } = require('./_content');
+const { MongoClient } = require('mongodb');
 
 const MONGO_URL = process.env.MONGO_URL;
-const DB_NAME = process.env.DB_NAME || 'ddp_portfolio';
-const COLLECTION = 'content';
 
-/** Fusiona MongoDB con defaults para campos nuevos (p. ej. meta_description). */
-function mergeContent(doc) {
-  if (!doc) return { ...defaultContent };
-  return {
-    ...defaultContent,
-    ...doc,
-    site: {
-      ...defaultContent.site,
-      ...doc.site,
-      meta_description: {
-        ...(defaultContent.site?.meta_description || {}),
-        ...(doc.site?.meta_description || {}),
-      },
-      social: {
-        ...(defaultContent.site?.social || {}),
-        ...(doc.site?.social || {}),
-      },
-    },
-    about: { ...defaultContent.about, ...doc.about },
-    projects: doc.projects ?? defaultContent.projects,
-  };
-}
-
-// Reuse the client across warm invocations
 let _client = null;
 async function getDb() {
   if (!_client) {
@@ -46,16 +20,12 @@ module.exports = async (req, res) => {
   if (applyCors(req, res)) return;
 
   try {
-    const db = await getDb();
-
     if (req.method === 'GET') {
       const isAdmin = !!verifyToken(req);
-      const doc = await db.collection(COLLECTION).findOne({}, { projection: { _id: 0 } });
-      const content = mergeContent(doc);
+      const content = await getMergedContent();
 
-      // Public visitors only see published projects; admin sees all
-      if (!isAdmin && Array.isArray(content.projects)) {
-        content.projects = content.projects.filter((p) => p.published !== false);
+      if (!isAdmin) {
+        content.projects = getPublishedProjects(content);
       }
 
       return res.status(200).json(content);
@@ -72,13 +42,11 @@ module.exports = async (req, res) => {
         return res.status(400).json({ ok: false, message: 'Estructura de contenido inválida' });
       }
 
-      // Strip any accidental _id that would break replaceOne
       delete body._id;
 
+      const db = await getDb();
       await db.collection(COLLECTION).replaceOne({}, body, { upsert: true });
 
-      // Notificar a Google y Bing que el sitemap ha cambiado (no bloqueante).
-      // Así ambos buscadores descubren los proyectos nuevos automáticamente.
       const sitemapUrl = encodeURIComponent('https://ddanidiaz.com/sitemap.xml');
       fetch(`https://www.google.com/ping?sitemap=${sitemapUrl}`).catch(() => {});
       fetch(`https://www.bing.com/ping?sitemap=${sitemapUrl}`).catch(() => {});

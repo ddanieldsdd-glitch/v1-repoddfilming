@@ -1,4 +1,4 @@
-import { useRef, useState, useMemo, useEffect, useCallback } from "react";
+import { useRef, useMemo, useEffect, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowUpRight, ArrowRight } from "lucide-react";
 import { useContent, useLang } from "../lib/useContent";
@@ -9,6 +9,7 @@ import { ProjectCard } from "../components/ProjectCard";
 import { ImageLightbox } from "../components/ImageLightbox";
 import { useImageLightbox } from "../hooks/useImageLightbox";
 import { optimizeCloudinaryUrl, cloudinaryResponsive, IMG, STILL_PRESETS, COVER_PRESET, prefetchCloudinaryImages } from "../lib/cloudinary";
+import { getProjectVideoUrl, buildProjectVideoGraph } from "../lib/videoSeo";
 
 const oimg = (url, width = IMG.still, quality = "good") =>
   url ? optimizeCloudinaryUrl(url, { width, quality }) : url;
@@ -68,6 +69,12 @@ function usePrefetchGalleryImages(stills, bts, slug) {
 const isVideoUrl = (url) =>
   /vimeo\.com|youtube\.com|youtu\.be/.test(String(url || ""));
 
+/** URL de vídeo del proyecto (preview_url → cover). */
+function getHeroVideoUrl(project) {
+  if (!project) return "";
+  return getProjectVideoUrl(project) || "";
+}
+
 /** Añade clase "revealed" al entrar en viewport */
 function useReveal(deps = []) {
   const ref = useRef(null);
@@ -124,7 +131,6 @@ export default function ProjectDetail() {
   const navigate = useNavigate();
   const content = useContent();
   const [lang] = useLang();
-  const [heroMediaReady, setHeroMediaReady] = useState(false);
 
   const {
     open: lightboxOpen,
@@ -172,20 +178,27 @@ export default function ProjectDetail() {
     [project?.stills, openLightbox],
   );
 
-  const heroVideoUrl = project
-    ? (isVideoUrl(project.preview_url) && project.preview_url) ||
-      (isVideoUrl(project.cover) && project.cover) || ""
-    : "";
-
-  useEffect(() => { setHeroMediaReady(false); }, [slug]);
+  const heroVideoUrl = getHeroVideoUrl(project);
 
   usePrefetchGalleryImages(project?.stills, project?.bts, slug);
 
   useEffect(() => {
-    if (!heroVideoUrl) return undefined;
-    const t = window.setTimeout(() => setHeroMediaReady(true), 6000);
-    return () => window.clearTimeout(t);
-  }, [slug, heroVideoUrl]);
+    if (!project) return undefined;
+
+    const pageUrl = `https://ddanidiaz.com/project/${project.slug}`;
+    const graph = buildProjectVideoGraph(project, pageUrl, content.site?.name || "Dani Díaz");
+    const scriptId = "project-jsonld";
+
+    document.getElementById(scriptId)?.remove();
+
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.id = scriptId;
+    script.textContent = JSON.stringify({ "@context": "https://schema.org", "@graph": graph });
+    document.head.appendChild(script);
+
+    return () => document.getElementById(scriptId)?.remove();
+  }, [project, content.site?.name]);
 
   const sameCatProjects = useMemo(() => {
     if (!project) return [];
@@ -225,31 +238,15 @@ export default function ProjectDetail() {
       <section data-hero className="bg-black pt-16 md:pt-22 px-1.5 sm:px-4 md:px-8 lg:px-12">
         <div className="relative overflow-hidden rounded-[1.5rem] sm:rounded-[1.75rem] md:rounded-[2.25rem] bg-neutral-950 shadow-[0_32px_80px_-20px_rgba(0,0,0,1)]">
           {heroVideoUrl ? (
-            <>
-              <div className={`w-full aspect-video transition-opacity duration-700 ${heroMediaReady ? "opacity-100" : "opacity-0"}`}>
-                <VideoPlayer
-                  url={heroVideoUrl}
-                  playerKey={`hero-${slug}`}
-                  autoplay loop interactive
-                  className="aspect-video w-full h-full"
-                  testId="project-hero-video"
-                  onReady={() => window.setTimeout(() => setHeroMediaReady(true), 400)}
-                />
-              </div>
-              {!heroMediaReady && (
-                <div className="pointer-events-none absolute inset-0 z-10 bg-neutral-950">
-                  {(project.cover && !isVideoUrl(project.cover)) || project.poster ? (
-                    <ResponsiveImg
-                      src={project.cover && !isVideoUrl(project.cover) ? project.cover : project.poster}
-                      preset="cover"
-                      eager
-                      alt=""
-                      className="w-full h-full object-cover opacity-60"
-                    />
-                  ) : null}
-                </div>
-              )}
-            </>
+            <div className="w-full aspect-video">
+              <VideoPlayer
+                url={heroVideoUrl}
+                playerKey={`hero-${slug}`}
+                autoplay loop interactive
+                className="aspect-video w-full h-full"
+                testId="project-hero-video"
+              />
+            </div>
           ) : project.cover && !isVideoUrl(project.cover) ? (
             <ResponsiveImg
               src={project.cover}

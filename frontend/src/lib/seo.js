@@ -2,6 +2,7 @@ import defaultContent from "../data/content.json";
 import { T, tr } from "./i18n";
 import { getActiveCategories } from "./contentStore";
 import { getHomeShareImage, getProjectShareImage, SITE_OG_LOGO } from "./ogShare";
+import { hasProjectWatchPage } from "./videoSeo";
 
 const BASE_URL = "https://ddanidiaz.com";
 
@@ -57,12 +58,13 @@ export function getPageSeo(pathname, content, lang) {
         (lang === "es"
           ? `${project.title} — proyecto de ${name}, Director de Fotografía.`
           : `${project.title} — project by ${name}, Cinematographer.`);
+      const hasVideo = hasProjectWatchPage(project);
       return withImage(
         {
           title: `${project.title} — ${name}`,
           description,
           canonical: `${BASE_URL}/project/${project.slug}`,
-          ogType: "article",
+          ogType: hasVideo ? "video.other" : "article",
         },
         getProjectShareImage(project),
         `${project.title} — ${name}`,

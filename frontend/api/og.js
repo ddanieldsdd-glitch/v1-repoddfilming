@@ -12,12 +12,16 @@
  *      meta tags del proyecto y se sirve el SPA completo con React
  */
 
-const { MongoClient } = require('mongodb');
 const defaultContent = require('../src/data/content.json');
+const { getMergedContent, getPublishedProjects } = require('./_content');
+const {
+  isVideoUrl,
+  parseVideoUrl,
+  resolveProjectVideo,
+  buildProjectVideoJsonLd,
+} = require('./_videoSeo');
 
-const MONGO_URL = process.env.MONGO_URL;
-const DB_NAME   = process.env.DB_NAME || 'ddp_portfolio';
-const BASE_URL  = 'https://ddanidiaz.com';
+const BASE_URL = 'https://ddanidiaz.com';
 const OG_LOGO   = 'https://res.cloudinary.com/dsphxo7mx/image/upload/c_scale,w_700/q_auto,f_jpg/e_negate/c_pad,b_rgb:000000,w_1200,h_630,g_center/v1777731841/DD_BLANCO_l8xqal.png';
 
 function buildOgLogoUrl(logoUrl) {
@@ -26,27 +30,6 @@ function buildOgLogoUrl(logoUrl) {
   const asset = logoUrl.split('/upload/').pop();
   if (!asset) return OG_LOGO;
   return `https://res.cloudinary.com/dsphxo7mx/image/upload/c_scale,w_700/q_auto,f_jpg/e_negate/c_pad,b_rgb:000000,w_1200,h_630,g_center/${asset}`;
-}
-
-// ─── MongoDB ──────────────────────────────────────────────────────────────────
-
-let _mongoClient = null;
-
-async function getContent() {
-  if (!MONGO_URL) return defaultContent;
-  try {
-    if (!_mongoClient) {
-      _mongoClient = new MongoClient(MONGO_URL);
-      await _mongoClient.connect();
-    }
-    const doc = await _mongoClient
-      .db(DB_NAME)
-      .collection('content')
-      .findOne({}, { projection: { _id: 0 } });
-    return doc || defaultContent;
-  } catch {
-    return defaultContent;
-  }
 }
 
 // ─── Base HTML (React SPA) cache ──────────────────────────────────────────────
@@ -73,10 +56,12 @@ async function getBaseHtml() {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const BOT_RE = /bot|crawler|spider|facebookexternalhit|whatsapp|telegram|slack|discord|twitter|linkedin|googlebot|bingbot|duckduck/i;
+// Bots sociales: HTML mínimo con OG tags. Los buscadores reciben el SPA completo
+// con iframe estático para que Google detecte la página como "watch page".
+const SOCIAL_BOT_RE = /facebookexternalhit|whatsapp|telegram|slack|discord|twitterbot|linkedinbot|pinterest/i;
 
-function isBot(ua) {
-  return BOT_RE.test(ua || '');
+function isSocialBot(ua) {
+  return SOCIAL_BOT_RE.test(ua || '');
 }
 
 function esc(str) {
@@ -95,10 +80,6 @@ function esc(str) {
  *                  Ideal para mantener la composición del cartel intacta.
  * mode = 'fill' → cover horizontal (landscape): recorte inteligente.
  */
-function isVideoUrl(url) {
-  return /vimeo\.com|youtube\.com|youtu\.be/i.test(String(url || ''));
-}
-
 function toOGImage(url, mode = 'pad') {
   if (!url || !url.includes('res.cloudinary.com')) return url;
   // Evitar doble transformación
@@ -109,66 +90,50 @@ function toOGImage(url, mode = 'pad') {
   return url.replace('/upload/', `/upload/${t}/`);
 }
 
-/** Extrae el ID numérico de una URL de Vimeo */
-function vimeoId(url) {
-  const m = (url || '').match(/vimeo\.com\/(\d+)/);
-  return m ? m[1] : null;
+function buildVideoMetaTags(embedUrl) {
+  if (!embedUrl) return '';
+  return `
+  <meta property="og:video" content="${embedUrl}" />
+  <meta property="og:video:secure_url" content="${embedUrl}" />
+  <meta property="og:video:type" content="text/html" />
+  <meta property="og:video:width" content="1920" />
+  <meta property="og:video:height" content="1080" />`;
+}
+
+/** iframe estático en HTML inicial: Google lo necesita para indexar la página como watch page. */
+function buildVideoEmbedHtml(embedUrl, title) {
+  if (!embedUrl) return '';
+  return `<main id="video-watch-page" style="margin:0;padding:0;background:#000">
+  <iframe src="${embedUrl}" title="${title}" width="960" height="540" style="width:100%;max-width:100%;aspect-ratio:16/9;border:0;display:block;min-height:360px" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+</main>`;
+}
+
+function injectVideoEmbed(html, embedUrl, title) {
+  if (!embedUrl) return html;
+  const embed = buildVideoEmbedHtml(embedUrl, title);
+  if (html.includes('<div id="root">')) {
+    return html.replace('<div id="root">', `${embed}\n<div id="root">`);
+  }
+  return html.replace('</body>', `${embed}\n</body>`);
 }
 
 /**
- * Genera el bloque JSON-LD (VideoObject + Person) para una página de proyecto.
- * Esto permite a Google mostrar miniaturas de vídeo en los resultados de búsqueda.
+ * Genera el bloque JSON-LD (VideoObject + WebPage) para una página de proyecto.
+ * Aplica automáticamente a cualquier proyecto con preview_url o cover de vídeo.
  */
 function buildProjectJsonLd(project, pageUrl) {
-  const id      = vimeoId(project.preview_url);
-  const thumb   = project.cover || project.poster || '';
-  const synopsisEs = (project.synopsis?.es || '').slice(0, 500);
-  const synopsisEn = (project.synopsis?.en || '').slice(0, 500);
-  const description = synopsisEs || synopsisEn || 'Proyecto cinematográfico de Dani Díaz.';
-
-  const graph = [
-    {
-      '@type': 'WebPage',
-      '@id': `${pageUrl}#webpage`,
-      url: pageUrl,
-      name: `${project.title} — Dani Díaz`,
-      description,
-      inLanguage: ['es', 'en'],
-      author: { '@id': 'https://ddanidiaz.com/#person' }
-    }
-  ];
-
-  if (id) {
-    graph.push({
-      '@type': 'VideoObject',
-      '@id': `${pageUrl}#video`,
-      name: project.title,
-      description,
-      thumbnailUrl: thumb,
-      uploadDate: project.year ? `${project.year}-01-01T00:00:00+00:00` : undefined,
-      embedUrl: `https://player.vimeo.com/video/${id}`,
-      url: pageUrl,
-      director: project.director
-        ? { '@type': 'Person', name: project.director }
-        : undefined,
-      productionCompany: project.production_company
-        ? { '@type': 'Organization', name: project.production_company }
-        : undefined
-    });
-  }
-
-  // Eliminar claves undefined para JSON limpio
-  return JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }, (_, v) => v === undefined ? undefined : v, 2);
+  return buildProjectVideoJsonLd(project, pageUrl);
 }
 
 function buildShowreelJsonLd(content, pageUrl) {
-  const id = vimeoId(content.site?.showreel_url);
+  const video = parseVideoUrl(content.site?.showreel_url);
   const title = 'Showreel — Dani Díaz';
   const description =
     content.site?.meta_description?.es
     || defaultContent.site?.meta_description?.es
     || 'Showreel de Dani Díaz, Director de Fotografía.';
-  const thumb = id ? `https://vumbnail.com/${id}.jpg` : buildOgLogoUrl(content.site?.logo_white);
+  const thumb = video?.defaultThumbnail || buildOgLogoUrl(content.site?.logo_white);
+  const videoNodeId = video ? `${pageUrl}#video` : undefined;
 
   const graph = [
     {
@@ -179,19 +144,21 @@ function buildShowreelJsonLd(content, pageUrl) {
       description,
       inLanguage: ['es', 'en'],
       author: { '@id': 'https://ddanidiaz.com/#person' },
+      mainEntity: videoNodeId ? { '@id': videoNodeId } : undefined,
     },
   ];
 
-  if (id) {
+  if (video) {
     graph.push({
       '@type': 'VideoObject',
       '@id': `${pageUrl}#video`,
       name: title,
       description,
       thumbnailUrl: thumb,
-      contentUrl: `https://vimeo.com/${id}`,
-      embedUrl: `https://player.vimeo.com/video/${id}`,
+      contentUrl: video.contentUrl,
+      embedUrl: video.embedUrl,
       url: pageUrl,
+      isPartOf: { '@id': `${pageUrl}#webpage` },
     });
   }
 
@@ -199,18 +166,24 @@ function buildShowreelJsonLd(content, pageUrl) {
 }
 
 function buildShowreelOG(content) {
-  const id = vimeoId(content.site?.showreel_url);
+  const video = parseVideoUrl(content.site?.showreel_url);
   const title = esc('Showreel — Dani Díaz');
   const description = esc(
     content.site?.meta_description?.es
     || defaultContent.site?.meta_description?.es
     || 'Showreel de Dani Díaz, Director de Fotografía.',
   );
-  const image = id
-    ? `https://vumbnail.com/${id}.jpg`
-    : buildOgLogoUrl(content.site?.logo_white);
+  const image = video?.defaultThumbnail || buildOgLogoUrl(content.site?.logo_white);
   const url = `${BASE_URL}/showreel`;
-  return { title, description, image, url, ogType: 'video.other', imageAlt: title };
+  return {
+    title,
+    description,
+    image,
+    url,
+    ogType: video ? 'video.other' : 'website',
+    imageAlt: title,
+    embedUrl: video?.embedUrl || null,
+  };
 }
 
 /**
@@ -235,12 +208,21 @@ function buildOGData(project) {
   }
 
   const url = `${BASE_URL}/project/${project.slug}`;
+  const video = resolveProjectVideo(project);
 
-  return { title, description, image, url, ogType: 'article', imageAlt: esc(`${project.title} — Dani Díaz`) };
+  return {
+    title,
+    description,
+    image,
+    url,
+    ogType: video ? 'video.other' : 'article',
+    imageAlt: esc(`${project.title} — Dani Díaz`),
+    embedUrl: video?.embedUrl || null,
+  };
 }
 
-/** HTML mínimo para bots: solo necesitan los meta tags, no ejecutan JS. */
-function buildBotHTML({ title, description, image, url, ogType = 'article', imageAlt = title }, jsonLd = '') {
+/** HTML mínimo para bots sociales: OG tags + iframe de vídeo si aplica. */
+function buildBotHTML({ title, description, image, url, ogType = 'article', imageAlt = title, embedUrl = null }, jsonLd = '') {
   const favicon = 'https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_32,h_32,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png';
   return `<!DOCTYPE html>
 <html lang="es">
@@ -269,9 +251,10 @@ function buildBotHTML({ title, description, image, url, ogType = 'article', imag
   <meta name="twitter:title" content="${title}" />
   <meta name="twitter:description" content="${description}" />
   <meta name="twitter:image" content="${image}" />
-  <meta name="twitter:image:alt" content="${imageAlt}" />
+  <meta name="twitter:image:alt" content="${imageAlt}" />${buildVideoMetaTags(embedUrl)}
 </head>
 <body style="background:#000000;">
+  ${buildVideoEmbedHtml(embedUrl, title)}
   <noscript>Necesitas habilitar JavaScript para ver esta web.</noscript>
   <div id="root"></div>
 </body>
@@ -282,7 +265,7 @@ function buildBotHTML({ title, description, image, url, ogType = 'article', imag
  * Inyecta meta tags OG de proyecto en el HTML real del SPA.
  * Elimina los meta tags genéricos del home y añade los del proyecto.
  */
-function injectOGTags(html, { title, description, image, url, ogType = 'article', imageAlt = title }, jsonLd = '') {
+function injectOGTags(html, { title, description, image, url, ogType = 'article', imageAlt = title, embedUrl = null }, jsonLd = '') {
   let out = html;
 
   // Reemplazar <title>
@@ -314,10 +297,11 @@ function injectOGTags(html, { title, description, image, url, ogType = 'article'
   <meta name="twitter:title" content="${title}" />
   <meta name="twitter:description" content="${description}" />
   <meta name="twitter:image" content="${image}" />
-  <meta name="twitter:image:alt" content="${imageAlt}" />
+  <meta name="twitter:image:alt" content="${imageAlt}" />${buildVideoMetaTags(embedUrl)}
   ${jsonLd ? `<script type="application/ld+json">${jsonLd}</script>` : ''}`;
 
   out = out.replace('</head>', `${tags}\n</head>`);
+  out = injectVideoEmbed(out, embedUrl, title);
   return out;
 }
 
@@ -330,7 +314,7 @@ module.exports = async (req, res) => {
   const pathname = parsed.pathname;
 
   if (pathname === '/showreel') {
-    const content = await getContent();
+    const content = await getMergedContent();
     const ogData  = buildShowreelOG(content);
     const jsonLd  = buildShowreelJsonLd(content, `${BASE_URL}/showreel`);
     const ua      = req.headers['user-agent'] || '';
@@ -338,7 +322,7 @@ module.exports = async (req, res) => {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=3600, stale-while-revalidate=86400');
 
-    if (isBot(ua)) {
+    if (isSocialBot(ua)) {
       return res.status(200).send(buildBotHTML(ogData, jsonLd));
     }
 
@@ -357,10 +341,8 @@ module.exports = async (req, res) => {
   }
 
   const slug    = decodeURIComponent(projectMatch[1]);
-  const content = await getContent();
-  const project = (content.projects || []).find(
-    (p) => p.slug === slug && p.published !== false
-  );
+  const content = await getMergedContent();
+  const project = getPublishedProjects(content).find((p) => p.slug === slug);
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   // Cloudflare cachea la respuesta hasta 1 hora; el navegador 10 min
@@ -377,17 +359,14 @@ module.exports = async (req, res) => {
   const jsonLd  = buildProjectJsonLd(project, `${BASE_URL}/project/${project.slug}`);
   const ua      = req.headers['user-agent'] || '';
 
-  if (isBot(ua)) {
-    // Bots no ejecutan JS → HTML mínimo con meta tags es suficiente
+  if (isSocialBot(ua)) {
     return res.status(200).send(buildBotHTML(ogData, jsonLd));
   }
 
-  // Usuario real → necesita el SPA completo con React + los meta tags del proyecto
   const baseHtml = await getBaseHtml();
   if (baseHtml) {
     return res.status(200).send(injectOGTags(baseHtml, ogData, jsonLd));
   }
 
-  // Fallback si el CDN no responde aún (ej: primer deploy)
   return res.status(200).send(buildBotHTML(ogData, jsonLd));
 };

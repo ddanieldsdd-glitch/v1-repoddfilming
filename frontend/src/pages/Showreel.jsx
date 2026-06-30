@@ -4,8 +4,9 @@ import { X, Volume2, VolumeX, Maximize, Minimize } from "lucide-react";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 import { VideoPlayer } from "../components/VideoPlayer";
-import { extractVimeoId, getVimeoPosterUrl } from "../lib/vimeo";
+import { getVimeoPosterUrl } from "../lib/vimeo";
 import { getSiteDescription } from "../lib/seo";
+import { parseVideoUrl } from "../lib/videoSeo";
 import { getPlayer } from "../lib/videoStore";
 
 function ControlButton({ onClick, label, ariaLabel, active = false, children }) {
@@ -35,8 +36,8 @@ export default function Showreel() {
   const [expanded, setExpanded] = useState(false);
   const [playing, setPlaying] = useState(false);
   const url = content.site?.showreel_url;
-  const vimeoId = extractVimeoId(url);
-  const poster = getVimeoPosterUrl(url);
+  const watchVideo = parseVideoUrl(url);
+  const poster = getVimeoPosterUrl(url) || watchVideo?.defaultThumbnail;
   const name = content.site?.name || "Dani Díaz";
   const title = `${tr(T.hero.showreel, lang)} — ${name}`;
   const description =
@@ -76,7 +77,7 @@ export default function Showreel() {
   }, [expanded]);
 
   useEffect(() => {
-    if (!vimeoId) return undefined;
+    if (!watchVideo) return undefined;
 
     const thumb = poster || content.site?.logo_white || "";
     const jsonLd = {
@@ -89,6 +90,7 @@ export default function Showreel() {
           name: title,
           description: getSiteDescription(content, lang) || description,
           inLanguage: lang,
+          mainEntity: { "@id": "https://ddanidiaz.com/showreel#video" },
         },
         {
           "@type": "VideoObject",
@@ -96,9 +98,10 @@ export default function Showreel() {
           name: title,
           description,
           thumbnailUrl: thumb,
-          contentUrl: `https://vimeo.com/${vimeoId}`,
-          embedUrl: `https://player.vimeo.com/video/${vimeoId}`,
+          contentUrl: watchVideo.contentUrl,
+          embedUrl: watchVideo.embedUrl,
           url: "https://ddanidiaz.com/showreel",
+          isPartOf: { "@id": "https://ddanidiaz.com/showreel#webpage" },
           uploadDate: "2024-01-01T00:00:00+00:00",
         },
       ],
@@ -111,7 +114,7 @@ export default function Showreel() {
     document.head.appendChild(script);
 
     return () => document.getElementById("showreel-jsonld")?.remove();
-  }, [content, lang, vimeoId, poster, title, description, name]);
+  }, [content, lang, watchVideo, poster, title, description]);
 
   const requestNativeFullscreen = useCallback(async (el) => {
     if (!el) return false;
