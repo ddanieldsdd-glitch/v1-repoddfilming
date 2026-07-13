@@ -14,6 +14,10 @@
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/showreel", "destination": "/api/og" },
+    { "source": "/about", "destination": "/api/og" },
+    { "source": "/contact", "destination": "/api/og" },
+    { "source": "/work", "destination": "/api/og" },
+    { "source": "/work/(.*)", "destination": "/api/og" },
     { "source": "/project/(.*)", "destination": "/api/og" },
     { "source": "/(.*)", "destination": "/" }
   ],

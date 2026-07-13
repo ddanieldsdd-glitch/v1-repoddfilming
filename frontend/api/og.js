@@ -14,6 +14,7 @@
 
 const defaultContent = require('../src/data/content.json');
 const { getMergedContent, getPublishedProjects } = require('./_content');
+const { getPageSeoData, buildStaticBodyHtml, buildStaticPageJsonLd } = require('./_pageSeo');
 const {
   isVideoUrl,
   parseVideoUrl,
@@ -56,12 +57,20 @@ async function getBaseHtml() {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-// Bots sociales: HTML mínimo con OG tags. Los buscadores reciben el SPA completo
-// con iframe estático para que Google detecte la página como "watch page".
+// Bots sociales y buscadores: HTML estático con meta tags y contenido rastreable.
 const SOCIAL_BOT_RE = /facebookexternalhit|whatsapp|telegram|slack|discord|twitterbot|linkedinbot|pinterest/i;
+const SEARCH_BOT_RE = /googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|applebot|semrushbot|ahrefsbot|mj12bot|dotbot|petalbot/i;
 
 function isSocialBot(ua) {
   return SOCIAL_BOT_RE.test(ua || '');
+}
+
+function isSearchBot(ua) {
+  return SEARCH_BOT_RE.test(ua || '');
+}
+
+function isCrawler(ua) {
+  return isSocialBot(ua) || isSearchBot(ua);
 }
 
 function esc(str) {
@@ -221,9 +230,13 @@ function buildOGData(project) {
   };
 }
 
-/** HTML mínimo para bots sociales: OG tags + iframe de vídeo si aplica. */
-function buildBotHTML({ title, description, image, url, ogType = 'article', imageAlt = title, embedUrl = null }, jsonLd = '') {
+/** HTML estático para crawlers: OG tags + contenido rastreable + iframe de vídeo si aplica. */
+function buildBotHTML(
+  { title, description, image, url, ogType = 'article', imageAlt = title, embedUrl = null, bodyHtml = '' },
+  jsonLd = '',
+) {
   const favicon = 'https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_32,h_32,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png';
+  const mainContent = bodyHtml || buildVideoEmbedHtml(embedUrl, title);
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -232,7 +245,7 @@ function buildBotHTML({ title, description, image, url, ogType = 'article', imag
   <meta name="theme-color" content="#000000" />
   <title>${title}</title>
   <meta name="description" content="${description}" />
-  <meta name="robots" content="index, follow" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
   <link rel="canonical" href="${url}" />
   <link rel="icon" type="image/png" sizes="32x32" href="${favicon}" />
   ${jsonLd ? `<script type="application/ld+json">${jsonLd}</script>` : ''}
@@ -254,7 +267,7 @@ function buildBotHTML({ title, description, image, url, ogType = 'article', imag
   <meta name="twitter:image:alt" content="${imageAlt}" />${buildVideoMetaTags(embedUrl)}
 </head>
 <body style="background:#000000;">
-  ${buildVideoEmbedHtml(embedUrl, title)}
+  ${mainContent}
   <noscript>Necesitas habilitar JavaScript para ver esta web.</noscript>
   <div id="root"></div>
 </body>
@@ -280,6 +293,7 @@ function injectOGTags(html, { title, description, image, url, ogType = 'article'
 
   // Inyectar antes de </head>
   const tags = `
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
   <link rel="canonical" href="${url}" />
   <meta name="description" content="${description}" />
   <meta property="og:type" content="${ogType}" />
@@ -305,62 +319,16 @@ function injectOGTags(html, { title, description, image, url, ogType = 'article'
   return out;
 }
 
-// ─── Handler ──────────────────────────────────────────────────────────────────
-
-module.exports = async (req, res) => {
-  // Vercel preserva el path original en req.url cuando reescribe a una función
-  const { URL: NodeURL } = require('url');
-  const parsed = new NodeURL(req.url, 'http://localhost');
-  const pathname = parsed.pathname;
-
-  if (pathname === '/showreel') {
-    const content = await getMergedContent();
-    const ogData  = buildShowreelOG(content);
-    const jsonLd  = buildShowreelJsonLd(content, `${BASE_URL}/showreel`);
-    const ua      = req.headers['user-agent'] || '';
-
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=3600, stale-while-revalidate=86400');
-
-    if (isSocialBot(ua)) {
-      return res.status(200).send(buildBotHTML(ogData, jsonLd));
-    }
-
-    const baseHtml = await getBaseHtml();
-    if (baseHtml) {
-      return res.status(200).send(injectOGTags(baseHtml, ogData, jsonLd));
-    }
-
-    return res.status(200).send(buildBotHTML(ogData, jsonLd));
-  }
-
-  const projectMatch = pathname.match(/^\/project\/([^/?#]+)/);
-
-  if (!projectMatch) {
-    return res.status(404).end();
-  }
-
-  const slug    = decodeURIComponent(projectMatch[1]);
-  const content = await getMergedContent();
-  const project = getPublishedProjects(content).find((p) => p.slug === slug);
+async function serveSeoPage(req, res, { ogData, jsonLd, pathname, content }) {
+  const ua = req.headers['user-agent'] || '';
+  const bodyHtml = buildStaticBodyHtml(pathname, content);
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  // Cloudflare cachea la respuesta hasta 1 hora; el navegador 10 min
   res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=3600, stale-while-revalidate=86400');
+  res.setHeader('X-Robots-Tag', 'index, follow');
 
-  // Proyecto no encontrado → devolver el SPA para que React muestre su 404
-  if (!project) {
-    const baseHtml = await getBaseHtml();
-    if (baseHtml) return res.status(200).send(baseHtml);
-    return res.redirect(302, '/');
-  }
-
-  const ogData  = buildOGData(project);
-  const jsonLd  = buildProjectJsonLd(project, `${BASE_URL}/project/${project.slug}`);
-  const ua      = req.headers['user-agent'] || '';
-
-  if (isSocialBot(ua)) {
-    return res.status(200).send(buildBotHTML(ogData, jsonLd));
+  if (isCrawler(ua)) {
+    return res.status(200).send(buildBotHTML({ ...ogData, bodyHtml }, jsonLd));
   }
 
   const baseHtml = await getBaseHtml();
@@ -368,5 +336,47 @@ module.exports = async (req, res) => {
     return res.status(200).send(injectOGTags(baseHtml, ogData, jsonLd));
   }
 
-  return res.status(200).send(buildBotHTML(ogData, jsonLd));
+  return res.status(200).send(buildBotHTML({ ...ogData, bodyHtml }, jsonLd));
+}
+
+// ─── Handler ──────────────────────────────────────────────────────────────────
+
+module.exports = async (req, res) => {
+  // Vercel preserva el path original en req.url cuando reescribe a una función
+  const { URL: NodeURL } = require('url');
+  const parsed = new NodeURL(req.url, 'http://localhost');
+  const pathname = parsed.pathname;
+  const content = await getMergedContent();
+
+  if (pathname === '/showreel') {
+    const ogData = buildShowreelOG(content);
+    const jsonLd = buildShowreelJsonLd(content, `${BASE_URL}/showreel`);
+    return serveSeoPage(req, res, { ogData, jsonLd, pathname, content });
+  }
+
+  const staticSeo = getPageSeoData(pathname, content);
+  if (staticSeo) {
+    const jsonLd = buildStaticPageJsonLd(pathname, content);
+    return serveSeoPage(req, res, { ogData: staticSeo, jsonLd, pathname, content });
+  }
+
+  const projectMatch = pathname.match(/^\/project\/([^/?#]+)/);
+  if (!projectMatch) {
+    return res.status(404).end();
+  }
+
+  const slug = decodeURIComponent(projectMatch[1]);
+  const project = getPublishedProjects(content).find((p) => p.slug === slug);
+
+  // Proyecto no encontrado → devolver el SPA para que React muestre su 404
+  if (!project) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    const baseHtml = await getBaseHtml();
+    if (baseHtml) return res.status(200).send(baseHtml);
+    return res.redirect(302, '/');
+  }
+
+  const ogData = buildOGData(project);
+  const jsonLd = buildProjectJsonLd(project, `${BASE_URL}/project/${project.slug}`);
+  return serveSeoPage(req, res, { ogData, jsonLd, pathname, content });
 };

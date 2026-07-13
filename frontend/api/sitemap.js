@@ -23,6 +23,11 @@ function escXml(str) {
 }
 
 module.exports = async (req, res) => {
+  if (req.method === 'HEAD') {
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800');
+    return res.status(200).end();
+  }
   if (req.method !== 'GET') return res.status(405).end('Method Not Allowed');
 
   const content   = await getMergedContent();
