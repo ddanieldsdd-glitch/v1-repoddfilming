@@ -15,6 +15,79 @@ import {
   saveContent,
 } from "../lib/contentStore";
 import { getProjectVideoSeoLabel } from "../lib/videoSeo";
+import { uploadImageFile } from "../lib/uploadImage";
+
+const uploadBtnCls =
+  "shrink-0 border border-white/25 px-3 py-2 text-[10px] tracking-[0.22em] uppercase text-white hover:bg-white hover:text-black transition disabled:opacity-30";
+
+const ImageUrlField = ({
+  label,
+  value,
+  onChange,
+  uploadFolder,
+  testId,
+  placeholder = "https://res.cloudinary.com/...",
+  previewFit = "cover",
+  previewBg = "bg-neutral-800",
+}) => {
+  const fileRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleUpload = async (files) => {
+    const file = files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadImageFile(file, { folder: uploadFolder });
+      onChange(url);
+      toast.success("Imagen subida a Cloudinary");
+    } catch (err) {
+      toast.error(err.message || "Error al subir");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
+  return (
+    <Field label={label}>
+      <div className="flex gap-2 items-start">
+        <input
+          data-testid={testId}
+          className={inputCls}
+          value={value || ""}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+        />
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => handleUpload(e.target.files)}
+        />
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          className={uploadBtnCls + " self-stretch"}
+        >
+          {uploading ? "Subiendo…" : "Subir"}
+        </button>
+      </div>
+      {value && (
+        <div className={`mt-2 w-full max-w-[200px] aspect-video ${previewBg} rounded overflow-hidden border border-white/10`}>
+          <img
+            src={value}
+            alt=""
+            className={`w-full h-full ${previewFit === "contain" ? "object-contain p-1" : "object-cover"}`}
+            onError={(e) => { e.target.style.display = "none"; }}
+          />
+        </div>
+      )}
+    </Field>
+  );
+};
 
 const Field = ({ label, children }) => (
   <label className="block">
@@ -31,8 +104,18 @@ const inputCls =
 const textareaCls = inputCls + " min-h-[90px] resize-y";
 
 /** Gestor visual de lista de URLs de imágenes */
-const UrlListField = ({ label, fieldKey, urls, onChange, previewFit = "cover", previewBg = "bg-neutral-800" }) => {
+const UrlListField = ({
+  label,
+  fieldKey,
+  urls,
+  onChange,
+  previewFit = "cover",
+  previewBg = "bg-neutral-800",
+  uploadFolder,
+}) => {
   const [input, setInput] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef(null);
 
   const commit = () => {
     const added = input
@@ -58,6 +141,34 @@ const UrlListField = ({ label, fieldKey, urls, onChange, previewFit = "cover", p
     if (j < 0 || j >= next.length) return;
     [next[i], next[j]] = [next[j], next[i]];
     onChange(next);
+  };
+
+  const handleUpload = async (files) => {
+    if (!uploadFolder || !files?.length) return;
+    setUploading(true);
+    const next = [...(urls || [])];
+    let added = 0;
+
+    try {
+      for (const file of Array.from(files)) {
+        const url = await uploadImageFile(file, { folder: uploadFolder });
+        if (!next.includes(url)) {
+          next.push(url);
+          added += 1;
+        }
+      }
+      if (added) {
+        onChange(next);
+        toast.success(
+          added === 1 ? "Imagen subida a Cloudinary" : `${added} imágenes subidas a Cloudinary`,
+        );
+      }
+    } catch (err) {
+      toast.error(err.message || "Error al subir");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
   };
 
   return (
@@ -121,13 +232,13 @@ const UrlListField = ({ label, fieldKey, urls, onChange, previewFit = "cover", p
         </ul>
       )}
 
-      {/* Input para añadir nuevas URLs */}
+      {/* Input para añadir nuevas URLs o subir archivos */}
       <div className="flex gap-2 items-start">
         <textarea
           className={textareaCls + " min-h-[64px] flex-1 font-mono text-[12px]"}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={"Pega una o varias URLs (una por línea)"}
+          placeholder={uploadFolder ? "Pega URLs o usa Subir archivo" : "Pega una o varias URLs (una por línea)"}
           onKeyDown={(e) => {
             if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
               e.preventDefault();
@@ -135,17 +246,41 @@ const UrlListField = ({ label, fieldKey, urls, onChange, previewFit = "cover", p
             }
           }}
         />
-        <button
-          type="button"
-          onClick={commit}
-          disabled={!input.trim()}
-          className="shrink-0 border border-white/25 px-3 py-2 text-[10px] tracking-[0.22em] uppercase text-white hover:bg-white hover:text-black transition disabled:opacity-30 self-end"
-        >
-          Añadir
-        </button>
+        <div className="shrink-0 flex flex-col gap-2 self-end">
+          {uploadFolder && (
+            <>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => handleUpload(e.target.files)}
+              />
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+                className={uploadBtnCls}
+              >
+                {uploading ? "Subiendo…" : "Subir archivo"}
+              </button>
+            </>
+          )}
+          <button
+            type="button"
+            onClick={commit}
+            disabled={!input.trim()}
+            className={uploadBtnCls + " disabled:opacity-30"}
+          >
+            Añadir URL
+          </button>
+        </div>
       </div>
       <p className="text-[9px] text-neutral-700 mt-1.5">
-        Pega varias URLs a la vez · ⌘+Enter para añadir
+        {uploadFolder
+          ? "Sube PNG/JPG directamente o pega URLs · ⌘+Enter para añadir URL"
+          : "Pega varias URLs a la vez · ⌘+Enter para añadir"}
       </p>
     </div>
   );
@@ -235,14 +370,13 @@ const ProjectForm = ({ value, onChange }) => {
           onChange={(e) => updateI18n("type", "en", e.target.value)}
         />
       </Field>
-      <Field label="Cover image URL">
-        <input
-          data-testid="form-cover"
-          className={inputCls}
-          value={value.cover || ""}
-          onChange={(e) => update({ cover: e.target.value })}
-        />
-      </Field>
+      <ImageUrlField
+        label="Cover image"
+        testId="form-cover"
+        value={value.cover || ""}
+        onChange={(url) => update({ cover: url })}
+        uploadFolder="ddp-portfolio/covers"
+      />
       <Field label="Video embed / preview URL (Vimeo or YouTube)">
         <input
           data-testid="form-preview"
@@ -255,14 +389,13 @@ const ProjectForm = ({ value, onChange }) => {
           Con URL de vídeo, la página del proyecto se indexa automáticamente como watch page en Google.
         </p>
       </Field>
-      <Field label="Poster image URL (optional)">
-        <input
-          data-testid="form-poster"
-          className={inputCls}
-          value={value.poster || ""}
-          onChange={(e) => update({ poster: e.target.value })}
-        />
-      </Field>
+      <ImageUrlField
+        label="Poster image (optional)"
+        testId="form-poster"
+        value={value.poster || ""}
+        onChange={(url) => update({ poster: url })}
+        uploadFolder="ddp-portfolio/posters"
+      />
       <Field label="External link (optional)">
         <input
           className={inputCls}
@@ -292,9 +425,10 @@ const ProjectForm = ({ value, onChange }) => {
           onChange={(next) => update({ recognitions: next })}
           previewFit="contain"
           previewBg="bg-black"
+          uploadFolder="ddp-portfolio/recognitions"
         />
         <p className="text-[9px] text-neutral-700 mt-1.5">
-          Sube el PNG a Cloudinary y pega la URL. Se muestran debajo de la sinopsis en la ficha del proyecto.
+          Sube el PNG directamente o pega la URL. Se muestran debajo de la sinopsis en la ficha del proyecto.
         </p>
       </div>
       <UrlListField
@@ -302,12 +436,14 @@ const ProjectForm = ({ value, onChange }) => {
         fieldKey="stills"
         urls={value.stills || []}
         onChange={(next) => update({ stills: next })}
+        uploadFolder="ddp-portfolio/stills"
       />
       <UrlListField
         label="BTS"
         fieldKey="bts"
         urls={value.bts || []}
         onChange={(next) => update({ bts: next })}
+        uploadFolder="ddp-portfolio/bts"
       />
       <div className="md:col-span-2">
         <Field label="Visibilidad">
@@ -381,30 +517,14 @@ const SiteSection = ({ content, onSave, saving }) => {
             onChange={(e) => updSite({ showreel_url: e.target.value })}
           />
         </Field>
-        <Field label="About — foto URL (Cloudinary)">
-          <input
-            data-testid="site-about-image"
-            className={inputCls}
-            value={draft.site.about_image || ""}
-            onChange={(e) => updSite({ about_image: e.target.value })}
-            placeholder="https://res.cloudinary.com/.../foto.jpg"
-          />
-          {draft.site.about_image && (
-            <div className="mt-2 flex items-center gap-3">
-              <div className="w-16 h-20 shrink-0 overflow-hidden rounded-md bg-neutral-800 ring-1 ring-white/10">
-                <img
-                  src={draft.site.about_image}
-                  alt=""
-                  className="w-full h-full object-cover"
-                  onError={(e) => { e.target.style.display = "none"; }}
-                />
-              </div>
-              <p className="text-[10px] text-neutral-600 leading-relaxed">
-                Vista previa · Sobre mí
-              </p>
-            </div>
-          )}
-        </Field>
+        <ImageUrlField
+          label="About — foto (Cloudinary)"
+          testId="site-about-image"
+          value={draft.site.about_image || ""}
+          onChange={(url) => updSite({ about_image: url })}
+          uploadFolder="ddp-portfolio/site"
+          placeholder="https://res.cloudinary.com/.../foto.jpg"
+        />
         <Field label="About — pie de foto">
           <input
             className={inputCls}
