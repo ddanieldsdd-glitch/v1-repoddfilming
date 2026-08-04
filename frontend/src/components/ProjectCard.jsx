@@ -209,8 +209,8 @@ export const ProjectCard = ({
                 </h3>
                 {cardSurface && recognitions.length > 0 && (
                   <div
-                    className={`flex items-center gap-0.5 sm:gap-1 shrink-0 transition-all duration-300 ease-out ${
-                      hovered ? "opacity-0 scale-95 max-w-0 overflow-hidden" : "opacity-90 max-w-[55%]"
+                    className={`flex items-center gap-0.5 sm:gap-1 shrink-0 transition-all duration-300 ${
+                      hovered ? "opacity-0 translate-y-1" : "opacity-90 translate-y-0"
                     }`}
                     aria-hidden={hovered}
                   >
