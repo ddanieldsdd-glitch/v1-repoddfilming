@@ -16,6 +16,7 @@ import {
 } from "../lib/contentStore";
 import { getProjectVideoSeoLabel } from "../lib/videoSeo";
 import { uploadImageFile, cloudinaryFolderHint } from "../lib/uploadImage";
+import { ImageDropZone, handleTextareaImagePaste } from "../components/admin/ImageDropZone";
 
 const uploadBtnCls =
   "shrink-0 border border-white/25 px-3 py-2 text-[10px] tracking-[0.22em] uppercase text-white hover:bg-white hover:text-black transition disabled:opacity-30";
@@ -30,18 +31,20 @@ const ImageUrlField = ({
   placeholder = "https://res.cloudinary.com/...",
   previewFit = "cover",
   previewBg = "bg-neutral-800",
+  onUploadStart,
 }) => {
   const fileRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const canUpload = assetType === "site" || !!projectSlug;
 
   const handleUpload = async (files) => {
-    const file = files?.[0];
+    const file = Array.isArray(files) ? files[0] : files?.[0];
     if (!file) return;
     if (!canUpload) {
       toast.error("Define el slug del proyecto antes de subir imágenes");
       return;
     }
+    onUploadStart?.();
     setUploading(true);
     try {
       const url = await uploadImageFile(file, { projectSlug, assetType });
@@ -57,6 +60,13 @@ const ImageUrlField = ({
 
   return (
     <Field label={label}>
+      <ImageDropZone
+        onFiles={handleUpload}
+        disabled={!canUpload}
+        uploading={uploading}
+        multiple={false}
+        className="p-3"
+      >
       <div className="flex gap-2 items-start">
         <input
           data-testid={testId}
@@ -97,6 +107,7 @@ const ImageUrlField = ({
           />
         </div>
       )}
+      </ImageDropZone>
     </Field>
   );
 };
@@ -125,6 +136,7 @@ const UrlListField = ({
   previewBg = "bg-neutral-800",
   projectSlug,
   assetType,
+  onUploadStart,
 }) => {
   const [input, setInput] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -158,16 +170,18 @@ const UrlListField = ({
   };
 
   const handleUpload = async (files) => {
-    if (!canUpload || !files?.length) {
+    const fileArray = Array.isArray(files) ? files : Array.from(files || []);
+    if (!canUpload || !fileArray.length) {
       if (!projectSlug) toast.error("Define el slug del proyecto antes de subir imágenes");
       return;
     }
+    onUploadStart?.();
     setUploading(true);
     const next = [...(urls || [])];
     let added = 0;
 
     try {
-      for (const file of Array.from(files)) {
+      for (const file of fileArray) {
         const url = await uploadImageFile(file, { projectSlug, assetType });
         if (!next.includes(url)) {
           next.push(url);
@@ -189,6 +203,13 @@ const UrlListField = ({
   };
 
   return (
+    <ImageDropZone
+      onFiles={handleUpload}
+      disabled={!canUpload}
+      uploading={uploading}
+      multiple
+      className="p-3"
+    >
     <div>
       <span className="block text-[10px] tracking-[0.28em] uppercase text-neutral-400 mb-2">
         {label}
@@ -255,7 +276,13 @@ const UrlListField = ({
           className={textareaCls + " min-h-[64px] flex-1 font-mono text-[12px]"}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={canUpload ? "Pega URLs o usa Subir archivo" : "Define el slug del proyecto para subir archivos"}
+          placeholder={canUpload ? "Pega URLs o arrastra imágenes aquí" : "Define el slug del proyecto para subir archivos"}
+          onPaste={(e) =>
+            handleTextareaImagePaste(e, handleUpload, {
+              disabled: !canUpload,
+              disabledMessage: "Define el slug del proyecto antes de subir imágenes",
+            })
+          }
           onKeyDown={(e) => {
             if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
               e.preventDefault();
@@ -297,10 +324,11 @@ const UrlListField = ({
       </div>
       <p className="text-[9px] text-neutral-700 mt-1.5">
         {canUpload
-          ? `Cloudinary → ${cloudinaryFolderHint(projectSlug, assetType)} · Sube PNG/JPG o pega URLs · ⌘+Enter para añadir URL`
+          ? `Cloudinary → ${cloudinaryFolderHint(projectSlug, assetType)} · Arrastra, pega imagen (⌘V) o URL · ⌘+Enter para añadir URL`
           : "Pega varias URLs a la vez · ⌘+Enter para añadir"}
       </p>
     </div>
+    </ImageDropZone>
   );
 };
 
@@ -308,7 +336,10 @@ const ProjectForm = ({ value, onChange }) => {
   const update = (patch) => onChange({ ...value, ...patch });
   const updateI18n = (key, lang, v) =>
     onChange({ ...value, [key]: { ...(value[key] || {}), [lang]: v } });
-  const projectSlug = value.slug || "";
+  const projectSlug = value.slug || slugify(value.title || "");
+  const ensureSlug = () => {
+    if (!value.slug && projectSlug) update({ slug: projectSlug });
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -396,6 +427,7 @@ const ProjectForm = ({ value, onChange }) => {
         onChange={(url) => update({ cover: url })}
         projectSlug={projectSlug}
         assetType="cover"
+        onUploadStart={ensureSlug}
       />
       <Field label="Video embed / preview URL (Vimeo or YouTube)">
         <input
@@ -416,6 +448,7 @@ const ProjectForm = ({ value, onChange }) => {
         onChange={(url) => update({ poster: url })}
         projectSlug={projectSlug}
         assetType="poster"
+        onUploadStart={ensureSlug}
       />
       <Field label="External link (optional)">
         <input
@@ -448,6 +481,7 @@ const ProjectForm = ({ value, onChange }) => {
           previewBg="bg-black"
           projectSlug={projectSlug}
           assetType="recognitions"
+          onUploadStart={ensureSlug}
         />
         <p className="text-[9px] text-neutral-700 mt-1.5">
           Sube el PNG directamente o pega la URL. Se muestran debajo de la sinopsis.
@@ -460,6 +494,7 @@ const ProjectForm = ({ value, onChange }) => {
         onChange={(next) => update({ stills: next })}
         projectSlug={projectSlug}
         assetType="stills"
+        onUploadStart={ensureSlug}
       />
       <UrlListField
         label="BTS"
@@ -468,6 +503,7 @@ const ProjectForm = ({ value, onChange }) => {
         onChange={(next) => update({ bts: next })}
         projectSlug={projectSlug}
         assetType="bts"
+        onUploadStart={ensureSlug}
       />
       <div className="md:col-span-2">
         <Field label="Visibilidad">
