@@ -154,6 +154,7 @@ export default function ProjectDetail() {
       stills: tr(T.project.stills, lang),
       bts: lang === "es" ? "Detrás de cámara" : "Behind the scenes",
       poster: lang === "es" ? "Póster" : "Poster",
+      recognitions: lang === "es" ? "Reconocimientos" : "Recognition",
     }),
     [lang],
   );
@@ -177,6 +178,15 @@ export default function ProjectDetail() {
       openLightbox(project.stills, index, "stills");
     },
     [project?.stills, openLightbox],
+  );
+
+  const openRecognitionsGallery = useCallback(
+    (index = 0) => {
+      const urls = getDetailRecognitions(project).map((r) => r.url);
+      if (!urls.length) return;
+      openLightbox(urls, index, "recognitions");
+    },
+    [project, openLightbox],
   );
 
   const heroVideoUrl = getHeroVideoUrl(project);
@@ -368,17 +378,32 @@ export default function ProjectDetail() {
               <div className="mt-6 clear-left md:clear-none">
                 <p className="text-[10px] tracking-[0.28em] uppercase text-white/35 mb-3">
                   {tr(T.project.recognitions, lang)}
+                  <span className="ml-2 normal-case tracking-normal text-white/25">
+                    · {lang === "es" ? "clic para ampliar" : "click to enlarge"}
+                  </span>
                 </p>
                 <div className="flex flex-wrap items-center gap-5 md:gap-7">
                   {detailRecognitions.map((item, i) => (
-                    <img
+                    <button
                       key={`${item.url}-${i}`}
-                      src={oimg(item.url, 280, "best")}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                      className="h-14 sm:h-16 md:h-[4.5rem] w-auto max-w-[140px] sm:max-w-[160px] object-contain opacity-85 hover:opacity-100 transition-opacity duration-300"
-                    />
+                      type="button"
+                      onClick={() => openRecognitionsGallery(i)}
+                      className="group relative rounded-lg outline-none focus:outline-none focus-visible:ring-1 focus-visible:ring-white/40 transition-transform duration-300 hover:scale-105 active:scale-[0.98]"
+                      style={{ WebkitTapHighlightColor: "transparent" }}
+                      aria-label={
+                        lang === "es"
+                          ? `Ampliar reconocimiento ${i + 1} de ${detailRecognitions.length}`
+                          : `Expand recognition ${i + 1} of ${detailRecognitions.length}`
+                      }
+                    >
+                      <img
+                        src={oimg(item.url, 280, "best")}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        className="h-14 sm:h-16 md:h-[4.5rem] w-auto max-w-[140px] sm:max-w-[160px] object-contain opacity-85 group-hover:opacity-100 transition-opacity duration-300"
+                      />
+                    </button>
                   ))}
                 </div>
               </div>
