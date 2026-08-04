@@ -12,13 +12,20 @@ function readFileAsDataUrl(file) {
 /**
  * Sube una imagen al Admin → Cloudinary (requiere sesión admin).
  * @param {File} file
- * @param {{ folder?: string }} options
+ * @param {{ projectSlug?: string, assetType?: string }} options
  * @returns {Promise<string>} URL segura de Cloudinary
  */
-export async function uploadImageFile(file, { folder = 'ddp-portfolio/site' } = {}) {
+export async function uploadImageFile(
+  file,
+  { projectSlug, assetType = 'site' } = {},
+) {
   if (!file) throw new Error('No se seleccionó ningún archivo');
   if (!file.type.startsWith('image/')) throw new Error('Solo se permiten imágenes');
   if (file.size > MAX_BYTES) throw new Error('La imagen supera el límite de 10 MB');
+
+  if (assetType !== 'site' && !projectSlug) {
+    throw new Error('Define el slug del proyecto antes de subir imágenes');
+  }
 
   const dataUrl = await readFileAsDataUrl(file);
 
@@ -26,7 +33,7 @@ export async function uploadImageFile(file, { folder = 'ddp-portfolio/site' } = 
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ file: dataUrl, folder }),
+    body: JSON.stringify({ file: dataUrl, projectSlug, assetType }),
   });
 
   const data = await res.json().catch(() => ({}));
@@ -35,4 +42,11 @@ export async function uploadImageFile(file, { folder = 'ddp-portfolio/site' } = 
   }
 
   return data.url;
+}
+
+/** Ruta Cloudinary esperada (solo informativa en Admin). */
+export function cloudinaryFolderHint(projectSlug, assetType) {
+  if (assetType === 'site') return 'ddp-portfolio/site';
+  if (!projectSlug) return 'ddp-portfolio/{slug}/…';
+  return `ddp-portfolio/${projectSlug}/${assetType}`;
 }

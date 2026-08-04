@@ -1,16 +1,9 @@
 const verifyToken = require('./_verifyToken');
 const applyCors = require('./_cors');
 const { uploadToCloudinary } = require('./_cloudinaryUpload');
+const { resolveUploadFolder } = require('./_uploadPaths');
 
 const MAX_BYTES = 10 * 1024 * 1024;
-const ALLOWED_FOLDERS = new Set([
-  'ddp-portfolio/recognitions',
-  'ddp-portfolio/stills',
-  'ddp-portfolio/bts',
-  'ddp-portfolio/covers',
-  'ddp-portfolio/posters',
-  'ddp-portfolio/site',
-]);
 
 function estimateDataUriBytes(dataUri) {
   const base64 = String(dataUri).split(',')[1] || '';
@@ -32,7 +25,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { file, folder = 'ddp-portfolio/site' } = req.body || {};
+    const { file, projectSlug, assetType = 'site' } = req.body || {};
 
     if (!file || typeof file !== 'string') {
       return res.status(400).json({ ok: false, message: 'Falta el archivo' });
@@ -42,17 +35,20 @@ module.exports = async (req, res) => {
       return res.status(400).json({ ok: false, message: 'Solo se permiten imágenes' });
     }
 
-    if (!ALLOWED_FOLDERS.has(folder)) {
-      return res.status(400).json({ ok: false, message: 'Carpeta de destino no permitida' });
-    }
-
     if (estimateDataUriBytes(file) > MAX_BYTES) {
       return res.status(400).json({ ok: false, message: 'La imagen supera el límite de 10 MB' });
     }
 
+    const folder = resolveUploadFolder({ projectSlug, assetType });
     const { url, publicId } = await uploadToCloudinary(file, { folder });
-    return res.status(200).json({ ok: true, url, publicId });
+    return res.status(200).json({ ok: true, url, publicId, folder });
   } catch (err) {
+    if (err.code === 'INVALID_SLUG') {
+      return res.status(400).json({ ok: false, message: 'Define un slug válido para el proyecto' });
+    }
+    if (err.code === 'INVALID_ASSET_TYPE') {
+      return res.status(400).json({ ok: false, message: err.message });
+    }
     if (err.code === 'CLOUDINARY_NOT_CONFIGURED') {
       return res.status(503).json({ ok: false, message: err.message });
     }

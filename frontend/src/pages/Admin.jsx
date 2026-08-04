@@ -15,7 +15,7 @@ import {
   saveContent,
 } from "../lib/contentStore";
 import { getProjectVideoSeoLabel } from "../lib/videoSeo";
-import { uploadImageFile } from "../lib/uploadImage";
+import { uploadImageFile, cloudinaryFolderHint } from "../lib/uploadImage";
 
 const uploadBtnCls =
   "shrink-0 border border-white/25 px-3 py-2 text-[10px] tracking-[0.22em] uppercase text-white hover:bg-white hover:text-black transition disabled:opacity-30";
@@ -24,7 +24,8 @@ const ImageUrlField = ({
   label,
   value,
   onChange,
-  uploadFolder,
+  projectSlug,
+  assetType,
   testId,
   placeholder = "https://res.cloudinary.com/...",
   previewFit = "cover",
@@ -32,13 +33,18 @@ const ImageUrlField = ({
 }) => {
   const fileRef = useRef(null);
   const [uploading, setUploading] = useState(false);
+  const canUpload = assetType === "site" || !!projectSlug;
 
   const handleUpload = async (files) => {
     const file = files?.[0];
     if (!file) return;
+    if (!canUpload) {
+      toast.error("Define el slug del proyecto antes de subir imágenes");
+      return;
+    }
     setUploading(true);
     try {
-      const url = await uploadImageFile(file, { folder: uploadFolder });
+      const url = await uploadImageFile(file, { projectSlug, assetType });
       onChange(url);
       toast.success("Imagen subida a Cloudinary");
     } catch (err) {
@@ -69,12 +75,18 @@ const ImageUrlField = ({
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
-          disabled={uploading}
+          disabled={uploading || !canUpload}
           className={uploadBtnCls + " self-stretch"}
+          title={canUpload ? cloudinaryFolderHint(projectSlug, assetType) : "Define el slug primero"}
         >
           {uploading ? "Subiendo…" : "Subir"}
         </button>
       </div>
+      {assetType !== "site" && (
+        <p className="text-[9px] text-neutral-700 mt-1.5 font-mono">
+          Cloudinary → {cloudinaryFolderHint(projectSlug, assetType)}
+        </p>
+      )}
       {value && (
         <div className={`mt-2 w-full max-w-[200px] aspect-video ${previewBg} rounded overflow-hidden border border-white/10`}>
           <img
@@ -111,11 +123,13 @@ const UrlListField = ({
   onChange,
   previewFit = "cover",
   previewBg = "bg-neutral-800",
-  uploadFolder,
+  projectSlug,
+  assetType,
 }) => {
   const [input, setInput] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef(null);
+  const canUpload = !!projectSlug && !!assetType;
 
   const commit = () => {
     const added = input
@@ -144,14 +158,17 @@ const UrlListField = ({
   };
 
   const handleUpload = async (files) => {
-    if (!uploadFolder || !files?.length) return;
+    if (!canUpload || !files?.length) {
+      if (!projectSlug) toast.error("Define el slug del proyecto antes de subir imágenes");
+      return;
+    }
     setUploading(true);
     const next = [...(urls || [])];
     let added = 0;
 
     try {
       for (const file of Array.from(files)) {
-        const url = await uploadImageFile(file, { folder: uploadFolder });
+        const url = await uploadImageFile(file, { projectSlug, assetType });
         if (!next.includes(url)) {
           next.push(url);
           added += 1;
@@ -238,7 +255,7 @@ const UrlListField = ({
           className={textareaCls + " min-h-[64px] flex-1 font-mono text-[12px]"}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={uploadFolder ? "Pega URLs o usa Subir archivo" : "Pega una o varias URLs (una por línea)"}
+          placeholder={canUpload ? "Pega URLs o usa Subir archivo" : "Define el slug del proyecto para subir archivos"}
           onKeyDown={(e) => {
             if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
               e.preventDefault();
@@ -247,7 +264,7 @@ const UrlListField = ({
           }}
         />
         <div className="shrink-0 flex flex-col gap-2 self-end">
-          {uploadFolder && (
+          {canUpload && (
             <>
               <input
                 ref={fileRef}
@@ -262,6 +279,7 @@ const UrlListField = ({
                 onClick={() => fileRef.current?.click()}
                 disabled={uploading}
                 className={uploadBtnCls}
+                title={cloudinaryFolderHint(projectSlug, assetType)}
               >
                 {uploading ? "Subiendo…" : "Subir archivo"}
               </button>
@@ -278,8 +296,8 @@ const UrlListField = ({
         </div>
       </div>
       <p className="text-[9px] text-neutral-700 mt-1.5">
-        {uploadFolder
-          ? "Sube PNG/JPG directamente o pega URLs · ⌘+Enter para añadir URL"
+        {canUpload
+          ? `Cloudinary → ${cloudinaryFolderHint(projectSlug, assetType)} · Sube PNG/JPG o pega URLs · ⌘+Enter para añadir URL`
           : "Pega varias URLs a la vez · ⌘+Enter para añadir"}
       </p>
     </div>
@@ -290,6 +308,7 @@ const ProjectForm = ({ value, onChange }) => {
   const update = (patch) => onChange({ ...value, ...patch });
   const updateI18n = (key, lang, v) =>
     onChange({ ...value, [key]: { ...(value[key] || {}), [lang]: v } });
+  const projectSlug = value.slug || "";
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -375,7 +394,8 @@ const ProjectForm = ({ value, onChange }) => {
         testId="form-cover"
         value={value.cover || ""}
         onChange={(url) => update({ cover: url })}
-        uploadFolder="ddp-portfolio/covers"
+        projectSlug={projectSlug}
+        assetType="cover"
       />
       <Field label="Video embed / preview URL (Vimeo or YouTube)">
         <input
@@ -390,11 +410,12 @@ const ProjectForm = ({ value, onChange }) => {
         </p>
       </Field>
       <ImageUrlField
-        label="Poster image (optional)"
+        label="Poster / cartel (optional)"
         testId="form-poster"
         value={value.poster || ""}
         onChange={(url) => update({ poster: url })}
-        uploadFolder="ddp-portfolio/posters"
+        projectSlug={projectSlug}
+        assetType="poster"
       />
       <Field label="External link (optional)">
         <input
@@ -425,10 +446,11 @@ const ProjectForm = ({ value, onChange }) => {
           onChange={(next) => update({ recognitions: next })}
           previewFit="contain"
           previewBg="bg-black"
-          uploadFolder="ddp-portfolio/recognitions"
+          projectSlug={projectSlug}
+          assetType="recognitions"
         />
         <p className="text-[9px] text-neutral-700 mt-1.5">
-          Sube el PNG directamente o pega la URL. Se muestran debajo de la sinopsis en la ficha del proyecto.
+          Sube el PNG directamente o pega la URL. Se muestran debajo de la sinopsis.
         </p>
       </div>
       <UrlListField
@@ -436,14 +458,16 @@ const ProjectForm = ({ value, onChange }) => {
         fieldKey="stills"
         urls={value.stills || []}
         onChange={(next) => update({ stills: next })}
-        uploadFolder="ddp-portfolio/stills"
+        projectSlug={projectSlug}
+        assetType="stills"
       />
       <UrlListField
         label="BTS"
         fieldKey="bts"
         urls={value.bts || []}
         onChange={(next) => update({ bts: next })}
-        uploadFolder="ddp-portfolio/bts"
+        projectSlug={projectSlug}
+        assetType="bts"
       />
       <div className="md:col-span-2">
         <Field label="Visibilidad">
@@ -522,7 +546,7 @@ const SiteSection = ({ content, onSave, saving }) => {
           testId="site-about-image"
           value={draft.site.about_image || ""}
           onChange={(url) => updSite({ about_image: url })}
-          uploadFolder="ddp-portfolio/site"
+          assetType="site"
           placeholder="https://res.cloudinary.com/.../foto.jpg"
         />
         <Field label="About — pie de foto">
