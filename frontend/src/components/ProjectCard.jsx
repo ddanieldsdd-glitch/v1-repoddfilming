@@ -51,7 +51,16 @@ export const ProjectCard = ({
     : null;
 
   const recognitions = getCardRecognitions(project, cardSurface);
-  const laurelUrl = (url) => optimizeCloudinaryUrl(url, { width: compact ? 64 : 80, quality: "best" });
+  const hasCardRecognitions = cardSurface && recognitions.length > 0;
+  const laurelWidth = cardSurface === "home" ? (compact ? 88 : 96) : compact ? 64 : 80;
+  const laurelUrl = (url) => optimizeCloudinaryUrl(url, { width: laurelWidth, quality: "best" });
+  const laurelSizeCls = cardSurface === "home"
+    ? compact
+      ? "h-4 max-w-[26px]"
+      : "h-5 sm:h-[22px] md:h-6 max-w-[32px] sm:max-w-[36px]"
+    : compact
+      ? "h-3.5 max-w-[22px]"
+      : "h-4 sm:h-[18px] md:h-5 max-w-[26px] sm:max-w-[30px]";
 
   // Observer 1: preloading (wide margin — carga antes de entrar en pantalla)
   useEffect(() => {
@@ -199,17 +208,21 @@ export const ProjectCard = ({
                   {String(index + 1).padStart(3, "0")}
                 </span>
               )}
-              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                <h3
-                  className={`min-w-0 flex-1 ${
-                    compact ? "text-sm md:text-base" : "text-base md:text-lg lg:text-xl"
-                  } font-light tracking-tight text-white leading-tight truncate`}
-                >
-                  {project.title}
-                </h3>
-                {cardSurface && recognitions.length > 0 && (
+              <h3
+                className={`${
+                  compact ? "text-sm md:text-base" : "text-base md:text-lg lg:text-xl"
+                } font-light tracking-tight text-white leading-tight truncate`}
+              >
+                {project.title}
+              </h3>
+              <div
+                className={`relative mt-1 ${
+                  hasCardRecognitions ? "h-5 sm:h-[22px] md:h-6" : "min-h-[14px] md:min-h-[16px]"
+                }`}
+              >
+                {hasCardRecognitions && (
                   <div
-                    className={`flex items-center gap-0.5 sm:gap-1 shrink-0 transition-all duration-300 ${
+                    className={`absolute inset-0 flex items-center gap-0.5 sm:gap-1 transition-all duration-300 ${
                       hovered ? "opacity-0 translate-y-1" : "opacity-90 translate-y-0"
                     }`}
                     aria-hidden={hovered}
@@ -221,23 +234,21 @@ export const ProjectCard = ({
                         alt=""
                         loading="lazy"
                         decoding="async"
-                        className={`w-auto object-contain drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)] ${
-                          compact
-                            ? "h-3.5 max-w-[22px]"
-                            : "h-4 sm:h-[18px] md:h-5 max-w-[26px] sm:max-w-[30px]"
-                        }`}
+                        className={`w-auto object-contain drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)] ${laurelSizeCls}`}
                       />
                     ))}
                   </div>
                 )}
+                <p
+                  className={`${
+                    hasCardRecognitions ? "absolute inset-0 flex items-center" : ""
+                  } text-[9px] md:text-[10px] tracking-[0.22em] uppercase text-white/60 truncate transition-all duration-300 ${
+                    hovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"
+                  }`}
+                >
+                  {project.director ? `${project.director} · ` : ""}{tr(project.type, lang)}
+                </p>
               </div>
-              <p
-                className={`text-[9px] md:text-[10px] tracking-[0.22em] uppercase text-white/60 mt-1 truncate transition-all duration-300 ${
-                  hovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"
-                }`}
-              >
-                {project.director ? `${project.director} · ` : ""}{tr(project.type, lang)}
-              </p>
             </div>
             <span
               className={`mb-0.5 shrink-0 text-[10px] md:text-[11px] tracking-[0.24em] uppercase text-white/55 transition-all duration-300 ${
