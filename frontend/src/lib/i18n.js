@@ -23,6 +23,7 @@ export const T = {
     synopsis: { es: "Sinopsis", en: "Synopsis" },
     stills: { es: "Fotogramas", en: "Stills" },
     bts: { es: "Detrás de cámara", en: "Behind the scenes" },
+    recognitions: { es: "Reconocimientos", en: "Recognition" },
     showBts: { es: "Ver BTS", en: "Show BTS" },
     hideBts: { es: "Ocultar BTS", en: "Hide BTS" },
     external: { es: "Ver proyecto", en: "View project" },

@@ -146,6 +146,9 @@ const normalizeProject = (input, projects) => {
     preview_url: input.preview_url || "",
     stills: Array.isArray(input.stills) ? input.stills.filter(Boolean) : splitUrls(input.stills),
     bts: Array.isArray(input.bts) ? input.bts.filter(Boolean) : splitUrls(input.bts),
+    recognitions: Array.isArray(input.recognitions)
+      ? input.recognitions.filter(Boolean)
+      : splitUrls(input.recognitions),
     external_link: input.external_link || "",
   };
 };

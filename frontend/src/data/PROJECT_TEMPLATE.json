@@ -41,6 +41,11 @@
     "https://res.cloudinary.com/.../still2.jpg"
   ],
 
+  "recognitions": [
+    "https://res.cloudinary.com/.../premio-festival.png"
+  ],
+  "_recognitions_help": "Reconocimientos / premios de festivales. PNG blanco con fondo transparente. Se muestran debajo de la sinopsis. Deja [] si no hay.",
+
   "bts": [
     "https://res.cloudinary.com/.../bts1.jpg"
   ],

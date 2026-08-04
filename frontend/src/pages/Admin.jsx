@@ -31,7 +31,7 @@ const inputCls =
 const textareaCls = inputCls + " min-h-[90px] resize-y";
 
 /** Gestor visual de lista de URLs de imágenes */
-const UrlListField = ({ label, fieldKey, urls, onChange }) => {
+const UrlListField = ({ label, fieldKey, urls, onChange, previewFit = "cover", previewBg = "bg-neutral-800" }) => {
   const [input, setInput] = useState("");
 
   const commit = () => {
@@ -80,11 +80,11 @@ const UrlListField = ({ label, fieldKey, urls, onChange }) => {
               className="flex items-center gap-2 bg-white/5 border border-white/8 px-2 py-1.5 rounded group"
             >
               {/* Preview */}
-              <div className="shrink-0 w-12 h-8 bg-neutral-800 rounded overflow-hidden">
+              <div className={`shrink-0 w-12 h-8 ${previewBg} rounded overflow-hidden`}>
                 <img
                   src={url}
                   alt=""
-                  className="w-full h-full object-cover"
+                  className={`w-full h-full ${previewFit === "contain" ? "object-contain p-0.5" : "object-cover"}`}
                   onError={(e) => { e.target.style.display = "none"; }}
                 />
               </div>
@@ -284,6 +284,19 @@ const ProjectForm = ({ value, onChange }) => {
           onChange={(e) => updateI18n("synopsis", "en", e.target.value)}
         />
       </Field>
+      <div className="md:col-span-2">
+        <UrlListField
+          label="Reconocimientos / premios (PNG blanco, fondo transparente)"
+          fieldKey="recognitions"
+          urls={value.recognitions || []}
+          onChange={(next) => update({ recognitions: next })}
+          previewFit="contain"
+          previewBg="bg-black"
+        />
+        <p className="text-[9px] text-neutral-700 mt-1.5">
+          Sube el PNG a Cloudinary y pega la URL. Se muestran debajo de la sinopsis en la ficha del proyecto.
+        </p>
+      </div>
       <UrlListField
         label="Stills"
         fieldKey="stills"
@@ -649,6 +662,7 @@ export default function Admin() {
       preview_url: "",
       stills: [],
       bts: [],
+      recognitions: [],
       external_link: "",
       published: true,
     });

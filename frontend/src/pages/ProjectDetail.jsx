@@ -230,6 +230,7 @@ export default function ProjectDetail() {
   const catLabel = getActiveCategories(projects).find((c) => c.id === project.category)?.[lang] || "";
   const hasStills = project.stills && project.stills.length > 0;
   const hasBts = project.bts && project.bts.length > 0;
+  const hasRecognitions = project.recognitions && project.recognitions.length > 0;
 
   return (
     <div data-testid="project-detail-page" className="bg-black min-h-screen">
@@ -360,6 +361,26 @@ export default function ProjectDetail() {
             <p className="text-[15px] md:text-base leading-relaxed text-neutral-400 whitespace-pre-line">
               {tr(project.synopsis, lang)}
             </p>
+
+            {hasRecognitions && (
+              <div className="mt-6 clear-left md:clear-none">
+                <p className="text-[10px] tracking-[0.28em] uppercase text-white/35 mb-3">
+                  {tr(T.project.recognitions, lang)}
+                </p>
+                <div className="flex flex-wrap items-center gap-5 md:gap-7">
+                  {project.recognitions.map((url, i) => (
+                    <img
+                      key={`${url}-${i}`}
+                      src={oimg(url, 280, "best")}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      className="h-14 sm:h-16 md:h-[4.5rem] w-auto max-w-[140px] sm:max-w-[160px] object-contain opacity-85 hover:opacity-100 transition-opacity duration-300"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
 
             {(project.external_link || hasStills || hasBts) && (
             <div className="mt-6 clear-left md:clear-none flex flex-wrap gap-2.5 items-center">
