@@ -10,6 +10,7 @@ import { ImageLightbox } from "../components/ImageLightbox";
 import { useImageLightbox } from "../hooks/useImageLightbox";
 import { optimizeCloudinaryUrl, cloudinaryResponsive, IMG, STILL_PRESETS, COVER_PRESET, prefetchCloudinaryImages } from "../lib/cloudinary";
 import { getProjectVideoUrl, buildProjectVideoGraph } from "../lib/videoSeo";
+import { getDetailRecognitions } from "../lib/recognitions";
 
 const oimg = (url, width = IMG.still, quality = "good") =>
   url ? optimizeCloudinaryUrl(url, { width, quality }) : url;
@@ -230,7 +231,8 @@ export default function ProjectDetail() {
   const catLabel = getActiveCategories(projects).find((c) => c.id === project.category)?.[lang] || "";
   const hasStills = project.stills && project.stills.length > 0;
   const hasBts = project.bts && project.bts.length > 0;
-  const hasRecognitions = project.recognitions && project.recognitions.length > 0;
+  const detailRecognitions = getDetailRecognitions(project);
+  const hasRecognitions = detailRecognitions.length > 0;
 
   return (
     <div data-testid="project-detail-page" className="bg-black min-h-screen">
@@ -368,10 +370,10 @@ export default function ProjectDetail() {
                   {tr(T.project.recognitions, lang)}
                 </p>
                 <div className="flex flex-wrap items-center gap-5 md:gap-7">
-                  {project.recognitions.map((url, i) => (
+                  {detailRecognitions.map((item, i) => (
                     <img
-                      key={`${url}-${i}`}
-                      src={oimg(url, 280, "best")}
+                      key={`${item.url}-${i}`}
+                      src={oimg(item.url, 280, "best")}
                       alt=""
                       loading="lazy"
                       decoding="async"

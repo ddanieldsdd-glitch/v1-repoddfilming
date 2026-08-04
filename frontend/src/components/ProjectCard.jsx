@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { tr } from "../lib/i18n";
 import { VideoPlayer } from "./VideoPlayer";
 import { pauseAllExcept, resumePlayer } from "../lib/videoStore";
-import { cloudinaryResponsive, CARD_PRESETS } from "../lib/cloudinary";
+import { cloudinaryResponsive, CARD_PRESETS, optimizeCloudinaryUrl } from "../lib/cloudinary";
+import { getCardRecognitions } from "../lib/recognitions";
 
 const isVideoUrl = (url) =>
   /vimeo\.com|youtube\.com|youtu\.be/.test(String(url || ""));
@@ -22,6 +23,8 @@ export const ProjectCard = ({
   fill = false,
   // alwaysPlay: el vídeo arranca en cuanto la tarjeta entra en viewport
   alwaysPlay = false,
+  // highlightRecognitions: muestra premios en reposo; al hover → director + tipo
+  highlightRecognitions = false,
 }) => {
   const [inView, setInView]           = useState(false);
   const [playInView, setPlayInView]   = useState(false);
@@ -46,6 +49,9 @@ export const ProjectCard = ({
   const cardImage     = imageUrl
     ? cloudinaryResponsive(imageUrl, eager ? CARD_PRESETS.eager : CARD_PRESETS.lazy)
     : null;
+
+  const recognitions = getCardRecognitions(project);
+  const laurelUrl = (url) => optimizeCloudinaryUrl(url, { width: compact ? 100 : 140, quality: "best" });
 
   // Observer 1: preloading (wide margin — carga antes de entrar en pantalla)
   useEffect(() => {
@@ -179,6 +185,31 @@ export const ProjectCard = ({
 
         {/* Gradiente permanente para legibilidad de la info */}
         <div className="pointer-events-none absolute inset-0 z-[4] bg-gradient-to-t from-black/90 via-black/15 to-transparent" />
+
+        {/* Reconocimientos — visibles en reposo; desaparecen al hover */}
+        {highlightRecognitions && recognitions.length > 0 && (
+          <div
+            className={`pointer-events-none absolute inset-x-0 top-[12%] bottom-[28%] z-[5] flex flex-wrap items-center justify-center gap-2 sm:gap-3 px-3 md:px-5 transition-all duration-300 ease-out ${
+              hovered ? "opacity-0 scale-[0.97] translate-y-1" : "opacity-100 scale-100 translate-y-0"
+            }`}
+            aria-hidden={hovered}
+          >
+            {recognitions.map((item, i) => (
+              <img
+                key={`${item.url}-${i}`}
+                src={laurelUrl(item.url)}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                className={`w-auto object-contain drop-shadow-[0_2px_12px_rgba(0,0,0,0.65)] ${
+                  compact
+                    ? "h-8 sm:h-9 max-w-[64px]"
+                    : "h-10 sm:h-12 md:h-[3.25rem] max-w-[88px] sm:max-w-[100px]"
+                }`}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Info overlay — título siempre visible; detalles solo en hover */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] p-4 md:p-5">

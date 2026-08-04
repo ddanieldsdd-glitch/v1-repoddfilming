@@ -279,6 +279,7 @@ export default function Home() {
                       key={group[0].id}
                       project={group[0]}
                       lang={lang}
+                      highlightRecognitions
                       eager={eager(0)}
                       index={baseIdx}
                       aspectClass="aspect-video"
@@ -294,6 +295,7 @@ export default function Home() {
                           key={p.id}
                           project={p}
                           lang={lang}
+                      highlightRecognitions
                           eager={eager(j)}
                           index={baseIdx + j}
                           aspectClass="aspect-video"
@@ -315,6 +317,7 @@ export default function Home() {
                           <ProjectCard
                             project={group[0]}
                             lang={lang}
+                      highlightRecognitions
                             eager={eager(0)}
                             index={baseIdx}
                             fill
@@ -324,6 +327,7 @@ export default function Home() {
                           <ProjectCard
                             project={group[1]}
                             lang={lang}
+                      highlightRecognitions
                             eager={eager(1)}
                             index={baseIdx + 1}
                             aspectClass="aspect-video"
@@ -331,6 +335,7 @@ export default function Home() {
                           <ProjectCard
                             project={group[2]}
                             lang={lang}
+                      highlightRecognitions
                             eager={eager(2)}
                             index={baseIdx + 2}
                             aspectClass="aspect-video"
@@ -343,6 +348,7 @@ export default function Home() {
                           <ProjectCard
                             project={group[0]}
                             lang={lang}
+                      highlightRecognitions
                             eager={eager(0)}
                             index={baseIdx}
                             aspectClass="aspect-video"
@@ -350,6 +356,7 @@ export default function Home() {
                           <ProjectCard
                             project={group[1]}
                             lang={lang}
+                      highlightRecognitions
                             eager={eager(1)}
                             index={baseIdx + 1}
                             aspectClass="aspect-video"
@@ -359,6 +366,7 @@ export default function Home() {
                           <ProjectCard
                             project={group[2]}
                             lang={lang}
+                      highlightRecognitions
                             eager={eager(2)}
                             index={baseIdx + 2}
                             fill

@@ -42,9 +42,9 @@
   ],
 
   "recognitions": [
-    "https://res.cloudinary.com/.../premio-festival.png"
+    { "url": "https://res.cloudinary.com/.../premio-festival.png", "showOnCard": true }
   ],
-  "_recognitions_help": "Reconocimientos / premios de festivales. PNG blanco con fondo transparente. Se muestran debajo de la sinopsis. Deja [] si no hay.",
+  "_recognitions_help": "Reconocimientos / premios. showOnCard controla visibilidad en Home/Work. Orden del array = orden de visualización. PNG blanco con fondo transparente.",
 
   "bts": [
     "https://res.cloudinary.com/.../bts1.jpg"

@@ -40,6 +40,21 @@ const splitUrls = (value) =>
     .map((item) => item.trim())
     .filter(Boolean);
 
+const normalizeRecognitionsInput = (input) => {
+  if (!input) return [];
+  const list = Array.isArray(input) ? input : splitUrls(input);
+  return list
+    .map((item) => {
+      if (typeof item === "string") {
+        const url = item.trim();
+        return url ? { url, showOnCard: true } : null;
+      }
+      const url = String(item?.url || "").trim();
+      return url ? { url, showOnCard: item.showOnCard !== false } : null;
+    })
+    .filter(Boolean);
+};
+
 const ensureUnique = (base, existing) => {
   let value = base;
   let i = 2;
@@ -146,9 +161,7 @@ const normalizeProject = (input, projects) => {
     preview_url: input.preview_url || "",
     stills: Array.isArray(input.stills) ? input.stills.filter(Boolean) : splitUrls(input.stills),
     bts: Array.isArray(input.bts) ? input.bts.filter(Boolean) : splitUrls(input.bts),
-    recognitions: Array.isArray(input.recognitions)
-      ? input.recognitions.filter(Boolean)
-      : splitUrls(input.recognitions),
+    recognitions: normalizeRecognitionsInput(input.recognitions),
     external_link: input.external_link || "",
   };
 };
