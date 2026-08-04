@@ -23,8 +23,8 @@ export const ProjectCard = ({
   fill = false,
   // alwaysPlay: el vídeo arranca en cuanto la tarjeta entra en viewport
   alwaysPlay = false,
-  // highlightRecognitions: muestra premios en reposo; al hover → director + tipo
-  highlightRecognitions = false,
+  // cardSurface: 'home' | 'work' — muestra premios en tarjeta; al hover → director + tipo
+  cardSurface = null,
 }) => {
   const [inView, setInView]           = useState(false);
   const [playInView, setPlayInView]   = useState(false);
@@ -50,8 +50,8 @@ export const ProjectCard = ({
     ? cloudinaryResponsive(imageUrl, eager ? CARD_PRESETS.eager : CARD_PRESETS.lazy)
     : null;
 
-  const recognitions = getCardRecognitions(project);
-  const laurelUrl = (url) => optimizeCloudinaryUrl(url, { width: compact ? 100 : 140, quality: "best" });
+  const recognitions = getCardRecognitions(project, cardSurface);
+  const laurelUrl = (url) => optimizeCloudinaryUrl(url, { width: compact ? 64 : 80, quality: "best" });
 
   // Observer 1: preloading (wide margin — carga antes de entrar en pantalla)
   useEffect(() => {
@@ -186,31 +186,6 @@ export const ProjectCard = ({
         {/* Gradiente permanente para legibilidad de la info */}
         <div className="pointer-events-none absolute inset-0 z-[4] bg-gradient-to-t from-black/90 via-black/15 to-transparent" />
 
-        {/* Reconocimientos — visibles en reposo; desaparecen al hover */}
-        {highlightRecognitions && recognitions.length > 0 && (
-          <div
-            className={`pointer-events-none absolute inset-x-0 top-[12%] bottom-[28%] z-[5] flex flex-wrap items-center justify-center gap-2 sm:gap-3 px-3 md:px-5 transition-all duration-300 ease-out ${
-              hovered ? "opacity-0 scale-[0.97] translate-y-1" : "opacity-100 scale-100 translate-y-0"
-            }`}
-            aria-hidden={hovered}
-          >
-            {recognitions.map((item, i) => (
-              <img
-                key={`${item.url}-${i}`}
-                src={laurelUrl(item.url)}
-                alt=""
-                loading="lazy"
-                decoding="async"
-                className={`w-auto object-contain drop-shadow-[0_2px_12px_rgba(0,0,0,0.65)] ${
-                  compact
-                    ? "h-8 sm:h-9 max-w-[64px]"
-                    : "h-10 sm:h-12 md:h-[3.25rem] max-w-[88px] sm:max-w-[100px]"
-                }`}
-              />
-            ))}
-          </div>
-        )}
-
         {/* Info overlay — título siempre visible; detalles solo en hover */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] p-4 md:p-5">
           <div className="flex items-end justify-between gap-3">
@@ -224,13 +199,38 @@ export const ProjectCard = ({
                   {String(index + 1).padStart(3, "0")}
                 </span>
               )}
-              <h3
-                className={`${
-                  compact ? "text-sm md:text-base" : "text-base md:text-lg lg:text-xl"
-                } font-light tracking-tight text-white leading-tight truncate`}
-              >
-                {project.title}
-              </h3>
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                <h3
+                  className={`min-w-0 flex-1 ${
+                    compact ? "text-sm md:text-base" : "text-base md:text-lg lg:text-xl"
+                  } font-light tracking-tight text-white leading-tight truncate`}
+                >
+                  {project.title}
+                </h3>
+                {cardSurface && recognitions.length > 0 && (
+                  <div
+                    className={`flex items-center gap-0.5 sm:gap-1 shrink-0 transition-all duration-300 ease-out ${
+                      hovered ? "opacity-0 scale-95 max-w-0 overflow-hidden" : "opacity-90 max-w-[55%]"
+                    }`}
+                    aria-hidden={hovered}
+                  >
+                    {recognitions.map((item, i) => (
+                      <img
+                        key={`${item.url}-${i}`}
+                        src={laurelUrl(item.url)}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        className={`w-auto object-contain drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)] ${
+                          compact
+                            ? "h-3.5 max-w-[22px]"
+                            : "h-4 sm:h-[18px] md:h-5 max-w-[26px] sm:max-w-[30px]"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
               <p
                 className={`text-[9px] md:text-[10px] tracking-[0.22em] uppercase text-white/60 mt-1 truncate transition-all duration-300 ${
                   hovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"

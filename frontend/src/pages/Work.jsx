@@ -90,7 +90,7 @@ export default function Work() {
                   <ProjectCard
                     project={p}
                     lang={lang}
-                    highlightRecognitions
+                    cardSurface="work"
                     eager={i < 4}
                     index={i}
                     aspectClass="aspect-video"

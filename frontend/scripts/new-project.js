@@ -47,10 +47,15 @@ const normalizeRecognitionsInput = (input) => {
     .map((item) => {
       if (typeof item === "string") {
         const url = item.trim();
-        return url ? { url, showOnCard: true } : null;
+        return url ? { url, showOnHome: true, showOnWork: true } : null;
       }
       const url = String(item?.url || "").trim();
-      return url ? { url, showOnCard: item.showOnCard !== false } : null;
+      if (!url) return null;
+      if (item.showOnHome != null || item.showOnWork != null) {
+        return { url, showOnHome: item.showOnHome === true, showOnWork: item.showOnWork === true };
+      }
+      const onCard = item.showOnCard !== false;
+      return { url, showOnHome: onCard, showOnWork: onCard };
     })
     .filter(Boolean);
 };

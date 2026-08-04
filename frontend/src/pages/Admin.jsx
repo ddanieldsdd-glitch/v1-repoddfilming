@@ -355,7 +355,7 @@ const RecognitionsField = ({
       .map((s) => s.trim())
       .filter(Boolean);
     if (!added.length) return;
-    onChange(mergeRecognitionUrls(list, added, { showOnCard: true }));
+    onChange(mergeRecognitionUrls(list, added));
     setInput("");
   };
 
@@ -373,9 +373,9 @@ const RecognitionsField = ({
     onChange(next);
   };
 
-  const toggleCard = (i) => {
+  const toggleFlag = (i, key) => {
     const next = list.map((item, idx) =>
-      idx === i ? { ...item, showOnCard: !item.showOnCard } : item,
+      idx === i ? { ...item, [key]: !item[key] } : item,
     );
     onChange(next);
   };
@@ -395,7 +395,7 @@ const RecognitionsField = ({
       for (const file of fileArray) {
         const url = await uploadImageFile(file, { projectSlug, assetType: "recognitions" });
         const before = next.length;
-        next = mergeRecognitionUrls(next, [url], { showOnCard: true });
+        next = mergeRecognitionUrls(next, [url]);
         if (next.length > before) added += 1;
       }
       if (added) {
@@ -448,20 +448,36 @@ const RecognitionsField = ({
                 <span className="flex-1 text-[11px] text-neutral-500 truncate font-mono min-w-0">
                   {item.url}
                 </span>
-                <label
-                  className="shrink-0 flex items-center gap-1.5 cursor-pointer select-none"
-                  title="Visible en tarjetas Home y Work"
-                >
-                  <input
-                    type="checkbox"
-                    checked={item.showOnCard}
-                    onChange={() => toggleCard(i)}
-                    className="w-3.5 h-3.5 accent-white"
-                  />
-                  <span className="text-[9px] tracking-[0.12em] uppercase text-neutral-500 whitespace-nowrap">
-                    Home/Work
-                  </span>
-                </label>
+                <div className="shrink-0 flex items-center gap-2">
+                  <label
+                    className="flex items-center gap-1 cursor-pointer select-none"
+                    title="Visible en tarjetas de la Home"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={item.showOnHome}
+                      onChange={() => toggleFlag(i, "showOnHome")}
+                      className="w-3.5 h-3.5 accent-white"
+                    />
+                    <span className="text-[9px] tracking-[0.1em] uppercase text-neutral-500">
+                      Home
+                    </span>
+                  </label>
+                  <label
+                    className="flex items-center gap-1 cursor-pointer select-none"
+                    title="Visible en tarjetas de Work"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={item.showOnWork}
+                      onChange={() => toggleFlag(i, "showOnWork")}
+                      className="w-3.5 h-3.5 accent-white"
+                    />
+                    <span className="text-[9px] tracking-[0.1em] uppercase text-neutral-500">
+                      Work
+                    </span>
+                  </label>
+                </div>
                 <div className="shrink-0 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     type="button"
@@ -542,8 +558,8 @@ const RecognitionsField = ({
         </div>
         <p className="text-[9px] text-neutral-700 mt-1.5">
           {canUpload
-            ? `Cloudinary → ${cloudinaryFolderHint(projectSlug, "recognitions")} · Marca Home/Work para tarjetas · El orden aquí define cómo se muestran · Ficha: todos`
-            : "Orden y visibilidad en Home/Work · Ficha del proyecto: todos"}
+            ? `Cloudinary → ${cloudinaryFolderHint(projectSlug, "recognitions")} · Marca Home y/o Work para tarjetas · Orden = visualización · Ficha: todos`
+            : "Marca Home/Work por premio · Ficha del proyecto: todos"}
         </p>
       </div>
     </ImageDropZone>

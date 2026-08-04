@@ -1,20 +1,29 @@
 /**
- * Reconocimiento: URL + flag para tarjetas Home/Work.
- * Compatible con el formato legacy string[] (solo URL).
+ * Reconocimiento: URL + visibilidad independiente en Home y Work.
+ * Compatible con string[] legacy y showOnCard (aplica a ambas pantallas).
  */
+
+function cardFlagsFromLegacy(item) {
+  if (item.showOnHome != null || item.showOnWork != null) {
+    return {
+      showOnHome: item.showOnHome === true,
+      showOnWork: item.showOnWork === true,
+    };
+  }
+  const onCard = item.showOnCard !== false;
+  return { showOnHome: onCard, showOnWork: onCard };
+}
 
 export function normalizeRecognition(item) {
   if (!item) return null;
   if (typeof item === "string") {
     const url = item.trim();
-    return url ? { url, showOnCard: true } : null;
+    return url ? { url, showOnHome: true, showOnWork: true } : null;
   }
   const url = String(item.url || "").trim();
   if (!url) return null;
-  return {
-    url,
-    showOnCard: item.showOnCard !== false,
-  };
+  const flags = cardFlagsFromLegacy(item);
+  return { url, ...flags };
 }
 
 export function normalizeRecognitions(list) {
@@ -31,20 +40,26 @@ export function getDetailRecognitions(project) {
   return normalizeRecognitions(project?.recognitions);
 }
 
-/** Solo los marcados para tarjetas Home/Work, en orden del Admin. */
-export function getCardRecognitions(project) {
-  return getDetailRecognitions(project).filter((r) => r.showOnCard);
+/** Reconocimientos para tarjetas según pantalla (home | work). */
+export function getCardRecognitions(project, surface) {
+  if (surface !== "home" && surface !== "work") return [];
+  const key = surface === "home" ? "showOnHome" : "showOnWork";
+  return getDetailRecognitions(project).filter((r) => r[key]);
 }
 
-/** Añade URLs nuevas sin duplicar. */
-export function mergeRecognitionUrls(existing, urls, { showOnCard = true } = {}) {
+/** Añade URLs nuevas sin duplicar. Por defecto no se marcan en tarjetas. */
+export function mergeRecognitionUrls(
+  existing,
+  urls,
+  { showOnHome = false, showOnWork = false } = {},
+) {
   const next = normalizeRecognitions(existing);
   const seen = new Set(next.map((r) => r.url));
   urls.forEach((raw) => {
     const url = String(raw || "").trim();
     if (!url || seen.has(url)) return;
     seen.add(url);
-    next.push({ url, showOnCard });
+    next.push({ url, showOnHome, showOnWork });
   });
   return next;
 }

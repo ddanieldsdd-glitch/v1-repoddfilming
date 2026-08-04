@@ -42,9 +42,9 @@
   ],
 
   "recognitions": [
-    { "url": "https://res.cloudinary.com/.../premio-festival.png", "showOnCard": true }
+    { "url": "https://res.cloudinary.com/.../premio-festival.png", "showOnHome": true, "showOnWork": true }
   ],
-  "_recognitions_help": "Reconocimientos / premios. showOnCard controla visibilidad en Home/Work. Orden del array = orden de visualización. PNG blanco con fondo transparente.",
+  "_recognitions_help": "showOnHome / showOnWork controlan tarjetas. Orden del array = visualización. Ficha del proyecto: todos. PNG blanco, fondo transparente.",
 
   "bts": [
     "https://res.cloudinary.com/.../bts1.jpg"
