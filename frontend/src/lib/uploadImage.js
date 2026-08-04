@@ -1,16 +1,12 @@
-const MAX_BYTES = 10 * 1024 * 1024;
+import { prepareImageForUpload } from './prepareImageForUpload';
 
-function readFileAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error('No se pudo leer el archivo'));
-    reader.readAsDataURL(file);
-  });
-}
+const CLOUDINARY_UPLOAD = (cloudName) =>
+  `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
 
 /**
- * Sube una imagen al Admin → Cloudinary (requiere sesión admin).
+ * Sube una imagen: optimiza en el navegador → firma en servidor → subida directa a Cloudinary.
+ * Evita el límite de peso de Vercel y aplica compresión de alta calidad.
+ *
  * @param {File} file
  * @param {{ projectSlug?: string, assetType?: string }} options
  * @returns {Promise<string>} URL segura de Cloudinary
@@ -21,27 +17,44 @@ export async function uploadImageFile(
 ) {
   if (!file) throw new Error('No se seleccionó ningún archivo');
   if (!file.type.startsWith('image/')) throw new Error('Solo se permiten imágenes');
-  if (file.size > MAX_BYTES) throw new Error('La imagen supera el límite de 10 MB');
 
   if (assetType !== 'site' && !projectSlug) {
     throw new Error('Define el slug del proyecto antes de subir imágenes');
   }
 
-  const dataUrl = await readFileAsDataUrl(file);
+  const prepared = await prepareImageForUpload(file, assetType);
 
-  const res = await fetch('/api/upload', {
+  const signRes = await fetch('/api/upload-sign', {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ file: dataUrl, projectSlug, assetType }),
+    body: JSON.stringify({ projectSlug, assetType }),
   });
 
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data.message || 'Error al subir la imagen');
+  const sign = await signRes.json().catch(() => ({}));
+  if (!signRes.ok) {
+    throw new Error(sign.message || 'Error al autorizar la subida');
   }
 
-  return data.url;
+  const form = new FormData();
+  form.append('file', prepared);
+  form.append('api_key', sign.apiKey);
+  form.append('timestamp', String(sign.timestamp));
+  form.append('signature', sign.signature);
+  form.append('folder', sign.folder);
+  form.append('transformation', sign.transformation);
+
+  const uploadRes = await fetch(CLOUDINARY_UPLOAD(sign.cloudName), {
+    method: 'POST',
+    body: form,
+  });
+
+  const data = await uploadRes.json().catch(() => ({}));
+  if (!uploadRes.ok) {
+    throw new Error(data.error?.message || 'Error al subir a Cloudinary');
+  }
+
+  return data.secure_url;
 }
 
 /** Ruta Cloudinary esperada (solo informativa en Admin). */
