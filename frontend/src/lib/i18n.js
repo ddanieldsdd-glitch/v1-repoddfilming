@@ -1,6 +1,7 @@
 export const T = {
   nav: {
     work: { es: "Obra", en: "Work" },
+    showreel: { es: "Showreel", en: "Showreel" },
     about: { es: "Sobre mí", en: "About" },
     contact: { es: "Contacto", en: "Contact" },
     home: { es: "Inicio", en: "Home" },
@@ -12,6 +13,7 @@ export const T = {
   work: {
     title: { es: "Obra seleccionada", en: "Selected work" },
     all: { es: "Todo", en: "All" },
+    viewAll: { es: "Ver toda la obra", en: "View all work" },
     none: { es: "Sin proyectos en esta categoría todavía.", en: "No projects in this category yet." },
   },
   project: {

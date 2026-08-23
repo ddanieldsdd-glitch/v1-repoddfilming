@@ -28,7 +28,14 @@
   },
 
   "cover": "https://res.cloudinary.com/.../cover.jpg",
-  "_cover_help": "Cover image. Imagen horizontal principal que se muestra como miniatura en home y /work.",
+  "_cover_help": "Imagen horizontal principal (miniatura en /work). En home se puede elegir otro still.",
+
+  "home_featured": true,
+  "home_order": 1,
+  "home_size": "medium",
+  "_home_size_help": "hero | large | wide | tall | medium | small — tamaño de la celda en la parrilla del home.",
+  "home_still": "",
+  "_home_still_help": "URL del fotograma para la portada. Vacío = cover. Se recorta al frame sin bandas negras.",
 
   "poster": "",
   "_poster_help": "Poster image. Cartel oficial vertical opcional. Aparece en la página de proyecto. Deja '' si no hay.",

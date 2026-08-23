@@ -260,7 +260,7 @@ export const VideoPlayer = ({
 
   return (
     <div
-      className={`relative w-full bg-black ${background && ytId ? "video-bg-cover" : ""} ${className} ${interactive ? "" : "pointer-events-none"}`}
+      className={`relative w-full h-full bg-black ${background ? "video-bg-cover" : ""} ${className} ${interactive ? "" : "pointer-events-none"}`}
       data-testid={testId}
     >
       {vimeoId ? (

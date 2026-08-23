@@ -44,7 +44,6 @@
         <link rel="dns-prefetch" href="https://cdn.fontshare.com" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
         <link rel="dns-prefetch" href="https://player.vimeo.com" />
-        <link rel="preload" as="image" href="https://vumbnail.com/1054144154.jpg" fetchpriority="high" />
         <style id="critical-shell">
             *,*::before,*::after{box-sizing:border-box}
             html{-webkit-text-size-adjust:100%}
@@ -157,34 +156,6 @@
         </script>
     </head>
     <body style="background:#000000;">
-        <!-- Poster estático: mejora LCP antes de que cargue el bundle de React -->
-        <img
-            id="static-hero-poster"
-            src="https://vumbnail.com/1054144154.jpg"
-            alt=""
-            fetchpriority="high"
-            decoding="sync"
-            width="1920"
-            height="1080"
-            style="position:fixed;top:8px;left:8px;right:8px;width:calc(100% - 16px);height:calc(100svh - 8px);object-fit:cover;border-radius:1.75rem;z-index:0;background:#0a0a0a"
-        />
-        <script>
-            (function () {
-                var p = location.pathname;
-                if (p !== "/" && p !== "") {
-                    document.getElementById("static-hero-poster")?.remove();
-                    return;
-                }
-                var poster = document.getElementById("static-hero-poster");
-                if (!poster) return;
-                var remove = function () {
-                    poster.remove();
-                };
-                window.addEventListener("scroll", remove, { once: true, passive: true });
-                window.addEventListener("wheel", remove, { once: true, passive: true });
-                window.addEventListener("touchmove", remove, { once: true, passive: true });
-            })();
-        </script>
         <noscript>
             <p>Dani Díaz, Director de Fotografía entre Sevilla y Barcelona. Formado en la ESCAC (Máster en Dirección de Fotografía). Trabaja en ficción, documental, publicidad y videoclips en digital y analógico 16/35mm. Premio FUGAZ por Origami · Festival de San Sebastián.</p>
             <p>Necesitas habilitar JavaScript para ver esta web.</p>

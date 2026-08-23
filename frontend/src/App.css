@@ -232,3 +232,14 @@ a:focus-visible {
   pointer-events: auto !important;
   border: 0 !important;
 }
+
+/* Home bento: dos filas cubren el primer viewport; dense evita huecos */
+.home-bento {
+  grid-auto-rows: minmax(150px, calc((100svh - 5.6rem) / 2));
+}
+
+@media (max-width: 767px) {
+  .home-bento {
+    grid-auto-rows: minmax(220px, 42svh);
+  }
+}

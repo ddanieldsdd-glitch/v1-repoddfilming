@@ -14,13 +14,31 @@ const safeParse = (raw) => {
   }
 };
 
+const applyHomeDefaults = (content) => {
+  if (!content?.projects) return content;
+  const defaults = defaultContent.projects || [];
+  return {
+    ...content,
+    projects: content.projects.map((p, i) => {
+      const def = defaults.find((d) => d.id === p.id || d.slug === p.slug);
+      return {
+        ...p,
+        home_featured: p.home_featured ?? def?.home_featured ?? true,
+        home_order: p.home_order ?? def?.home_order ?? i + 1,
+        home_size: p.home_size ?? def?.home_size ?? "medium",
+        home_still: p.home_still ?? def?.home_still ?? "",
+      };
+    }),
+  };
+};
+
 // Synchronous read from localStorage cache — used for instant first render
 export const loadContent = () => {
-  if (typeof window === "undefined") return defaultContent;
+  if (typeof window === "undefined") return applyHomeDefaults(defaultContent);
   const raw = localStorage.getItem(STORAGE_KEY);
   const parsed = raw ? safeParse(raw) : null;
   const base = parsed || defaultContent;
-  return {
+  return applyHomeDefaults({
     ...defaultContent,
     ...base,
     site: {
@@ -33,14 +51,14 @@ export const loadContent = () => {
     },
     about: { ...defaultContent.about, ...base.about },
     projects: base.projects ?? defaultContent.projects,
-  };
+  });
 };
 
 // Async fetch from the server — returns fresh data from MongoDB
 export const fetchContent = async () => {
   const res = await fetch("/api/content", { credentials: "same-origin" });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+  return applyHomeDefaults(await res.json());
 };
 
 // Update localStorage cache and notify all subscribers (local only, no server write)

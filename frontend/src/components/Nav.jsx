@@ -104,6 +104,9 @@ export const Nav = () => {
           <NavLink to="/work" className={linkClass} data-testid="nav-work">
             {tr(T.nav.work, lang)}
           </NavLink>
+          <NavLink to="/showreel" className={linkClass} data-testid="nav-showreel">
+            {tr(T.nav.showreel, lang)}
+          </NavLink>
           <NavLink to="/about" className={linkClass} data-testid="nav-about">
             {tr(T.nav.about, lang)}
           </NavLink>
@@ -163,6 +166,16 @@ export const Nav = () => {
               }
             >
               {tr(T.nav.work, lang)}
+            </NavLink>
+            <NavLink
+              to="/showreel"
+              className={({ isActive }) =>
+                `px-4 py-2.5 rounded-xl text-[12px] tracking-[0.24em] uppercase transition-all ${
+                  isActive ? "text-white bg-white/10" : "text-white/65 hover:text-white hover:bg-white/8"
+                }`
+              }
+            >
+              {tr(T.nav.showreel, lang)}
             </NavLink>
             <NavLink
               to="/about"

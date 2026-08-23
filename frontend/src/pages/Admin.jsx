@@ -21,6 +21,7 @@ import {
   mergeRecognitionUrls,
   normalizeRecognitions,
 } from "../lib/recognitions";
+import { HOME_SIZES, stillChoices } from "../lib/homeGrid";
 
 const uploadBtnCls =
   "shrink-0 border border-white/25 px-3 py-2 text-[10px] tracking-[0.22em] uppercase text-white hover:bg-white hover:text-black transition disabled:opacity-30";
@@ -745,7 +746,200 @@ const ProjectForm = ({ value, onChange }) => {
             </span>
           </label>
         </Field>
+        <div className="mt-5 rounded-xl border border-white/10 p-4 space-y-4">
+          <p className="text-[10px] tracking-[0.28em] uppercase text-neutral-500">
+            Portada
+          </p>
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={value.home_featured !== false}
+              onChange={(e) => update({ home_featured: e.target.checked })}
+              className="w-4 h-4 accent-black"
+            />
+            <span className="text-sm text-neutral-300">Mostrar en la pantalla principal</span>
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label="Orden en home">
+              <input
+                type="number"
+                min={1}
+                className={inputCls}
+                value={value.home_order ?? ""}
+                onChange={(e) => update({ home_order: parseInt(e.target.value, 10) || "" })}
+              />
+            </Field>
+            <Field label="Tamaño en la parrilla">
+              <select
+                className={inputCls}
+                value={value.home_size || "medium"}
+                onChange={(e) => update({ home_size: e.target.value })}
+              >
+                {HOME_SIZES.map((s) => (
+                  <option key={s.id} value={s.id}>{s.es}</option>
+                ))}
+              </select>
+            </Field>
+          </div>
+          <Field label="Still de portada">
+            <div className="flex flex-wrap gap-2 mt-1">
+              {stillChoices(value).map((url) => (
+                <button
+                  key={url}
+                  type="button"
+                  onClick={() => update({ home_still: url })}
+                  className={`relative h-16 w-24 overflow-hidden rounded-lg border ${
+                    (value.home_still || value.cover) === url
+                      ? "border-white ring-1 ring-white"
+                      : "border-white/15 hover:border-white/40"
+                  }`}
+                >
+                  <img src={url} alt="" className="h-full w-full object-cover" />
+                </button>
+              ))}
+            </div>
+          </Field>
+        </div>
       </div>
+    </div>
+  );
+};
+
+const HomeLayoutSection = ({ content, onSave, saving }) => {
+  const snapshot = (projects) =>
+    (projects || []).map((p, i) => ({
+      id: p.id,
+      title: p.title,
+      slug: p.slug,
+      cover: p.cover,
+      stills: p.stills || [],
+      home_featured: p.home_featured !== false,
+      home_order: Number.isFinite(Number(p.home_order)) ? Number(p.home_order) : i + 1,
+      home_size: p.home_size || "medium",
+      home_still: p.home_still || "",
+    }));
+
+  const [rows, setRows] = useState(() => snapshot(content.projects));
+  useEffect(() => setRows(snapshot(content.projects)), [content.projects]);
+
+  const patch = (id, next) =>
+    setRows((list) => list.map((r) => (r.id === id ? { ...r, ...next } : r)));
+
+  const handleSave = async () => {
+    try {
+      const projects = content.projects.map((p) => {
+        const row = rows.find((r) => r.id === p.id);
+        if (!row) return p;
+        return {
+          ...p,
+          home_featured: row.home_featured,
+          home_order: row.home_order,
+          home_size: row.home_size,
+          home_still: row.home_still,
+        };
+      });
+      await onSave({ ...content, projects });
+      toast.success("Portada guardada");
+    } catch {
+      /* onSave already toasts */
+    }
+  };
+
+  const sorted = [...rows].sort((a, b) => Number(a.home_order) - Number(b.home_order));
+
+  return (
+    <div className="border border-white/10 p-6 md:p-8 mb-10" data-testid="admin-home-layout">
+      <h2 className="text-xl tracking-tight mb-2">Pantalla principal</h2>
+      <p className="text-[12px] text-neutral-500 mb-6 max-w-2xl">
+        Elige qué proyectos aparecen en home, el still, el tamaño de la celda y el orden.
+        Las imágenes se recortan al frame (sin bandas negras). El showreel se abre desde el menú
+        con la URL del bloque Site.
+      </p>
+      <ul className="space-y-4">
+        {sorted.map((row) => {
+          const project = content.projects.find((p) => p.id === row.id) || row;
+          const thumbs = stillChoices(project);
+          return (
+            <li
+              key={row.id}
+              className="rounded-xl border border-white/10 p-4 grid grid-cols-1 lg:grid-cols-[160px_1fr] gap-4"
+            >
+              <div className="h-24 lg:h-full min-h-[96px] rounded-lg overflow-hidden bg-neutral-900">
+                {(row.home_still || row.cover) && (
+                  <img
+                    src={row.home_still || row.cover}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                )}
+              </div>
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm text-white">{row.title}</p>
+                  <label className="flex items-center gap-2 text-[11px] tracking-[0.18em] uppercase text-neutral-400">
+                    <input
+                      type="checkbox"
+                      checked={row.home_featured}
+                      onChange={(e) => patch(row.id, { home_featured: e.target.checked })}
+                      className="accent-white"
+                    />
+                    En home
+                  </label>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  <Field label="Orden">
+                    <input
+                      type="number"
+                      min={1}
+                      className={inputCls}
+                      value={row.home_order}
+                      onChange={(e) => patch(row.id, { home_order: parseInt(e.target.value, 10) || 1 })}
+                    />
+                  </Field>
+                  <Field label="Tamaño">
+                    <select
+                      className={inputCls}
+                      value={row.home_size}
+                      onChange={(e) => patch(row.id, { home_size: e.target.value })}
+                    >
+                      {HOME_SIZES.map((s) => (
+                        <option key={s.id} value={s.id}>{s.es}</option>
+                      ))}
+                    </select>
+                  </Field>
+                </div>
+                {thumbs.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {thumbs.map((url) => (
+                      <button
+                        key={url}
+                        type="button"
+                        onClick={() => patch(row.id, { home_still: url })}
+                        className={`h-12 w-[4.5rem] overflow-hidden rounded-md border ${
+                          (row.home_still || row.cover) === url
+                            ? "border-white"
+                            : "border-white/15 hover:border-white/40"
+                        }`}
+                        title="Usar este still"
+                      >
+                        <img src={url} alt="" className="h-full w-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+      <button
+        data-testid="save-home-layout"
+        onClick={handleSave}
+        disabled={saving}
+        className="mt-6 border border-white/30 px-5 py-2 text-[11px] tracking-[0.28em] uppercase text-white hover:bg-white hover:text-black transition disabled:opacity-50"
+      >
+        {saving ? "Saving…" : "Guardar portada"}
+      </button>
     </div>
   );
 };
@@ -795,7 +989,7 @@ const SiteSection = ({ content, onSave, saving }) => {
             onChange={(e) => updSite({ name: e.target.value })}
           />
         </Field>
-        <Field label="Showreel URL (Vimeo)">
+        <Field label="Showreel URL (Vimeo o YouTube) — página /showreel">
           <input
             data-testid="site-showreel"
             className={inputCls}
@@ -1073,6 +1267,10 @@ export default function Admin() {
       recognitions: [],
       external_link: "",
       published: true,
+      home_featured: true,
+      home_order: "",
+      home_size: "medium",
+      home_still: "",
     });
   };
   const cancelEdit = () => {
@@ -1231,6 +1429,7 @@ export default function Admin() {
 
       <div className="px-6 md:px-12 py-10 max-w-6xl">
         <SiteSection content={content} onSave={onSave} saving={saving} />
+        <HomeLayoutSection content={content} onSave={onSave} saving={saving} />
 
         <div className="border border-white/10 p-6 md:p-8">
           <div className="flex items-center justify-between mb-6">

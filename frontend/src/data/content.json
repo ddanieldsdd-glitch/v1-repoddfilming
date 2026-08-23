@@ -41,6 +41,10 @@
       "category": "fiction",
       "title": "¿Qué Comen los Dragones?",
       "year": 2025,
+      "home_featured": true,
+      "home_order": 4,
+      "home_size": "wide",
+      "home_still": "",
       "type": {
         "es": "Cortometraje",
         "en": "Short Film"
@@ -73,6 +77,10 @@
       "category": "fiction",
       "title": "La Espantada",
       "year": 2025,
+      "home_featured": true,
+      "home_order": 2,
+      "home_size": "medium",
+      "home_still": "",
       "type": {
         "es": "Cortometraje de Ficción",
         "en": "Fiction Short Film"
@@ -110,6 +118,10 @@
       "category": "fiction",
       "title": "Origami",
       "year": 2024,
+      "home_featured": true,
+      "home_order": 3,
+      "home_size": "medium",
+      "home_still": "",
       "type": {
         "es": "Cortometraje de Ficción",
         "en": "Fiction Short Film"
@@ -139,6 +151,10 @@
       "category": "music-video",
       "title": "Ayer",
       "year": 2024,
+      "home_featured": true,
+      "home_order": 1,
+      "home_size": "hero",
+      "home_still": "",
       "type": {
         "es": "Videoclip",
         "en": "Music Video"
@@ -175,6 +191,10 @@
       "category": "fiction",
       "title": "V1",
       "year": 2026,
+      "home_featured": true,
+      "home_order": 5,
+      "home_size": "medium",
+      "home_still": "",
       "type": {
         "es": "Cortometraje",
         "en": "Short Film"

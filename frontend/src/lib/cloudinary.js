@@ -134,6 +134,13 @@ export const IMG = {
   logo: 88,
 };
 
+/** Stills del home: recorte fill en el navegador (object-cover), sin forzar 16:9. */
+export const HOME_STILL_PRESET = {
+  widths: [480, 720, 1080, 1440, 1800],
+  sizes: "(min-width: 1024px) 50vw, (min-width: 640px) 70vw, 100vw",
+  quality: "good",
+};
+
 /** Tarjetas de proyecto — equilibrio calidad / peso. */
 export const CARD_PRESETS = {
   lazy: {

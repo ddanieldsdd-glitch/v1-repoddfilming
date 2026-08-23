@@ -25,6 +25,8 @@ export const ProjectCard = ({
   alwaysPlay = false,
   // cardSurface: 'home' | 'work' — muestra premios en tarjeta; al hover → director + tipo
   cardSurface = null,
+  /** Still concreto (home): recorta al frame con object-cover, sin bandas. */
+  imageOverride = "",
 }) => {
   const [inView, setInView]           = useState(false);
   const [playInView, setPlayInView]   = useState(false);
@@ -45,9 +47,14 @@ export const ProjectCard = ({
     rawPreviewUrl && !isYoutubeUrl(rawPreviewUrl) ? rawPreviewUrl : null;
 
   const coverIsImage  = project.cover && !isVideoUrl(project.cover);
-  const imageUrl      = coverIsImage ? project.cover : project.poster;
+  const imageUrl      = imageOverride || (coverIsImage ? project.cover : project.poster);
   const cardImage     = imageUrl
-    ? cloudinaryResponsive(imageUrl, eager ? CARD_PRESETS.eager : CARD_PRESETS.lazy)
+    ? cloudinaryResponsive(
+        imageUrl,
+        cardSurface === "home"
+          ? { widths: [480, 720, 1080, 1440, 1800], sizes: "(min-width: 1024px) 50vw, 100vw", quality: "good" }
+          : eager ? CARD_PRESETS.eager : CARD_PRESETS.lazy,
+      )
     : null;
 
   const recognitions = getCardRecognitions(project, cardSurface);
@@ -136,17 +143,15 @@ export const ProjectCard = ({
         ? "rounded-[1.5rem] md:rounded-[2rem]"
         : "rounded-[1.65rem] md:rounded-[2.1rem]";
 
-  // fill=true: en móvil usa aspect-video normal; en desktop rellena el contenedor
-  const sizeClass = fill
-    ? `aspect-video md:aspect-auto md:h-full`
-    : aspectClass;
+  // fill=true: la celda del grid manda; object-cover evita bandas negras
+  const sizeClass = fill ? "h-full min-h-[200px]" : aspectClass;
 
   return (
     <Link
       ref={cardRef}
       to={`/project/${project.slug}`}
       data-testid={`project-card-${project.slug}`}
-      className={`group block cursor-pointer apple-tv-card ${fill ? "md:h-full" : ""}`}
+      className={`group block cursor-pointer apple-tv-card h-full ${fill ? "" : ""}`}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onTouchStart={onTouchStart}
