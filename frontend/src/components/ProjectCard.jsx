@@ -152,6 +152,8 @@ export const ProjectCard = ({
         : "rounded-[1.65rem] md:rounded-[2.1rem]";
 
   const contain = (fit ?? (cardSurface === "work" ? "contain" : "cover")) === "contain";
+  const isHome = cardSurface === "home";
+  const noHoverScale = isHome || contain;
   const useCrop = crop && !contain && !isFullCrop(crop);
   const cropPos = useCrop ? cropObjectPosition(crop) : undefined;
   const sizeClass = fill ? "h-full min-h-0" : aspectClass;
@@ -172,7 +174,7 @@ export const ProjectCard = ({
     >
       <div
         className={`relative overflow-hidden bg-neutral-950 ${sizeClass} w-full shadow-[0_18px_50px_-28px_rgba(0,0,0,0.85)] ring-1 ring-white/10 transition-all duration-500 ease-out group-hover:shadow-[0_28px_70px_-24px_rgba(0,0,0,0.9)] group-hover:ring-white/20 ${
-          contain ? "" : "group-hover:scale-[1.02] group-active:scale-[0.99]"
+          noHoverScale ? "" : "group-hover:scale-[1.02] group-active:scale-[0.99]"
         } ${organicRadius}`}
       >
         <div className="absolute inset-0 z-0 bg-neutral-950" />
@@ -207,7 +209,7 @@ export const ProjectCard = ({
               height={imgH}
               className={`absolute inset-0 z-[3] w-full h-full ${contain ? "object-contain" : "object-cover"} transition-all duration-300 ease-out ${
                 previewVisible
-                  ? contain
+                  ? contain || isHome
                     ? "opacity-0"
                     : "opacity-0 scale-[1.03]"
                   : "opacity-100 scale-100"

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ProjectCard } from "./ProjectCard";
+import { isFullCrop } from "./CroppedImage";
 import { packJustified, DEFAULT_RATIO } from "../lib/justifiedLayout";
 import { stripCloudinaryTransforms } from "../lib/cloudinary";
 import { cropAspectRatio, defaultHomeCrop } from "../lib/crop";
@@ -53,19 +54,23 @@ export function HomeStillGrid({ tiles, lang }) {
     () =>
       tiles.map((t, index) => {
         const crop = t.home_crop || t.project.home_crop || defaultHomeCrop();
+        const fullFrame = isFullCrop(crop);
         const dim = dims[t.still];
         const ratio = dim
-          ? cropAspectRatio(crop, dim.w, dim.h)
+          ? fullFrame
+            ? dim.w / dim.h
+            : cropAspectRatio(crop, dim.w, dim.h)
           : DEFAULT_RATIO;
         return {
           id: t.project.id || t.project.slug,
           slug: t.project.slug,
           project: t.project,
           still: t.still,
-          crop,
+          crop: fullFrame ? null : crop,
           size: t.size,
           index,
           ratio,
+          fullFrame,
         };
       }),
     [tiles, dims],
@@ -111,7 +116,7 @@ export function HomeStillGrid({ tiles, lang }) {
                 eager={item.index < 4}
                 index={item.index}
                 fill
-                fit="cover"
+                fit={item.fullFrame ? "contain" : "cover"}
                 ratio={item.ratio}
                 imageOverride={item.still}
                 crop={item.crop}

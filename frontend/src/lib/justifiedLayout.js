@@ -5,7 +5,7 @@
 
 export const DEFAULT_RATIO = 16 / 9;
 
-const SOLO_SIZES = new Set(["hero", "wide", "large"]);
+const SOLO_SIZES = new Set(["wide"]);
 
 function maxPerRowForSize(size, globalMax) {
   if (SOLO_SIZES.has(size)) return 1;
