@@ -5,6 +5,8 @@ import { VideoPlayer } from "./VideoPlayer";
 import { pauseAllExcept, resumePlayer } from "../lib/videoStore";
 import { cloudinaryResponsive, CARD_PRESETS, optimizeCloudinaryUrl } from "../lib/cloudinary";
 import { getCardRecognitions } from "../lib/recognitions";
+import { CroppedImage, isFullCrop } from "./CroppedImage";
+import { cropObjectPosition } from "../lib/crop";
 
 const isVideoUrl = (url) =>
   /vimeo\.com|youtube\.com|youtu\.be/.test(String(url || ""));
@@ -31,6 +33,8 @@ export const ProjectCard = ({
   fit,
   /** Relación de aspecto del still (ancho/alto). */
   ratio,
+  /** Ventana de recorte normalizada { x, y, w, h }. */
+  crop,
 }) => {
   const [inView, setInView]           = useState(false);
   const [playInView, setPlayInView]   = useState(false);
@@ -148,6 +152,8 @@ export const ProjectCard = ({
         : "rounded-[1.65rem] md:rounded-[2.1rem]";
 
   const contain = (fit ?? (cardSurface === "work" ? "contain" : "cover")) === "contain";
+  const useCrop = crop && !contain && !isFullCrop(crop);
+  const cropPos = useCrop ? cropObjectPosition(crop) : undefined;
   const sizeClass = fill ? "h-full min-h-0" : aspectClass;
   const imgW = ratio ? Math.round(ratio * 100) : 16;
   const imgH = 100;
@@ -172,24 +178,43 @@ export const ProjectCard = ({
         <div className="absolute inset-0 z-0 bg-neutral-950" />
 
         {cardImage && (
-          <img
-            src={cardImage.src}
-            srcSet={cardImage.srcSet}
-            sizes={cardImage.sizes}
-            alt={project.title}
-            loading={eager ? "eager" : "lazy"}
-            decoding="async"
-            fetchPriority={eager ? "high" : "auto"}
-            width={imgW}
-            height={imgH}
-            className={`absolute inset-0 z-[3] w-full h-full ${contain ? "object-contain" : "object-cover"} transition-all duration-300 ease-out ${
-              previewVisible
-                ? contain
-                  ? "opacity-0"
-                  : "opacity-0 scale-[1.03]"
-                : "opacity-100 scale-100"
-            }`}
-          />
+          useCrop ? (
+            <CroppedImage
+              src={cardImage.src}
+              srcSet={cardImage.srcSet}
+              sizes={cardImage.sizes}
+              alt={project.title}
+              crop={crop}
+              loading={eager ? "eager" : "lazy"}
+              decoding="async"
+              fetchPriority={eager ? "high" : "auto"}
+              width={imgW}
+              height={imgH}
+              className={`z-[3] transition-all duration-300 ease-out ${
+                previewVisible ? "opacity-0" : "opacity-100"
+              }`}
+            />
+          ) : (
+            <img
+              src={cardImage.src}
+              srcSet={cardImage.srcSet}
+              sizes={cardImage.sizes}
+              alt={project.title}
+              loading={eager ? "eager" : "lazy"}
+              decoding="async"
+              fetchPriority={eager ? "high" : "auto"}
+              width={imgW}
+              height={imgH}
+              className={`absolute inset-0 z-[3] w-full h-full ${contain ? "object-contain" : "object-cover"} transition-all duration-300 ease-out ${
+                previewVisible
+                  ? contain
+                    ? "opacity-0"
+                    : "opacity-0 scale-[1.03]"
+                  : "opacity-100 scale-100"
+              }`}
+              style={cropPos ? { objectPosition: cropPos } : undefined}
+            />
+          )
         )}
 
         {shouldPreload && previewUrl && (

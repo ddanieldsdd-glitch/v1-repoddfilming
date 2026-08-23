@@ -23,6 +23,8 @@ import {
 } from "../lib/recognitions";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { HOME_SIZES, stillChoices } from "../lib/homeGrid";
+import { CropEditor } from "../components/admin/CropEditor";
+import { SHOWREEL_PLACEMENTS } from "../lib/crop";
 
 const uploadBtnCls =
   "shrink-0 border border-white/25 px-3 py-2 text-[10px] tracking-[0.22em] uppercase text-white hover:bg-white hover:text-black transition disabled:opacity-30";
@@ -800,6 +802,24 @@ const ProjectForm = ({ value, onChange }) => {
               ))}
             </div>
           </Field>
+          {stillChoices(value).length > 0 && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
+              <CropEditor
+                label="Recorte portada"
+                imageUrl={value.home_still || value.cover || stillChoices(value)[0]}
+                crop={value.home_crop}
+                onChange={(home_crop) => update({ home_crop })}
+                mode="free"
+              />
+              <CropEditor
+                label="Recorte obra (16:9)"
+                imageUrl={value.cover || value.poster || stillChoices(value)[0]}
+                crop={value.work_crop}
+                onChange={(work_crop) => update({ work_crop })}
+                mode="16:9"
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -807,7 +827,7 @@ const ProjectForm = ({ value, onChange }) => {
 };
 
 const HomeLayoutSection = ({ content, onSave, saving }) => {
-  const snapshot = (projects) =>
+  const snapshot = (projects, site) =>
     (projects || []).map((p, i) => ({
       id: p.id,
       title: p.title,
@@ -818,10 +838,16 @@ const HomeLayoutSection = ({ content, onSave, saving }) => {
       home_order: Number.isFinite(Number(p.home_order)) ? Number(p.home_order) : i + 1,
       home_size: p.home_size || "medium",
       home_still: p.home_still || "",
+      home_crop: p.home_crop,
+      work_crop: p.work_crop,
     }));
 
-  const [rows, setRows] = useState(() => snapshot(content.projects));
-  useEffect(() => setRows(snapshot(content.projects)), [content.projects]);
+  const [rows, setRows] = useState(() => snapshot(content.projects, content.site));
+  const [homeMax, setHomeMax] = useState(content.site?.home_max ?? 12);
+  useEffect(() => {
+    setRows(snapshot(content.projects, content.site));
+    setHomeMax(content.site?.home_max ?? 12);
+  }, [content.projects, content.site]);
 
   const patch = (id, next) =>
     setRows((list) => list.map((r) => (r.id === id ? { ...r, ...next } : r)));
@@ -837,9 +863,15 @@ const HomeLayoutSection = ({ content, onSave, saving }) => {
           home_order: row.home_order,
           home_size: row.home_size,
           home_still: row.home_still,
+          home_crop: row.home_crop,
+          work_crop: row.work_crop,
         };
       });
-      await onSave({ ...content, projects });
+      await onSave({
+        ...content,
+        site: { ...content.site, home_max: Number(homeMax) || 12 },
+        projects,
+      });
       toast.success("Portada guardada");
     } catch {
       /* onSave already toasts */
@@ -868,11 +900,22 @@ const HomeLayoutSection = ({ content, onSave, saving }) => {
     <div className="border border-white/10 p-6 md:p-8 mb-10" data-testid="admin-home-layout">
       <h2 className="text-xl tracking-tight mb-2">Pantalla principal</h2>
       <p className="text-[12px] text-neutral-500 mb-6 max-w-2xl">
-        Elige qué proyectos aparecen en home, el still y el orden. Cada pieza conserva el aspect
-        ratio del fotograma (se ve entero, sin recortar ni ampliar). El tamaño solo decide si va
-        en una fila propia o se empaqueta con otras. El showreel se abre desde el menú con la URL
-        del bloque Site.
+        Elige qué proyectos aparecen en home, el still, el recorte, el tamaño y el orden. El tamaño
+        decide si la pieza ocupa una fila propia (destacado, grande, panorámica) o se empaqueta con
+        otras. El showreel se configura en Site.
       </p>
+      <div className="mb-6 max-w-xs">
+        <Field label="Máximo de piezas en portada">
+          <input
+            type="number"
+            min={1}
+            max={24}
+            className={inputCls}
+            value={homeMax}
+            onChange={(e) => setHomeMax(parseInt(e.target.value, 10) || 12)}
+          />
+        </Field>
+      </div>
       <ul className="space-y-4">
         {sorted.map((row) => {
           const project = content.projects.find((p) => p.id === row.id) || row;
@@ -973,6 +1016,15 @@ const HomeLayoutSection = ({ content, onSave, saving }) => {
                     ))}
                   </div>
                 )}
+                {row.home_featured && (row.home_still || row.cover) && (
+                  <CropEditor
+                    label="Recorte portada"
+                    imageUrl={row.home_still || row.cover}
+                    crop={row.home_crop}
+                    onChange={(home_crop) => patch(row.id, { home_crop })}
+                    mode="free"
+                  />
+                )}
               </div>
             </li>
           );
@@ -1041,6 +1093,29 @@ const SiteSection = ({ content, onSave, saving }) => {
             className={inputCls}
             value={draft.site.showreel_url}
             onChange={(e) => updSite({ showreel_url: e.target.value })}
+          />
+        </Field>
+        <Field label="Dónde mostrar el showreel">
+          <select
+            className={inputCls}
+            value={draft.site.showreel_placement || "nav"}
+            onChange={(e) => updSite({ showreel_placement: e.target.value })}
+            data-testid="site-showreel-placement"
+          >
+            {SHOWREEL_PLACEMENTS.map((p) => (
+              <option key={p.id} value={p.id}>{p.es}</option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Máximo de piezas en portada">
+          <input
+            type="number"
+            min={1}
+            max={24}
+            className={inputCls}
+            value={draft.site.home_max ?? 12}
+            onChange={(e) => updSite({ home_max: parseInt(e.target.value, 10) || 12 })}
+            data-testid="site-home-max"
           />
         </Field>
         <ImageUrlField
@@ -1317,6 +1392,8 @@ export default function Admin() {
       home_order: "",
       home_size: "medium",
       home_still: "",
+      home_crop: { x: 0, y: 0, w: 1, h: 1 },
+      work_crop: { x: 0, y: 0, w: 1, h: 1 },
     });
   };
   const cancelEdit = () => {

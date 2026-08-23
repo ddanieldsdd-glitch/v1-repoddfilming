@@ -2,13 +2,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ProjectCard } from "./ProjectCard";
 import { packJustified, DEFAULT_RATIO } from "../lib/justifiedLayout";
 import { stripCloudinaryTransforms } from "../lib/cloudinary";
+import { cropAspectRatio, defaultHomeCrop } from "../lib/crop";
 
 const GAP = 16;
 
 export function HomeStillGrid({ tiles, lang }) {
   const wrapRef = useRef(null);
   const [width, setWidth] = useState(0);
-  const [ratios, setRatios] = useState({});
+  const [dims, setDims] = useState({});
   const [windowH, setWindowH] = useState(
     typeof window !== "undefined" ? window.innerHeight : 900,
   );
@@ -37,8 +38,10 @@ export function HomeStillGrid({ tiles, lang }) {
       const img = new Image();
       img.onload = () => {
         if (!img.naturalWidth || !img.naturalHeight) return;
-        const next = img.naturalWidth / img.naturalHeight;
-        setRatios((prev) => (prev[url] === next ? prev : { ...prev, [url]: next }));
+        setDims((prev) => ({
+          ...prev,
+          [url]: { w: img.naturalWidth, h: img.naturalHeight },
+        }));
       };
       img.src = stripCloudinaryTransforms(url) || url;
     });
@@ -48,16 +51,24 @@ export function HomeStillGrid({ tiles, lang }) {
 
   const items = useMemo(
     () =>
-      tiles.map((t, index) => ({
-        id: t.project.id || t.project.slug,
-        slug: t.project.slug,
-        project: t.project,
-        still: t.still,
-        size: t.size,
-        index,
-        ratio: ratios[t.still] || DEFAULT_RATIO,
-      })),
-    [tiles, ratios],
+      tiles.map((t, index) => {
+        const crop = t.home_crop || t.project.home_crop || defaultHomeCrop();
+        const dim = dims[t.still];
+        const ratio = dim
+          ? cropAspectRatio(crop, dim.w, dim.h)
+          : DEFAULT_RATIO;
+        return {
+          id: t.project.id || t.project.slug,
+          slug: t.project.slug,
+          project: t.project,
+          still: t.still,
+          crop,
+          size: t.size,
+          index,
+          ratio,
+        };
+      }),
+    [tiles, dims],
   );
 
   const rows = useMemo(
@@ -66,7 +77,6 @@ export function HomeStillGrid({ tiles, lang }) {
         gap: GAP,
         minH: width < 640 ? 180 : 240,
         maxH: Math.round(windowH * (width < 640 ? 0.48 : 0.46)),
-        soloMaxH: Math.round(windowH * (width < 640 ? 0.42 : 0.38)),
         windowH,
         maxPerRow: width < 640 ? 1 : 2,
         soloAll: false,
@@ -101,9 +111,10 @@ export function HomeStillGrid({ tiles, lang }) {
                 eager={item.index < 4}
                 index={item.index}
                 fill
-                fit="contain"
+                fit="cover"
                 ratio={item.ratio}
                 imageOverride={item.still}
+                crop={item.crop}
               />
             </div>
           ))}

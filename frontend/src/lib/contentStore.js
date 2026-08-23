@@ -1,4 +1,5 @@
 ﻿import defaultContent from "../data/content.json";
+import { defaultHomeCrop, defaultWorkCrop } from "./crop";
 
 const STORAGE_KEY = "ddp_content_v7";
 const LANG_KEY = "ddp_lang";
@@ -17,8 +18,15 @@ const safeParse = (raw) => {
 const applyHomeDefaults = (content) => {
   if (!content?.projects) return content;
   const defaults = defaultContent.projects || [];
+  const siteDef = defaultContent.site || {};
   return {
     ...content,
+    site: {
+      ...siteDef,
+      ...content.site,
+      home_max: content.site?.home_max ?? siteDef.home_max ?? 12,
+      showreel_placement: content.site?.showreel_placement ?? siteDef.showreel_placement ?? "nav",
+    },
     projects: content.projects.map((p, i) => {
       const def = defaults.find((d) => d.id === p.id || d.slug === p.slug);
       return {
@@ -27,6 +35,8 @@ const applyHomeDefaults = (content) => {
         home_order: p.home_order ?? def?.home_order ?? i + 1,
         home_size: p.home_size ?? def?.home_size ?? "medium",
         home_still: p.home_still ?? def?.home_still ?? "",
+        home_crop: p.home_crop ?? def?.home_crop ?? defaultHomeCrop(),
+        work_crop: p.work_crop ?? def?.work_crop ?? defaultWorkCrop(),
       };
     }),
   };

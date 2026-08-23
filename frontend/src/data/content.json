@@ -14,6 +14,8 @@
       "en": "\"Good cinematography shouldn't be noticed at all.\" — Roger Deakins"
     },
     "showreel_url": "https://vimeo.com/1054144154",
+    "showreel_placement": "nav",
+    "home_max": 12,
     "about_image": "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777731173/7ae19329-a9ee-4ad6-85d3-b2b784c25d7f_bigjxi.jpg",
     "about_photo_caption": "Nave Soviética",
     "meta_description": {

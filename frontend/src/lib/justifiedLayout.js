@@ -1,18 +1,31 @@
 /**
- * Justified rows: native aspect ratio, no crop, no stretch.
- * Desktop prefers two large stills per row (mixed widths from different ARs).
- * "hero" no longer isolates a still on its own row.
+ * Justified rows: packing by crop aspect ratio.
+ * home_size controls solo rows (hero/wide/large) vs packed rows.
  */
 
 export const DEFAULT_RATIO = 16 / 9;
+
+const SOLO_SIZES = new Set(["hero", "wide", "large"]);
+
+function maxPerRowForSize(size, globalMax) {
+  if (SOLO_SIZES.has(size)) return 1;
+  if (size === "small") return Math.min(3, globalMax);
+  return Math.min(2, globalMax);
+}
+
+function soloMaxHForSize(size, windowH) {
+  if (size === "hero") return Math.round(windowH * 0.55);
+  if (size === "wide") return Math.round(windowH * 0.36);
+  if (size === "large") return Math.round(windowH * 0.48);
+  return Math.round(windowH * 0.4);
+}
 
 export function packJustified(items, containerWidth, opts = {}) {
   const gap = opts.gap ?? 14;
   const minH = opts.minH ?? 240;
   const windowH = opts.windowH ?? 900;
   const maxH = opts.maxH ?? Math.round(windowH * 0.48);
-  const soloMaxH = opts.soloMaxH ?? Math.round(windowH * 0.4);
-  const maxPerRow = opts.maxPerRow ?? 2;
+  const globalMaxPerRow = opts.maxPerRow ?? 2;
   const soloAll = Boolean(opts.soloAll);
 
   if (!containerWidth || containerWidth < 80 || !items.length) {
@@ -34,7 +47,10 @@ export function packJustified(items, containerWidth, opts = {}) {
   const flush = () => {
     if (!current.length) return;
     let height = fillH(current);
-    const cap = current.length === 1 ? Math.min(maxH, soloMaxH) : maxH;
+    const cap =
+      current.length === 1
+        ? Math.min(maxH, soloMaxHForSize(current[0].size, windowH))
+        : maxH;
     height = Math.min(height, cap);
     if (current.length > 1) height = Math.max(minH, Math.min(height, maxH));
     height = Math.min(height, fillH(current));
@@ -54,9 +70,25 @@ export function packJustified(items, containerWidth, opts = {}) {
       flush();
       continue;
     }
-    if (current.length >= maxPerRow) flush();
+
+    const itemSolo = SOLO_SIZES.has(item.size);
+    if (itemSolo && current.length) flush();
+    if (current.length && SOLO_SIZES.has(current[0].size)) flush();
+
+    const rowMax = itemSolo
+      ? 1
+      : Math.min(
+          globalMaxPerRow,
+          maxPerRowForSize(item.size, globalMaxPerRow),
+          current.length
+            ? maxPerRowForSize(current[0].size, globalMaxPerRow)
+            : globalMaxPerRow,
+        );
+
+    if (current.length >= rowMax) flush();
     if (current.length && !fits(item)) flush();
     current.push(item);
+    if (itemSolo) flush();
   }
   flush();
 
