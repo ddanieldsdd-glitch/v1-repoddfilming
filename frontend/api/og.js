@@ -1,17 +1,17 @@
 /**
  * Serverless function que gestiona el Open Graph para todos los proyectos.
  *
- * Flujo:
- *  - Bot (WhatsApp, Telegram, etc.) visita /project/:slug
- *    → rewrite en vercel.json envía aquí
- *    → se sirve HTML mínimo con meta tags OG correctas (bots no ejecutan JS)
- *
- *  - Usuario normal visita /project/:slug
- *    → rewrite envía aquí también
- *    → se obtiene el index.html real del CDN (en caché), se inyectan los
- *      meta tags del proyecto y se sirve el SPA completo con React
+ * Flujo (mismo HTML para usuarios y crawlers, para no cachear una página
+ * distinta según el User-Agent):
+ *  - Rewrite en vercel.json envía /project/:slug, /about, etc. aquí
+ *  - Se parte del index.html del SPA (copiado al build como api/_spa.html)
+ *  - Se inyectan meta OG, JSON-LD y el iframe de vídeo si aplica
+ *  - React monta la ficha completa; el HTML mínimo de crawlers solo se usa
+ *    si el shell del SPA no está disponible, y nunca se cachea en el CDN
  */
 
+const fs = require('fs');
+const path = require('path');
 const defaultContent = require('../src/data/content.json');
 const { getMergedContent, getPublishedProjects } = require('./_content');
 const { getPageSeoData, buildStaticBodyHtml, buildStaticPageJsonLd } = require('./_pageSeo');
@@ -34,24 +34,82 @@ function buildOgLogoUrl(logoUrl) {
 }
 
 // ─── Base HTML (React SPA) cache ──────────────────────────────────────────────
-// Se obtiene del CDN de producción y se reutiliza entre invocaciones calientes.
+// El shell se copia a api/_spa.html en el build. Pedir /index.html a producción
+// falla: cleanUrls lo redirige (308) y el fetch interno a la propia web suele
+// caer al HTML mínimo de crawlers.
 
 let _baseHtml = null;
 let _baseHtmlFetchedAt = 0;
 const BASE_HTML_TTL = 20 * 60 * 1000; // 20 minutos
 
+function isSpaShell(html) {
+  return typeof html === 'string'
+    && html.includes('id="root"')
+    && html.includes('static/js');
+}
+
+function readSpaFromDisk() {
+  const candidates = [
+    path.join(__dirname, '_spa.html'),
+    path.join(process.cwd(), 'api', '_spa.html'),
+    path.join(process.cwd(), 'build', 'index.html'),
+    path.join(__dirname, '..', 'build', 'index.html'),
+  ];
+  for (const file of candidates) {
+    try {
+      const html = fs.readFileSync(file, 'utf8');
+      if (isSpaShell(html)) return html;
+    } catch {
+      // siguiente candidato
+    }
+  }
+  return null;
+}
+
+async function fetchSpaHtml(url) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 2500);
+  try {
+    const r = await fetch(url, {
+      headers: { 'User-Agent': 'og-injector/1.0' },
+      redirect: 'follow',
+      signal: ctrl.signal,
+    });
+    if (!r.ok) return null;
+    const html = await r.text();
+    return isSpaShell(html) ? html : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function getBaseHtml() {
   const now = Date.now();
   if (_baseHtml && now - _baseHtmlFetchedAt < BASE_HTML_TTL) return _baseHtml;
-  try {
-    const r = await fetch(`${BASE_URL}/index.html`, { headers: { 'User-Agent': 'og-injector/1.0' } });
-    if (r.ok) {
-      _baseHtml = await r.text();
-      _baseHtmlFetchedAt = now;
-    }
-  } catch {
-    // Usa la caché obsoleta si existe
+
+  const fromDisk = readSpaFromDisk();
+  if (fromDisk) {
+    _baseHtml = fromDisk;
+    _baseHtmlFetchedAt = now;
+    return _baseHtml;
   }
+
+  const urls = [
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}/` : null,
+    `${BASE_URL}/`,
+  ].filter(Boolean);
+
+  for (const url of urls) {
+    const html = await fetchSpaHtml(url);
+    if (html) {
+      _baseHtml = html;
+      _baseHtmlFetchedAt = now;
+      return _baseHtml;
+    }
+  }
+
   return _baseHtml;
 }
 
@@ -324,18 +382,23 @@ async function serveSeoPage(req, res, { ogData, jsonLd, pathname, content }) {
   const bodyHtml = buildStaticBodyHtml(pathname, content);
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=3600, stale-while-revalidate=86400');
   res.setHeader('X-Robots-Tag', 'index, follow');
+  res.setHeader('Vary', 'User-Agent');
 
+  // Nunca cachear el HTML de crawlers en el CDN: comparte URL con la ficha
+  // real y un HIT serviría la versión escueta a quien recargue la página.
   if (isCrawler(ua)) {
+    res.setHeader('Cache-Control', 'private, no-store');
     return res.status(200).send(buildBotHTML({ ...ogData, bodyHtml }, jsonLd));
   }
 
   const baseHtml = await getBaseHtml();
   if (baseHtml) {
+    res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=3600, stale-while-revalidate=86400');
     return res.status(200).send(injectOGTags(baseHtml, ogData, jsonLd));
   }
 
+  res.setHeader('Cache-Control', 'private, no-store');
   return res.status(200).send(buildBotHTML({ ...ogData, bodyHtml }, jsonLd));
 }
 

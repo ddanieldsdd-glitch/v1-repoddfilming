@@ -60,6 +60,7 @@ function App() {
 
   useEffect(() => {
     document.getElementById("video-watch-page")?.remove();
+    document.getElementById("seo-static-content")?.remove();
   }, []);
 
   return (

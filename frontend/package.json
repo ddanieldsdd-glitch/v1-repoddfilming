@@ -63,12 +63,12 @@
     },
     "scripts": {
         "start": "craco start",
-        "build": "cross-env ESLINT_NO_DEV_ERRORS=true craco build",
+        "build": "cross-env ESLINT_NO_DEV_ERRORS=true craco build && node scripts/copy-spa-html.js",
         "test": "craco test",
         "new-project": "node scripts/new-project.js",
         "new-project:paste": "node scripts/new-project.js --paste",
         "check:videos": "node scripts/check-videos.js",
-        "predeploy": "cross-env CI=false ESLINT_NO_DEV_ERRORS=true craco build"
+        "predeploy": "cross-env CI=false ESLINT_NO_DEV_ERRORS=true craco build && node scripts/copy-spa-html.js"
     },
     "browserslist": {
         "production": [

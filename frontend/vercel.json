@@ -3,6 +3,11 @@
   "buildCommand": "npm run predeploy",
   "outputDirectory": "build",
   "framework": "create-react-app",
+  "functions": {
+    "api/og.js": {
+      "includeFiles": "build/index.html"
+    }
+  },
   "redirects": [
     {
       "source": "/:path*",
