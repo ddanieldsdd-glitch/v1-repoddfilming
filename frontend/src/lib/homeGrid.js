@@ -51,7 +51,6 @@ export function getHomeProjects(projects = [], homeMax = 12) {
         order,
         size,
         still: resolveHomeStill(project),
-        home_crop: project.home_crop,
         className: HOME_SIZE_CLASS[size],
       };
     })

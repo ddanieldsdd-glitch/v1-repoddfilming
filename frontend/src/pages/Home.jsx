@@ -5,9 +5,9 @@ import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 import { HomeStillGrid } from "../components/HomeStillGrid";
 import { HomeShowreel } from "../components/HomeShowreel";
-import { getHomeProjects, getHomeThemeCards } from "../lib/homeGrid";
+import { CategoryExploreLinks } from "../components/CategoryExploreLinks";
+import { getHomeProjects } from "../lib/homeGrid";
 import { getActiveCategories } from "../lib/contentStore";
-import { cloudinaryResponsive } from "../lib/cloudinary";
 import { showreelOnHome } from "../lib/crop";
 
 export default function Home() {
@@ -18,10 +18,7 @@ export default function Home() {
     () => getHomeProjects(content.projects, homeMax),
     [content.projects, homeMax],
   );
-  const themes = useMemo(
-    () => getHomeThemeCards(content.projects),
-    [content.projects],
-  );
+  const showExplore = getActiveCategories(content.projects).length > 0;
   const showreelUrl = content.site?.showreel_url;
   const reelOnHome = showreelOnHome(content.site?.showreel_placement) && showreelUrl;
 
@@ -50,7 +47,7 @@ export default function Home() {
         )}
       </section>
 
-      {themes.length > 0 && (
+      {showExplore && (
         <section
           data-testid="home-see-more"
           className="px-4 sm:px-6 md:px-12 lg:px-16 pt-6 md:pt-10 pb-16 md:pb-24 border-t border-white/10"
@@ -58,49 +55,7 @@ export default function Home() {
           <p className="text-[10px] tracking-[0.32em] uppercase text-white/45 mb-5 md:mb-7">
             {tr(T.work.seeMore, lang)}
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-5">
-            {getActiveCategories(content.projects)
-              .filter((c) => themes.some((t) => t.id === c.id))
-              .slice(0, 2)
-              .map((cat) => {
-                const theme = themes.find((t) => t.id === cat.id);
-                const img = theme?.still
-                  ? cloudinaryResponsive(theme.still, {
-                      widths: [720, 1080, 1440],
-                      sizes: "(min-width: 768px) 42vw, 100vw",
-                      quality: "good",
-                    })
-                  : null;
-                return (
-                  <Link
-                    key={cat.id}
-                    to={`/work/${cat.id}`}
-                    data-testid={`home-theme-${cat.id}`}
-                    className="group relative overflow-hidden rounded-[1.5rem] md:rounded-[2rem] aspect-[4/3] sm:aspect-video bg-neutral-950 border border-white/10"
-                  >
-                    {img && (
-                      <img
-                        src={img.src}
-                        srcSet={img.srcSet}
-                        sizes={img.sizes}
-                        alt={cat[lang]}
-                        className="absolute inset-0 w-full h-full object-cover opacity-60 transition duration-500 group-hover:opacity-80 group-hover:scale-[1.04]"
-                      />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                    <div className="absolute inset-x-0 bottom-0 p-5 md:p-6 flex items-end justify-between gap-4">
-                      <h2 className="text-xl md:text-2xl font-light tracking-tight">
-                        {cat[lang]}
-                      </h2>
-                      <ArrowUpRight
-                        className="w-5 h-5 text-white/80 group-hover:text-white transition shrink-0"
-                        strokeWidth={1.4}
-                      />
-                    </div>
-                  </Link>
-                );
-              })}
-          </div>
+          <CategoryExploreLinks projects={content.projects} lang={lang} />
           <Link
             to="/work"
             data-testid="home-view-all"

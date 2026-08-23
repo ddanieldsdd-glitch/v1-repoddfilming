@@ -1,5 +1,5 @@
 ﻿import defaultContent from "../data/content.json";
-import { defaultHomeCrop, defaultWorkCrop } from "./crop";
+import { defaultWorkCrop } from "./crop";
 
 const STORAGE_KEY = "ddp_content_v7";
 const LANG_KEY = "ddp_lang";
@@ -35,8 +35,8 @@ const applyHomeDefaults = (content) => {
         home_order: p.home_order ?? def?.home_order ?? i + 1,
         home_size: p.home_size ?? def?.home_size ?? "medium",
         home_still: p.home_still ?? def?.home_still ?? "",
-        home_crop: p.home_crop ?? def?.home_crop ?? defaultHomeCrop(),
-        work_crop: p.work_crop ?? def?.work_crop ?? defaultWorkCrop(),
+        preview_crop:
+          p.preview_crop ?? p.work_crop ?? def?.preview_crop ?? def?.work_crop ?? defaultWorkCrop(),
       };
     }),
   };

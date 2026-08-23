@@ -36,10 +36,8 @@
   "_home_size_help": "hero | large | wide | tall | medium | small — tamaño de la celda en la parrilla del home.",
   "home_still": "",
   "_home_still_help": "URL del fotograma para la portada. Vacío = cover.",
-  "home_crop": { "x": 0, "y": 0, "w": 1, "h": 1 },
-  "_home_crop_help": "Recorte en portada (fracciones 0–1). Ajustable en Admin.",
-  "work_crop": { "x": 0, "y": 0, "w": 1, "h": 1 },
-  "_work_crop_help": "Recorte en Obra, siempre 16:9. Ajustable en Admin.",
+  "preview_crop": { "x": 0, "y": 0, "w": 1, "h": 1 },
+  "_preview_crop_help": "Recorte 16:9 de la miniatura Vimeo en Obra (Admin). No afecta al still.",
 
   "poster": "",
   "_poster_help": "Poster image. Cartel oficial vertical opcional. Aparece en la página de proyecto. Deja '' si no hay.",

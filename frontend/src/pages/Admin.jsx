@@ -802,23 +802,19 @@ const ProjectForm = ({ value, onChange }) => {
               ))}
             </div>
           </Field>
-          {stillChoices(value).length > 0 && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
-              <CropEditor
-                label="Recorte portada"
-                imageUrl={value.home_still || value.cover || stillChoices(value)[0]}
-                crop={value.home_crop}
-                onChange={(home_crop) => update({ home_crop })}
-                mode="free"
-              />
-              <CropEditor
-                label="Recorte obra (16:9)"
-                imageUrl={value.cover || value.poster || stillChoices(value)[0]}
-                crop={value.work_crop}
-                onChange={(work_crop) => update({ work_crop })}
-                mode="16:9"
-              />
-            </div>
+          {(value.preview_url || /vimeo\.com/.test(value.cover || "")) && (
+            <CropEditor
+              label="Recorte miniatura Vimeo (16:9)"
+              imageUrl={
+                value.poster ||
+                value.stills?.[0] ||
+                (value.cover && !/vimeo\.com/.test(value.cover) ? value.cover : "") ||
+                stillChoices(value)[0]
+              }
+              crop={value.preview_crop ?? value.work_crop}
+              onChange={(preview_crop) => update({ preview_crop })}
+              mode="16:9"
+            />
           )}
         </div>
       </div>
@@ -838,8 +834,6 @@ const HomeLayoutSection = ({ content, onSave, saving }) => {
       home_order: Number.isFinite(Number(p.home_order)) ? Number(p.home_order) : i + 1,
       home_size: p.home_size || "medium",
       home_still: p.home_still || "",
-      home_crop: p.home_crop,
-      work_crop: p.work_crop,
     }));
 
   const [rows, setRows] = useState(() => snapshot(content.projects, content.site));
@@ -863,8 +857,6 @@ const HomeLayoutSection = ({ content, onSave, saving }) => {
           home_order: row.home_order,
           home_size: row.home_size,
           home_still: row.home_still,
-          home_crop: row.home_crop,
-          work_crop: row.work_crop,
         };
       });
       await onSave({
@@ -1015,15 +1007,6 @@ const HomeLayoutSection = ({ content, onSave, saving }) => {
                       </button>
                     ))}
                   </div>
-                )}
-                {row.home_featured && (row.home_still || row.cover) && (
-                  <CropEditor
-                    label="Recorte portada"
-                    imageUrl={row.home_still || row.cover}
-                    crop={row.home_crop}
-                    onChange={(home_crop) => patch(row.id, { home_crop })}
-                    mode="free"
-                  />
                 )}
               </div>
             </li>
@@ -1392,8 +1375,7 @@ export default function Admin() {
       home_order: "",
       home_size: "medium",
       home_still: "",
-      home_crop: { x: 0, y: 0, w: 1, h: 1 },
-      work_crop: { x: 0, y: 0, w: 1, h: 1 },
+      preview_crop: { x: 0, y: 0, w: 1, h: 1 },
     });
   };
   const cancelEdit = () => {

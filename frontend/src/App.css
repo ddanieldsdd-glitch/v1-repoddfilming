@@ -134,7 +134,8 @@ a:focus-visible {
   width: 320% !important;
   height: 320% !important;
   max-width: none !important;
-  transform: translate(-50%, -54%) !important;
+  transform-origin: var(--vf-x, 50%) var(--vf-y, 54%) !important;
+  transform: translate(-50%, -54%) scale(calc(3.2 * var(--vf-zoom, 1))) !important;
   pointer-events: none !important;
   border: 0 !important;
 }

@@ -5,6 +5,12 @@ import {
   unregisterPlayer,
   getGlobalMuted,
 } from "../lib/videoStore";
+import { normalizeCrop } from "../lib/crop";
+
+function isFullCropNormalized(crop) {
+  const c = normalizeCrop(crop);
+  return c.w >= 0.99 && c.h >= 0.99 && c.x <= 0.01 && c.y <= 0.01;
+}
 
 /**
  * Vimeo: @vimeo/player SDK.
@@ -24,6 +30,8 @@ export const VideoPlayer = ({
   interactive = true,
   /** Recorta el iframe para llenar el marco. Por defecto sigue a `background`. */
   cover,
+  /** Ventana 16:9 sobre el vídeo (miniatura / preview en tarjetas). */
+  crop,
   onReady,
   onPlay,
   onPause,
@@ -260,11 +268,19 @@ export const VideoPlayer = ({
 
   const iframeCls = `absolute inset-0 h-full w-full border-0 bg-black [color-scheme:dark] ${interactive ? "" : "pointer-events-none"}`;
   const shouldCover = cover ?? background;
+  const cropVars = crop && !isFullCropNormalized(crop)
+    ? {
+        "--vf-x": `${(normalizeCrop(crop).x + normalizeCrop(crop).w / 2) * 100}%`,
+        "--vf-y": `${(normalizeCrop(crop).y + normalizeCrop(crop).h / 2) * 100}%`,
+        "--vf-zoom": String(1 / Math.min(normalizeCrop(crop).w, normalizeCrop(crop).h)),
+      }
+    : undefined;
 
   return (
     <div
       className={`relative w-full h-full bg-black ${shouldCover ? "video-bg-cover" : ""} ${className} ${interactive ? "" : "pointer-events-none"}`}
       data-testid={testId}
+      style={cropVars}
     >
       {vimeoId ? (
         <iframe

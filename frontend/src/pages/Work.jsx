@@ -95,8 +95,8 @@ export default function Work() {
                     index={i}
                     aspectClass="aspect-video"
                     alwaysPlay
-                    fit="cover"
-                    crop={p.work_crop}
+                    fit="contain"
+                    previewCrop={p.preview_crop ?? p.work_crop}
                   />
                 </div>
               );

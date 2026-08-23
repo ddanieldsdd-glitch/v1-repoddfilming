@@ -6,6 +6,7 @@ import { T, tr } from "../lib/i18n";
 import { VideoPlayer } from "../components/VideoPlayer";
 import { getActiveCategories } from "../lib/contentStore";
 import { ProjectCard } from "../components/ProjectCard";
+import { CategoryExploreLinks } from "../components/CategoryExploreLinks";
 import { ImageLightbox } from "../components/ImageLightbox";
 import { useImageLightbox } from "../hooks/useImageLightbox";
 import { optimizeCloudinaryUrl, cloudinaryResponsive, IMG, STILL_PRESETS, COVER_PRESET, prefetchCloudinaryImages } from "../lib/cloudinary";
@@ -668,32 +669,11 @@ export default function ProjectDetail() {
           <p className="text-[10px] tracking-[0.34em] uppercase text-neutral-600 mb-6">
             {lang === "es" ? "Explorar otras ramas" : "Explore other categories"}
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-            {otherCategories.map((c) => {
-              const preview = projects.find((p) => p.category === c.id);
-              const thumb = preview?.poster || preview?.cover;
-              return (
-                <Link
-                  key={c.id}
-                  to={`/work/${c.id}`}
-                  className="group relative overflow-hidden rounded-2xl bg-neutral-950 ring-1 ring-white/10 hover:ring-white/25 transition-all duration-500 hover:scale-[1.02] p-5 flex flex-col justify-end min-h-[100px] sm:min-h-[120px]"
-                >
-                  {thumb && (
-                    <img
-                      src={oimg(thumb, IMG.card)} alt=""
-                      className="pointer-events-none absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-30 transition-opacity duration-500 scale-[1.04] group-hover:scale-100"
-                    />
-                  )}
-                  <div className="relative z-10">
-                    <span className="text-lg sm:text-xl font-light tracking-tight text-white">
-                      {c[lang]}
-                    </span>
-                  </div>
-                  <ArrowRight className="absolute right-4 bottom-4 h-4 w-4 text-white/30 group-hover:text-white/70 group-hover:translate-x-1 transition-all" strokeWidth={1.5} />
-                </Link>
-              );
-            })}
-          </div>
+          <CategoryExploreLinks
+            projects={projects}
+            lang={lang}
+            excludeCategoryId={project.category}
+          />
         </section>
       )}
 
