@@ -267,7 +267,7 @@ export const VideoPlayer = ({
   }
 
   const iframeCls = `absolute inset-0 h-full w-full border-0 bg-black [color-scheme:dark] ${interactive ? "" : "pointer-events-none"}`;
-  const shouldCover = cover ?? background;
+  const shouldCover = cover === true;
   const cropVars = crop && !isFullCropNormalized(crop)
     ? {
         "--vf-x": `${(normalizeCrop(crop).x + normalizeCrop(crop).w / 2) * 100}%`,

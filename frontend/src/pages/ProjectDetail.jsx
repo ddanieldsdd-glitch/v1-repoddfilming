@@ -653,7 +653,17 @@ export default function ProjectDetail() {
                 className="reveal-stagger"
                 style={{ "--delay": `${i * 70}ms` }}
               >
-                <ProjectCard project={p} lang={lang} eager={i < 4} index={i} aspectClass="aspect-video" />
+                <ProjectCard
+                  project={p}
+                  lang={lang}
+                  cardSurface="work"
+                  eager={i < 4}
+                  index={i}
+                  aspectClass="aspect-video"
+                  alwaysPlay
+                  fit="contain"
+                  previewCrop={p.preview_crop ?? p.work_crop}
+                />
               </div>
             ))}
           </div>
