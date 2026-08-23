@@ -14,6 +14,7 @@ export const T = {
     title: { es: "Obra seleccionada", en: "Selected work" },
     all: { es: "Todo", en: "All" },
     viewAll: { es: "Ver toda la obra", en: "View all work" },
+    seeMore: { es: "Ver más", en: "See more" },
     none: { es: "Sin proyectos en esta categoría todavía.", en: "No projects in this category yet." },
   },
   project: {

@@ -1,27 +1,18 @@
 /**
- * Pack items into justified rows.
- * Each item keeps its native aspect ratio; a row is scaled as a whole
- * (never stretching a still on its own, never cropping). Order is preserved.
+ * Justified rows: native aspect ratio, no crop, no stretch.
+ * Desktop prefers two large stills per row (mixed widths from different ARs).
+ * "hero" no longer isolates a still on its own row.
  */
 
 export const DEFAULT_RATIO = 16 / 9;
 
-const SOLO_SIZES = new Set(["hero", "large", "wide"]);
-
-function maxHeightFor(item, count, windowH, defaultMaxH) {
-  if (count === 1) {
-    if (item.size === "hero") return Math.round(windowH * 0.7);
-    if (item.size === "large") return Math.round(windowH * 0.58);
-    if (item.size === "wide") return Math.round(windowH * 0.44);
-  }
-  return defaultMaxH;
-}
-
 export function packJustified(items, containerWidth, opts = {}) {
-  const gap = opts.gap ?? 12;
-  const minH = opts.minH ?? 150;
+  const gap = opts.gap ?? 14;
+  const minH = opts.minH ?? 240;
   const windowH = opts.windowH ?? 900;
-  const defaultMaxH = opts.maxH ?? Math.round(windowH * 0.55);
+  const maxH = opts.maxH ?? Math.round(windowH * 0.48);
+  const soloMaxH = opts.soloMaxH ?? Math.round(windowH * 0.4);
+  const maxPerRow = opts.maxPerRow ?? 2;
   const soloAll = Boolean(opts.soloAll);
 
   if (!containerWidth || containerWidth < 80 || !items.length) {
@@ -31,21 +22,22 @@ export function packJustified(items, containerWidth, opts = {}) {
   const rows = [];
   let current = [];
 
+  const fillH = (list) => {
+    const n = list.length;
+    const gaps = gap * Math.max(0, n - 1);
+    const sumR = list.reduce((s, i) => s + i.ratio, 0);
+    return (containerWidth - gaps) / sumR;
+  };
+
+  const fits = (item) => fillH([...current, item]) >= minH;
+
   const flush = () => {
     if (!current.length) return;
-    const n = current.length;
-    const gaps = gap * Math.max(0, n - 1);
-    const sumR = current.reduce((s, i) => s + i.ratio, 0);
-    const fillH = (containerWidth - gaps) / sumR;
-
-    // Scale the whole row to the content width. maxH caps portraits so a
-    // vertical still never becomes a full-viewport tower.
-    let height = fillH;
-    const cap = Math.min(...current.map((i) => maxHeightFor(i, n, windowH, defaultMaxH)));
+    let height = fillH(current);
+    const cap = current.length === 1 ? Math.min(maxH, soloMaxH) : maxH;
     height = Math.min(height, cap);
-    if (n > 1) height = Math.max(minH, height);
-    height = Math.min(height, fillH);
-
+    if (current.length > 1) height = Math.max(minH, Math.min(height, maxH));
+    height = Math.min(height, fillH(current));
     rows.push(
       current.map((item) => ({
         ...item,
@@ -56,22 +48,14 @@ export function packJustified(items, containerWidth, opts = {}) {
     current = [];
   };
 
-  const wouldFit = (item) => {
-    const n = current.length + 1;
-    const gaps = gap * (n - 1);
-    const sumR = current.reduce((s, i) => s + i.ratio, 0) + item.ratio;
-    return (containerWidth - gaps) / sumR >= minH;
-  };
-
   for (const item of items) {
-    const solo = soloAll || SOLO_SIZES.has(item.size);
-    if (solo) {
-      flush();
+    if (soloAll) {
       current = [item];
       flush();
       continue;
     }
-    if (current.length && !wouldFit(item)) flush();
+    if (current.length >= maxPerRow) flush();
+    if (current.length && !fits(item)) flush();
     current.push(item);
   }
   flush();

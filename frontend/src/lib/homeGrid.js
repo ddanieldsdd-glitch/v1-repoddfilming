@@ -1,14 +1,14 @@
 /** Cómo empaqueta cada pieza en la parrilla justificada (el frame nunca se recorta). */
 export const HOME_SIZES = [
-  { id: "hero", es: "Fila propia — ocupa todo el ancho", en: "Own row — full width" },
-  { id: "large", es: "Fila propia — grande", en: "Own row — large" },
-  { id: "wide", es: "Fila propia — panorámica", en: "Own row — wide" },
-  { id: "tall", es: "En fila (con otras)", en: "Packed in a row" },
+  { id: "hero", es: "Destacado — en fila", en: "Featured — packed" },
+  { id: "large", es: "Grande — en fila", en: "Large — packed" },
+  { id: "wide", es: "Panorámica — en fila", en: "Wide — packed" },
+  { id: "tall", es: "En fila (vertical)", en: "Packed (vertical)" },
   { id: "medium", es: "En fila", en: "Packed in a row" },
   { id: "small", es: "En fila (compacto)", en: "Packed compact" },
 ];
 
-const AUTO_SIZES = ["hero", "medium", "medium", "wide", "medium", "tall", "large", "small"];
+const AUTO_SIZES = ["medium", "medium", "large", "medium", "wide", "medium", "tall", "small"];
 
 export const HOME_SIZE_CLASS = {
   hero: "col-span-12 md:col-span-8 md:row-span-2 min-h-[58vw] md:min-h-0",
@@ -52,4 +52,28 @@ export function getHomeProjects(projects = []) {
       };
     })
     .sort((a, b) => a.order - b.order || a.project.title.localeCompare(b.project.title));
+}
+
+const THEME_PRIORITY = ["fiction", "documentary"];
+
+export function getHomeThemeCards(projects = []) {
+  const published = (projects || []).filter((p) => p.published !== false);
+  const pick = (id) => {
+    const inCat = published.filter((p) => p.category === id);
+    return (
+      inCat.find((p) => p.home_featured !== false && resolveHomeStill(p)) ||
+      inCat.find((p) => resolveHomeStill(p)) ||
+      inCat[0] ||
+      null
+    );
+  };
+
+  return THEME_PRIORITY.map((id) => {
+    const project = pick(id);
+    return {
+      id,
+      project,
+      still: project ? resolveHomeStill(project) : "",
+    };
+  });
 }
