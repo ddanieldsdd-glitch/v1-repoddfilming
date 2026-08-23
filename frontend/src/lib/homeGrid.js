@@ -19,7 +19,7 @@ export const HOME_SIZE_CLASS = {
   small: "col-span-6 md:col-span-3 min-h-[42vw] sm:min-h-[28vw] md:min-h-0",
 };
 
-export function projectStillChoices(project) {
+export function stillChoices(project) {
   const urls = [project?.cover, ...(project?.stills || [])].filter(Boolean);
   return [...new Set(urls)];
 }
