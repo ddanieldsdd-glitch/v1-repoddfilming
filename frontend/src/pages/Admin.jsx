@@ -15,6 +15,7 @@ import {
   saveContent,
 } from "../lib/contentStore";
 import { getProjectVideoSeoLabel } from "../lib/videoSeo";
+import { getVimeoPosterUrl } from "../lib/vimeo";
 import { uploadImageFile, cloudinaryFolderHint } from "../lib/uploadImage";
 import { ImageDropZone, handleTextareaImagePaste } from "../components/admin/ImageDropZone";
 import {
@@ -28,6 +29,23 @@ import { SHOWREEL_PLACEMENTS } from "../lib/crop";
 
 const uploadBtnCls =
   "shrink-0 border border-white/25 px-3 py-2 text-[10px] tracking-[0.22em] uppercase text-white hover:bg-white hover:text-black transition disabled:opacity-30";
+
+const isVimeoUrl = (url) => /vimeo\.com/.test(String(url || ""));
+
+const projectVimeoPreview = (project) => {
+  const raw = project?.preview_url || (isVimeoUrl(project?.cover) ? project.cover : "");
+  return raw && isVimeoUrl(raw) ? raw : "";
+};
+
+const previewCropGuideUrl = (project) => {
+  const vimeo = projectVimeoPreview(project);
+  const thumb = vimeo ? getVimeoPosterUrl(vimeo) : null;
+  if (thumb) return thumb;
+  if (project?.poster) return project.poster;
+  if (project?.stills?.[0]) return project.stills[0];
+  if (project?.cover && !isVimeoUrl(project.cover)) return project.cover;
+  return stillChoices(project)[0] || "";
+};
 
 const ImageUrlField = ({
   label,
@@ -677,8 +695,28 @@ const ProjectForm = ({ value, onChange }) => {
         />
         <p className="mt-1 text-[11px] text-neutral-500">
           Con URL de vídeo, la página del proyecto se indexa automáticamente como watch page en Google.
+          En Obra el vídeo se autoreproduce en la miniatura; en la portada, al pasar el ratón.
         </p>
       </Field>
+      {projectVimeoPreview(value) && (
+        <div className="md:col-span-2 rounded-xl border border-white/10 p-4 space-y-3">
+          <p className="text-[10px] tracking-[0.28em] uppercase text-neutral-500">
+            Reencuadre del vídeo Vimeo (16:9)
+          </p>
+          <p className="text-[11px] text-neutral-500 max-w-2xl">
+            Define qué parte del vídeo se ve en las miniaturas de Obra y en el preview al hover en
+            la portada. La imagen de referencia es el thumbnail de Vimeo; no modifica el still de la
+            parrilla.
+          </p>
+          <CropEditor
+            label="Ventana visible en miniatura"
+            imageUrl={previewCropGuideUrl(value)}
+            crop={value.preview_crop ?? value.work_crop}
+            onChange={(preview_crop) => update({ preview_crop })}
+            mode="16:9"
+          />
+        </div>
+      )}
       <ImageUrlField
         label="Poster / cartel (optional)"
         testId="form-poster"
@@ -748,75 +786,10 @@ const ProjectForm = ({ value, onChange }) => {
               Publicado — visible en el sitio
             </span>
           </label>
-        </Field>
-        <div className="mt-5 rounded-xl border border-white/10 p-4 space-y-4">
-          <p className="text-[10px] tracking-[0.28em] uppercase text-neutral-500">
-            Portada
+          <p className="mt-2 text-[11px] text-neutral-500">
+            Portada (orden, tamaño, still): sección «Pantalla principal» más abajo en Admin.
           </p>
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={value.home_featured !== false}
-              onChange={(e) => update({ home_featured: e.target.checked })}
-              className="w-4 h-4 accent-black"
-            />
-            <span className="text-sm text-neutral-300">Mostrar en la pantalla principal</span>
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Orden en home">
-              <input
-                type="number"
-                min={1}
-                className={inputCls}
-                value={value.home_order ?? ""}
-                onChange={(e) => update({ home_order: parseInt(e.target.value, 10) || "" })}
-              />
-            </Field>
-            <Field label="Tamaño en la parrilla">
-              <select
-                className={inputCls}
-                value={value.home_size || "medium"}
-                onChange={(e) => update({ home_size: e.target.value })}
-              >
-                {HOME_SIZES.map((s) => (
-                  <option key={s.id} value={s.id}>{s.es}</option>
-                ))}
-              </select>
-            </Field>
-          </div>
-          <Field label="Still de portada">
-            <div className="flex flex-wrap gap-2 mt-1">
-              {stillChoices(value).map((url) => (
-                <button
-                  key={url}
-                  type="button"
-                  onClick={() => update({ home_still: url })}
-                  className={`relative h-16 w-24 overflow-hidden rounded-lg border bg-black ${
-                    (value.home_still || value.cover) === url
-                      ? "border-white ring-1 ring-white"
-                      : "border-white/15 hover:border-white/40"
-                  }`}
-                >
-                  <img src={url} alt="" className="h-full w-full object-contain" />
-                </button>
-              ))}
-            </div>
-          </Field>
-          {(value.preview_url || /vimeo\.com/.test(value.cover || "")) && (
-            <CropEditor
-              label="Recorte miniatura Vimeo (16:9)"
-              imageUrl={
-                value.poster ||
-                value.stills?.[0] ||
-                (value.cover && !/vimeo\.com/.test(value.cover) ? value.cover : "") ||
-                stillChoices(value)[0]
-              }
-              crop={value.preview_crop ?? value.work_crop}
-              onChange={(preview_crop) => update({ preview_crop })}
-              mode="16:9"
-            />
-          )}
-        </div>
+        </Field>
       </div>
     </div>
   );
@@ -892,9 +865,9 @@ const HomeLayoutSection = ({ content, onSave, saving }) => {
     <div className="border border-white/10 p-6 md:p-8 mb-10" data-testid="admin-home-layout">
       <h2 className="text-xl tracking-tight mb-2">Pantalla principal</h2>
       <p className="text-[12px] text-neutral-500 mb-6 max-w-2xl">
-        Elige qué proyectos aparecen en home, el still, el recorte, el tamaño y el orden. El tamaño
-        decide si la pieza ocupa una fila propia (destacado, grande, panorámica) o se empaqueta con
-        otras. El showreel se configura en Site.
+        Qué proyectos salen en la parrilla, su still, tamaño y orden. El reencuadre del vídeo Vimeo
+        (miniaturas en Obra y preview en portada) se configura en cada proyecto, junto a la URL de
+        preview. El showreel y el máximo de piezas global se ajustan aquí; la URL del reel en Site.
       </p>
       <div className="mb-6 max-w-xs">
         <Field label="Máximo de piezas en portada">
@@ -905,6 +878,7 @@ const HomeLayoutSection = ({ content, onSave, saving }) => {
             className={inputCls}
             value={homeMax}
             onChange={(e) => setHomeMax(parseInt(e.target.value, 10) || 12)}
+            data-testid="site-home-max"
           />
         </Field>
       </div>
@@ -1089,17 +1063,6 @@ const SiteSection = ({ content, onSave, saving }) => {
               <option key={p.id} value={p.id}>{p.es}</option>
             ))}
           </select>
-        </Field>
-        <Field label="Máximo de piezas en portada">
-          <input
-            type="number"
-            min={1}
-            max={24}
-            className={inputCls}
-            value={draft.site.home_max ?? 12}
-            onChange={(e) => updSite({ home_max: parseInt(e.target.value, 10) || 12 })}
-            data-testid="site-home-max"
-          />
         </Field>
         <ImageUrlField
           label="About — foto (Cloudinary)"

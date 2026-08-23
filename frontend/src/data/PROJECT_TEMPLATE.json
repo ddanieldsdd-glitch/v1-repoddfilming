@@ -37,7 +37,7 @@
   "home_still": "",
   "_home_still_help": "URL del fotograma para la portada. Vacío = cover.",
   "preview_crop": { "x": 0, "y": 0, "w": 1, "h": 1 },
-  "_preview_crop_help": "Recorte 16:9 de la miniatura Vimeo en Obra (Admin). No afecta al still.",
+  "_preview_crop_help": "Reencuadre 16:9 del vídeo Vimeo en miniaturas (Obra + hover en portada). Admin: junto a preview URL.",
 
   "poster": "",
   "_poster_help": "Poster image. Cartel oficial vertical opcional. Aparece en la página de proyecto. Deja '' si no hay.",

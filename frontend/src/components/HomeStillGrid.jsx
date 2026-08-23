@@ -103,6 +103,7 @@ export function HomeStillGrid({ tiles, lang }) {
                 fit="contain"
                 ratio={item.ratio}
                 imageOverride={item.still}
+                previewCrop={item.project.preview_crop ?? item.project.work_crop}
               />
             </div>
           ))}
