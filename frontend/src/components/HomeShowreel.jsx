@@ -24,7 +24,7 @@ export function HomeShowreel({ url }) {
           <img
             src={poster}
             alt=""
-            className="absolute inset-0 z-[1] h-full w-full object-cover"
+            className="absolute inset-0 z-[1] h-full w-full object-contain bg-black"
           />
         )}
         <VideoPlayer
@@ -34,7 +34,7 @@ export function HomeShowreel({ url }) {
           muted
           loop
           background
-          cover
+          cover={false}
           className="absolute inset-0 z-[2] h-full w-full"
           testId="home-showreel-player"
           interactive={false}

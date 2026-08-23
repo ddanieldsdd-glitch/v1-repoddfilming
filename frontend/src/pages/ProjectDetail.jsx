@@ -1,6 +1,6 @@
 import { useRef, useMemo, useEffect, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowUpRight, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 import { VideoPlayer } from "../components/VideoPlayer";
