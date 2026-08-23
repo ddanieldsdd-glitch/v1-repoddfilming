@@ -1,11 +1,11 @@
-/** Tamaños de celda en la parrilla del home (12 columnas, auto-flow dense). */
+/** Cómo empaqueta cada pieza en la parrilla justificada (el frame nunca se recorta). */
 export const HOME_SIZES = [
-  { id: "hero", es: "Destacado (grande)", en: "Hero" },
-  { id: "large", es: "Grande", en: "Large" },
-  { id: "wide", es: "Ancho", en: "Wide" },
-  { id: "tall", es: "Alto (vertical)", en: "Tall" },
-  { id: "medium", es: "Mediano", en: "Medium" },
-  { id: "small", es: "Pequeño", en: "Small" },
+  { id: "hero", es: "Fila propia — ocupa todo el ancho", en: "Own row — full width" },
+  { id: "large", es: "Fila propia — grande", en: "Own row — large" },
+  { id: "wide", es: "Fila propia — panorámica", en: "Own row — wide" },
+  { id: "tall", es: "En fila (con otras)", en: "Packed in a row" },
+  { id: "medium", es: "En fila", en: "Packed in a row" },
+  { id: "small", es: "En fila (compacto)", en: "Packed compact" },
 ];
 
 const AUTO_SIZES = ["hero", "medium", "medium", "wide", "medium", "tall", "large", "small"];

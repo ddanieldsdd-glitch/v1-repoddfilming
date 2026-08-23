@@ -25,8 +25,12 @@ export const ProjectCard = ({
   alwaysPlay = false,
   // cardSurface: 'home' | 'work' — muestra premios en tarjeta; al hover → director + tipo
   cardSurface = null,
-  /** Still concreto (home): recorta al frame con object-cover, sin bandas. */
+  /** Still concreto (home). */
   imageOverride = "",
+  /** cover recorta al marco; contain muestra el fotograma entero (sin ampliar). */
+  fit,
+  /** Relación de aspecto del still (ancho/alto). */
+  ratio,
 }) => {
   const [inView, setInView]           = useState(false);
   const [playInView, setPlayInView]   = useState(false);
@@ -143,15 +147,17 @@ export const ProjectCard = ({
         ? "rounded-[1.5rem] md:rounded-[2rem]"
         : "rounded-[1.65rem] md:rounded-[2.1rem]";
 
-  // fill=true: la celda del grid manda; object-cover evita bandas negras
-  const sizeClass = fill ? "h-full min-h-[200px]" : aspectClass;
+  const contain = (fit ?? (cardSurface === "work" ? "contain" : "cover")) === "contain";
+  const sizeClass = fill ? "h-full min-h-0" : aspectClass;
+  const imgW = ratio ? Math.round(ratio * 100) : 16;
+  const imgH = 100;
 
   return (
     <Link
       ref={cardRef}
       to={`/project/${project.slug}`}
       data-testid={`project-card-${project.slug}`}
-      className={`group block cursor-pointer apple-tv-card h-full ${fill ? "" : ""}`}
+      className="group block cursor-pointer apple-tv-card h-full"
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onTouchStart={onTouchStart}
@@ -159,7 +165,9 @@ export const ProjectCard = ({
       onTouchCancel={onTouchEnd}
     >
       <div
-        className={`relative overflow-hidden bg-neutral-950 ${sizeClass} w-full shadow-[0_18px_50px_-28px_rgba(0,0,0,0.85)] ring-1 ring-white/10 transition-all duration-500 ease-out group-hover:scale-[1.02] group-hover:shadow-[0_28px_70px_-24px_rgba(0,0,0,0.9)] group-hover:ring-white/20 group-active:scale-[0.99] ${organicRadius}`}
+        className={`relative overflow-hidden bg-neutral-950 ${sizeClass} w-full shadow-[0_18px_50px_-28px_rgba(0,0,0,0.85)] ring-1 ring-white/10 transition-all duration-500 ease-out group-hover:shadow-[0_28px_70px_-24px_rgba(0,0,0,0.9)] group-hover:ring-white/20 ${
+          contain ? "" : "group-hover:scale-[1.02] group-active:scale-[0.99]"
+        } ${organicRadius}`}
       >
         <div className="absolute inset-0 z-0 bg-neutral-950" />
 
@@ -172,10 +180,14 @@ export const ProjectCard = ({
             loading={eager ? "eager" : "lazy"}
             decoding="async"
             fetchPriority={eager ? "high" : "auto"}
-            width={16}
-            height={9}
-            className={`absolute inset-0 z-[3] w-full h-full object-cover transition-all duration-300 ease-out ${
-              previewVisible ? "opacity-0 scale-[1.03]" : "opacity-100 scale-100"
+            width={imgW}
+            height={imgH}
+            className={`absolute inset-0 z-[3] w-full h-full ${contain ? "object-contain" : "object-cover"} transition-all duration-300 ease-out ${
+              previewVisible
+                ? contain
+                  ? "opacity-0"
+                  : "opacity-0 scale-[1.03]"
+                : "opacity-100 scale-100"
             }`}
           />
         )}
@@ -188,6 +200,7 @@ export const ProjectCard = ({
             muted
             playing={shouldPlay}
             loop
+            cover={!contain}
             className={`absolute inset-0 z-[1] w-full h-full bg-black transition-opacity duration-300 ${
               previewVisible ? "opacity-100" : "opacity-0"
             }`}

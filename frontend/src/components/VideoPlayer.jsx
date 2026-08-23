@@ -22,6 +22,8 @@ export const VideoPlayer = ({
   className = "",
   testId,
   interactive = true,
+  /** Recorta el iframe para llenar el marco. Por defecto sigue a `background`. */
+  cover,
   onReady,
   onPlay,
   onPause,
@@ -257,10 +259,11 @@ export const VideoPlayer = ({
   }
 
   const iframeCls = `absolute inset-0 h-full w-full border-0 bg-black [color-scheme:dark] ${interactive ? "" : "pointer-events-none"}`;
+  const shouldCover = cover ?? background;
 
   return (
     <div
-      className={`relative w-full h-full bg-black ${background ? "video-bg-cover" : ""} ${className} ${interactive ? "" : "pointer-events-none"}`}
+      className={`relative w-full h-full bg-black ${shouldCover ? "video-bg-cover" : ""} ${className} ${interactive ? "" : "pointer-events-none"}`}
       data-testid={testId}
     >
       {vimeoId ? (

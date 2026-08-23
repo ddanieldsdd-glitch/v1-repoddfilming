@@ -21,6 +21,7 @@ import {
   mergeRecognitionUrls,
   normalizeRecognitions,
 } from "../lib/recognitions";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { HOME_SIZES, stillChoices } from "../lib/homeGrid";
 
 const uploadBtnCls =
@@ -788,13 +789,13 @@ const ProjectForm = ({ value, onChange }) => {
                   key={url}
                   type="button"
                   onClick={() => update({ home_still: url })}
-                  className={`relative h-16 w-24 overflow-hidden rounded-lg border ${
+                  className={`relative h-16 w-24 overflow-hidden rounded-lg border bg-black ${
                     (value.home_still || value.cover) === url
                       ? "border-white ring-1 ring-white"
                       : "border-white/15 hover:border-white/40"
                   }`}
                 >
-                  <img src={url} alt="" className="h-full w-full object-cover" />
+                  <img src={url} alt="" className="h-full w-full object-contain" />
                 </button>
               ))}
             </div>
@@ -845,46 +846,91 @@ const HomeLayoutSection = ({ content, onSave, saving }) => {
     }
   };
 
-  const sorted = [...rows].sort((a, b) => Number(a.home_order) - Number(b.home_order));
+  const sorted = [...rows].sort(
+    (a, b) => Number(a.home_order) - Number(b.home_order) || a.title.localeCompare(b.title),
+  );
+
+  const move = (id, dir) => {
+    const featured = sorted.filter((r) => r.home_featured);
+    const rest = sorted.filter((r) => !r.home_featured);
+    const i = featured.findIndex((r) => r.id === id);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= featured.length) return;
+    const next = [...featured];
+    [next[i], next[j]] = [next[j], next[i]];
+    setRows([
+      ...next.map((r, idx) => ({ ...r, home_order: idx + 1 })),
+      ...rest.map((r, idx) => ({ ...r, home_order: next.length + idx + 1 })),
+    ]);
+  };
 
   return (
     <div className="border border-white/10 p-6 md:p-8 mb-10" data-testid="admin-home-layout">
       <h2 className="text-xl tracking-tight mb-2">Pantalla principal</h2>
       <p className="text-[12px] text-neutral-500 mb-6 max-w-2xl">
-        Elige qué proyectos aparecen en home, el still, el tamaño de la celda y el orden.
-        Las imágenes se recortan al frame (sin bandas negras). El showreel se abre desde el menú
-        con la URL del bloque Site.
+        Elige qué proyectos aparecen en home, el still y el orden. Cada pieza conserva el aspect
+        ratio del fotograma (se ve entero, sin recortar ni ampliar). El tamaño solo decide si va
+        en una fila propia o se empaqueta con otras. El showreel se abre desde el menú con la URL
+        del bloque Site.
       </p>
       <ul className="space-y-4">
         {sorted.map((row) => {
           const project = content.projects.find((p) => p.id === row.id) || row;
           const thumbs = stillChoices(project);
+          const featuredList = sorted.filter((r) => r.home_featured);
+          const featIndex = featuredList.findIndex((r) => r.id === row.id);
           return (
             <li
               key={row.id}
               className="rounded-xl border border-white/10 p-4 grid grid-cols-1 lg:grid-cols-[160px_1fr] gap-4"
             >
-              <div className="h-24 lg:h-full min-h-[96px] rounded-lg overflow-hidden bg-neutral-900">
+              <div className="h-24 lg:h-full min-h-[96px] rounded-lg overflow-hidden bg-black flex items-center justify-center">
                 {(row.home_still || row.cover) && (
                   <img
                     src={row.home_still || row.cover}
                     alt=""
-                    className="w-full h-full object-cover"
+                    className="max-w-full max-h-full object-contain"
                   />
                 )}
               </div>
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="text-sm text-white">{row.title}</p>
-                  <label className="flex items-center gap-2 text-[11px] tracking-[0.18em] uppercase text-neutral-400">
-                    <input
-                      type="checkbox"
-                      checked={row.home_featured}
-                      onChange={(e) => patch(row.id, { home_featured: e.target.checked })}
-                      className="accent-white"
-                    />
-                    En home
-                  </label>
+                  <div className="flex items-center gap-3">
+                    {row.home_featured && (
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => move(row.id, -1)}
+                          disabled={featIndex <= 0}
+                          className="p-1.5 border border-white/20 text-white hover:bg-white hover:text-black disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-white transition"
+                          aria-label="Subir"
+                          title="Subir"
+                        >
+                          <ChevronUp className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => move(row.id, 1)}
+                          disabled={featIndex < 0 || featIndex >= featuredList.length - 1}
+                          className="p-1.5 border border-white/20 text-white hover:bg-white hover:text-black disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-white transition"
+                          aria-label="Bajar"
+                          title="Bajar"
+                        >
+                          <ChevronDown className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                    <label className="flex items-center gap-2 text-[11px] tracking-[0.18em] uppercase text-neutral-400">
+                      <input
+                        type="checkbox"
+                        checked={row.home_featured}
+                        onChange={(e) => patch(row.id, { home_featured: e.target.checked })}
+                        className="accent-white"
+                      />
+                      En home
+                    </label>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   <Field label="Orden">
@@ -915,14 +961,14 @@ const HomeLayoutSection = ({ content, onSave, saving }) => {
                         key={url}
                         type="button"
                         onClick={() => patch(row.id, { home_still: url })}
-                        className={`h-12 w-[4.5rem] overflow-hidden rounded-md border ${
+                        className={`h-12 w-[4.5rem] overflow-hidden rounded-md border bg-black ${
                           (row.home_still || row.cover) === url
                             ? "border-white"
                             : "border-white/15 hover:border-white/40"
                         }`}
                         title="Usar este still"
                       >
-                        <img src={url} alt="" className="h-full w-full object-cover" />
+                        <img src={url} alt="" className="h-full w-full object-contain" />
                       </button>
                     ))}
                   </div>

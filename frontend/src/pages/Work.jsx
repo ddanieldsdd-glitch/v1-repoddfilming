@@ -95,6 +95,7 @@ export default function Work() {
                     index={i}
                     aspectClass="aspect-video"
                     alwaysPlay
+                    fit="contain"
                   />
                 </div>
               );
