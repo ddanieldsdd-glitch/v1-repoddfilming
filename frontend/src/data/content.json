@@ -14,8 +14,12 @@
       "en": "\"Good cinematography shouldn't be noticed at all.\" — Roger Deakins"
     },
     "showreel_url": "https://vimeo.com/1054144154",
-    "showreel_placement": "nav",
+    "showreel_placement": "both",
     "home_max": 12,
+    "location": {
+      "es": "Sevilla · Barcelona, España",
+      "en": "Seville · Barcelona, Spain"
+    },
     "about_image": "https://res.cloudinary.com/dsphxo7mx/image/upload/v1777731173/7ae19329-a9ee-4ad6-85d3-b2b784c25d7f_bigjxi.jpg",
     "about_photo_caption": "Nave Soviética",
     "meta_description": {
@@ -47,6 +51,7 @@
       "home_order": 4,
       "home_size": "wide",
       "home_still": "",
+      "home_still_ratio": 1.777778,
       "type": {
         "es": "Cortometraje",
         "en": "Short Film"
@@ -83,6 +88,7 @@
       "home_order": 2,
       "home_size": "medium",
       "home_still": "",
+      "home_still_ratio": 2.683438,
       "type": {
         "es": "Cortometraje de Ficción",
         "en": "Fiction Short Film"
@@ -124,6 +130,7 @@
       "home_order": 3,
       "home_size": "medium",
       "home_still": "",
+      "home_still_ratio": 1.935728,
       "type": {
         "es": "Cortometraje de Ficción",
         "en": "Fiction Short Film"
@@ -157,6 +164,7 @@
       "home_order": 1,
       "home_size": "hero",
       "home_still": "",
+      "home_still_ratio": 1.892247,
       "type": {
         "es": "Videoclip",
         "en": "Music Video"
@@ -197,6 +205,7 @@
       "home_order": 5,
       "home_size": "medium",
       "home_still": "",
+      "home_still_ratio": 1.896296,
       "type": {
         "es": "Cortometraje",
         "en": "Short Film"

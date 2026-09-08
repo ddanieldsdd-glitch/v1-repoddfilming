@@ -1,4 +1,11 @@
 /* Editorial cinematic typography — Fontshare se carga de forma async en index.html */
+:root {
+  --cinema-bg: #050505;
+  --cinema-fg: #e8e6e2;
+  --cinema-muted: #92918e;
+  --cinema-border: rgba(255, 255, 255, 0.1);
+}
+
 html,
 body,
 #root,
@@ -12,8 +19,13 @@ html.dark,
 html.dark body,
 html.dark #root,
 html.dark .App {
-  background: #0a0a0a;
-  color: #f5f5f5;
+  background: var(--cinema-bg);
+  color: var(--cinema-fg);
+}
+
+.cinema-page {
+  background: var(--cinema-bg);
+  color: var(--cinema-fg);
 }
 
 body {
@@ -88,7 +100,7 @@ select:focus {
 }
 button:focus-visible,
 a:focus-visible {
-  outline: 2px solid #0a0a0a;
+  outline: 2px solid currentColor;
   outline-offset: 4px;
 }
 
@@ -125,6 +137,8 @@ a:focus-visible {
 /* Tarjetas background: recortar chrome de YouTube (título, botones) */
 .video-bg-cover {
   overflow: hidden !important;
+  contain: layout paint;
+  isolation: isolate;
 }
 
 .video-bg-cover iframe {
@@ -145,6 +159,17 @@ a:focus-visible {
 @media (max-width: 767px) {
   .apple-tv-card:active .aspect-video {
     transform: scale(0.985);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 

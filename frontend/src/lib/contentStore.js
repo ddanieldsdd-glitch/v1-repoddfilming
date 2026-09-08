@@ -44,6 +44,7 @@ const applyHomeDefaults = (content) => {
         home_order: p.home_order ?? def?.home_order ?? i + 1,
         home_size: p.home_size ?? def?.home_size ?? "medium",
         home_still: p.home_still ?? def?.home_still ?? "",
+        home_still_ratio: p.home_still_ratio ?? def?.home_still_ratio ?? null,
         preview_crop:
           p.preview_crop ?? p.work_crop ?? def?.preview_crop ?? def?.work_crop ?? defaultWorkCrop(),
       };
@@ -228,7 +229,10 @@ export const updateSite = async (current, { site, about }) => {
   });
 };
 
-export const updateHomeLayout = async (current, { home_max, projects, showreel_url, showreel_placement }) => {
+export const updateHomeLayout = async (
+  current,
+  { home_max, projects, showreel_url, showreel_placement },
+) => {
   const data = await requestJson("/api/home-layout", {
     method: "PUT",
     body: JSON.stringify({

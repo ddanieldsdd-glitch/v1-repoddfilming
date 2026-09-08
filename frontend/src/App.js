@@ -66,7 +66,7 @@ function AppLayout() {
   }, []);
 
   return (
-    <div className="App relative bg-white dark:bg-black text-black dark:text-white antialiased transition-colors duration-500">
+    <div className="App relative cinema-page antialiased transition-colors duration-500">
       <div className="film-grain-overlay pointer-events-none fixed inset-0 z-[100] mix-blend-overlay opacity-[0.035] dark:mix-blend-soft-light dark:opacity-[0.075]" aria-hidden />
       <SpeedInsightsBridge />
       <GA4Tracker />

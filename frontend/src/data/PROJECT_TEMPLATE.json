@@ -36,6 +36,8 @@
   "_home_size_help": "hero | large | wide | tall | medium | small — tamaño de la celda en la parrilla del home.",
   "home_still": "",
   "_home_still_help": "URL del fotograma para la portada. Vacío = cover.",
+  "home_still_ratio": null,
+  "_home_still_ratio_help": "Relación ancho/alto del fotograma de portada. El admin la calcula automáticamente.",
   "preview_crop": { "x": 0, "y": 0, "w": 1, "h": 1 },
   "_preview_crop_help": "Reencuadre 16:9 del vídeo Vimeo en miniaturas (Obra + hover en portada). Admin: junto a preview URL.",
   "preview_video_ratio": null,

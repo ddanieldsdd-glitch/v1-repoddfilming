@@ -23,6 +23,7 @@ describe('_contentMutations', () => {
           home_order: 1,
           home_size: 'medium',
           home_still: '',
+          home_still_ratio: 16 / 9,
         },
         {
           id: 'p-2',
@@ -71,11 +72,19 @@ describe('_contentMutations', () => {
     const result = await updateHomeLayoutSection(db, 'content', {
       home_updated_at: doc.home_updated_at,
       home_max: 8,
-      projects: [{ id: 'p-1', home_featured: true, home_order: 2, home_size: 'wide', home_still: 'still.jpg' }],
+      projects: [{
+        id: 'p-1',
+        home_featured: true,
+        home_order: 2,
+        home_size: 'wide',
+        home_still: 'still.jpg',
+        home_still_ratio: 2.39,
+      }],
     });
 
     expect(result.site.home_max).toBe(8);
     expect(result.projects[0].home_size).toBe('wide');
+    expect(result.projects[0].home_still_ratio).toBe(2.39);
     expect(result.projects[0].title).toBe('One');
   });
 
@@ -155,12 +164,14 @@ describe('_contentMutations', () => {
         ...doc.projects[0],
         title: 'Updated',
         home_still: 'stale.jpg',
+        home_still_ratio: 1,
         home_size: 'hero',
       },
     });
 
     expect(result.project.title).toBe('Updated');
     expect(result.project.home_still).toBe('');
+    expect(result.project.home_still_ratio).toBe(16 / 9);
     expect(result.project.home_size).toBe('medium');
   });
 

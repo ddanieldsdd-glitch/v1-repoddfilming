@@ -70,6 +70,8 @@
         "check:videos": "node scripts/check-videos.js",
         "backfill:vimeo-ratios": "node scripts/backfill-vimeo-ratios.js",
         "backfill:vimeo-ratios:apply": "node scripts/backfill-vimeo-ratios.js --apply",
+        "backfill:home-still-ratios": "node scripts/backfill-home-still-ratios.js",
+        "backfill:home-still-ratios:apply": "node scripts/backfill-home-still-ratios.js --apply",
         "diagnose:content": "node scripts/content-diagnose.js",
         "diagnose:content:json": "node scripts/content-diagnose.js --source=json",
         "backup:content": "node scripts/content-backup.js",

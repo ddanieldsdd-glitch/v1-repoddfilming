@@ -109,7 +109,14 @@ export const VideoPlayer = ({
       });
 
     const onPlayEvent = () => onPlay?.();
-    const onPauseEvent = () => onPause?.();
+    const onPauseEvent = () => {
+      onPause?.();
+      if (!background || document.hidden) return;
+      window.setTimeout(() => {
+        if (playerRef.current !== player) return;
+        player.play().catch(() => {});
+      }, 280);
+    };
     const onErrorEvent = (err) => {
       console.warn("[VideoPlayer] error:", err?.message || err);
       onError?.(err);

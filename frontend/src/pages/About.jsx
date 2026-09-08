@@ -55,20 +55,20 @@ export default function About() {
       {/* ── Página ─────────────────────────────────────────────────────── */}
       <div
         data-testid="about-page"
-        className="bg-white dark:bg-black pt-28 sm:pt-32 md:pt-40 pb-28 transition-colors duration-500 min-h-screen"
+        className="cinema-page pt-28 sm:pt-32 md:pt-40 pb-28 md:pb-36 transition-colors duration-500 min-h-screen"
       >
         <div className="px-6 md:px-12 lg:px-16">
 
           {/* Cabecera */}
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 pb-8 border-b border-black/10 dark:border-white/10 mb-14">
             <div>
-              <p className="text-[11px] tracking-[0.32em] uppercase text-neutral-500 dark:text-neutral-400 mb-5">
+              <p className="text-[10px] tracking-[0.18em] uppercase text-[var(--cinema-muted)] mb-5">
                 {tr(T.about.title, lang)}
               </p>
-              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tight font-light leading-[0.9] text-black dark:text-white">
+              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl tracking-[-0.045em] font-light leading-[0.9] text-[var(--cinema-fg)]">
                 {name}
               </h1>
-              <p className="mt-4 text-[11px] tracking-[0.26em] uppercase text-neutral-500 dark:text-neutral-400">
+              <p className="mt-4 text-[10px] tracking-[0.16em] uppercase text-[var(--cinema-muted)]">
                 {tr(title, lang)}
               </p>
             </div>
@@ -97,7 +97,7 @@ export default function About() {
                       })
                     }
                   >
-                    <div className="relative flex-1 min-h-[360px] md:min-h-0 overflow-hidden rounded-[1.75rem] md:rounded-[2.25rem] bg-neutral-100 dark:bg-neutral-900 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.35)] dark:shadow-[0_24px_60px_-20px_rgba(0,0,0,0.7)]">
+                    <div className="relative flex-1 min-h-[360px] md:min-h-0 overflow-hidden rounded-[1rem] md:rounded-[1.25rem] bg-neutral-900 ring-1 ring-white/[0.06]">
                       <img
                         src={photo}
                         alt={name}
@@ -124,7 +124,7 @@ export default function About() {
               {/* Primer párrafo destacado */}
               {paragraphs.length > 0 && (
                 <p className="text-xl md:text-2xl font-light leading-[1.55] text-black dark:text-white mb-8">
-                  {paragraphs[0]}
+                    {paragraphs[0]}
                 </p>
               )}
 

@@ -1,7 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { useContent, useLang } from "../lib/useContent";
-import { T, tr } from "../lib/i18n";
-import { formatPhoneDisplay, telHref } from "../lib/utils";
+import { tr } from "../lib/i18n";
 
 export const Footer = () => {
   const content = useContent();
@@ -17,51 +16,33 @@ export const Footer = () => {
   return (
     <footer
       data-testid="site-footer"
-      className="border-t border-black/10 dark:border-white/10 mt-0 px-6 md:px-12 lg:px-16 py-10 md:py-12 bg-white dark:bg-black transition-colors duration-500"
+      className="cinema-page border-t border-white/10 mt-0 px-6 md:px-12 lg:px-16 py-12 md:py-16 transition-colors duration-500"
     >
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-10">
+      <div className="grid grid-cols-1 gap-10 md:grid-cols-12 md:gap-12">
         <div className="md:col-span-7">
-          <p className="text-[10px] tracking-[0.32em] uppercase text-neutral-500 dark:text-neutral-400 mb-4">
-            {tr(T.contact.title, lang)}
+          <p className="text-xl tracking-[-0.02em] text-[var(--cinema-fg)] md:text-2xl">
+            {content.site.name}
           </p>
-          <div className="flex flex-col gap-6 sm:flex-row sm:flex-wrap sm:items-baseline sm:gap-x-10 sm:gap-y-6">
-            <a
-              href={`mailto:${s.email}`}
-              data-testid="footer-email"
-              className="block text-xl md:text-2xl lg:text-3xl tracking-tight text-black dark:text-white hover:opacity-60 transition-opacity break-words"
-            >
-              {s.email}
-            </a>
-            {s.phone && (
-              <a
-                href={telHref(s.phone)}
-                data-testid="footer-phone"
-                className="block text-sm md:text-base lg:text-lg tracking-tight text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white transition-opacity whitespace-nowrap"
-              >
-                {formatPhoneDisplay(s.phone)}
-              </a>
-            )}
-          </div>
+          <p className="mt-1.5 text-[10px] tracking-[0.16em] uppercase text-[var(--cinema-muted)]">
+            {tr(content.site.title, lang)}
+          </p>
+          {content.site.location && (
+            <p className="mt-6 text-xs text-white/45">
+              {tr(content.site.location, lang)}
+            </p>
+          )}
         </div>
-        <div className="md:col-span-5 flex flex-col gap-2 md:items-end">
-          <p className="text-[10px] tracking-[0.32em] uppercase text-neutral-500 dark:text-neutral-400 mb-3">
-            {tr(T.contact.follow, lang)}
-          </p>
+        <div className="flex flex-col items-start gap-3 md:col-span-5 md:items-end">
           {s.instagram && (
-            <a data-testid="footer-instagram" href={s.instagram} target="_blank" rel="noreferrer" className="text-xs tracking-wide text-black dark:text-white hover:opacity-60">Instagram</a>
+            <a data-testid="footer-instagram" href={s.instagram} target="_blank" rel="noreferrer" className="text-xs text-[var(--cinema-fg)] hover:opacity-60">Instagram ↗</a>
           )}
           {s.vimeo && (
-            <a data-testid="footer-vimeo" href={s.vimeo} target="_blank" rel="noreferrer" className="text-xs tracking-wide text-black dark:text-white hover:opacity-60">Vimeo</a>
+            <a data-testid="footer-vimeo" href={s.vimeo} target="_blank" rel="noreferrer" className="text-xs text-[var(--cinema-fg)] hover:opacity-60">Vimeo ↗</a>
           )}
-          {s.linkedin && (
-            <a data-testid="footer-linkedin" href={s.linkedin} target="_blank" rel="noreferrer" className="text-xs tracking-wide text-black dark:text-white hover:opacity-60">LinkedIn</a>
-          )}
-          {s.imdb && (
-            <a data-testid="footer-imdb" href={s.imdb} target="_blank" rel="noreferrer" className="text-xs tracking-wide text-black dark:text-white hover:opacity-60">IMDb</a>
-          )}
+          <a data-testid="footer-email" href={`mailto:${s.email}`} className="text-xs text-[var(--cinema-fg)] hover:opacity-60">Email ↗</a>
         </div>
       </div>
-      <div className="mt-8 md:mt-12 pt-6 border-t border-black/10 dark:border-white/10 flex flex-col md:flex-row justify-between gap-2 text-[10px] tracking-[0.24em] uppercase text-neutral-500 dark:text-neutral-400">
+      <div className="mt-12 md:mt-16 pt-6 border-t border-white/10 flex flex-col md:flex-row justify-between gap-2 text-[9px] tracking-[0.14em] uppercase text-white/40">
         <span>© {year} {content.site.name}</span>
       </div>
     </footer>

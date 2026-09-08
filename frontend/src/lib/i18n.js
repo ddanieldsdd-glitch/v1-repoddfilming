@@ -7,7 +7,7 @@ export const T = {
     home: { es: "Inicio", en: "Home" },
   },
   hero: {
-    showreel: { es: "Showreel", en: "Showreel" },
+    showreel: { es: "Ver showreel", en: "View showreel" },
     scroll: { es: "Desplázate", en: "Scroll" },
   },
   work: {
@@ -39,9 +39,10 @@ export const T = {
   },
   contact: {
     title: { es: "Contacto", en: "Contact" },
+    headline: { es: "Trabajemos juntos", en: "Let's work together" },
     intro: {
-      es: "Para nuevos proyectos, colaboraciones o referencias técnicas.",
-      en: "For new projects, collaborations or technical references.",
+      es: "¿Tienes una historia que contar?",
+      en: "Do you have a story to tell?",
     },
     email: { es: "Correo", en: "Email" },
     phone: { es: "Teléfono", en: "Phone" },

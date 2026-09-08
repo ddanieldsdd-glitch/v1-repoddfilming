@@ -6,7 +6,13 @@ const {
 } = require('./_contentIntegrity');
 const { recordHistory } = require('./_contentHistory');
 
-const HOME_LOCKED_FIELDS = ['home_featured', 'home_order', 'home_size', 'home_still'];
+const HOME_LOCKED_FIELDS = [
+  'home_featured',
+  'home_order',
+  'home_size',
+  'home_still',
+  'home_still_ratio',
+];
 
 const VALID_CATEGORIES = new Set(['fiction', 'documentary', 'commercial', 'music-video']);
 

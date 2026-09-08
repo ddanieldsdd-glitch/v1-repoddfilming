@@ -37,6 +37,7 @@ export const SiteSection = () => {
           <input className={inputCls} value={draft.site.name || ""} onChange={(e) => updSite({ name: e.target.value })} />
         </Field>
         <I18nField label="Título" es={draft.site.title?.es} en={draft.site.title?.en} onChangeEs={(v) => updI18n("title", "es", v)} onChangeEn={(v) => updI18n("title", "en", v)} />
+        <I18nField label="Ubicación" es={draft.site.location?.es} en={draft.site.location?.en} onChangeEs={(v) => updI18n("location", "es", v)} onChangeEn={(v) => updI18n("location", "en", v)} />
         <I18nField label="Tagline" es={draft.site.tagline?.es} en={draft.site.tagline?.en} onChangeEs={(v) => updI18n("tagline", "es", v)} onChangeEn={(v) => updI18n("tagline", "en", v)} />
         <ImageUrlField label="Logo blanco" value={draft.site.logo_white || ""} onChange={(url) => updSite({ logo_white: url })} assetType="site" />
       </div>

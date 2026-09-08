@@ -29,7 +29,11 @@ export const Nav = () => {
         location.pathname === "/" ||
         location.pathname === "/showreel" ||
         location.pathname.startsWith("/project/");
-      setOverHero(hasHero && y < window.innerHeight - 80);
+      const homeHero = location.pathname === "/" && document.getElementById("showreel");
+      const heroBoundary = homeHero
+        ? homeHero.offsetTop + homeHero.offsetHeight
+        : window.innerHeight;
+      setOverHero(hasHero && y < heroBoundary - 80);
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -61,10 +65,10 @@ export const Nav = () => {
   const logoUrl = SITE_NAV_LOGO;
 
   const linkClass = ({ isActive }) =>
-    `text-[12px] tracking-[0.22em] uppercase transition-all duration-300 px-3.5 py-2 rounded-full ${
+    `text-[11px] tracking-[0.14em] uppercase transition-all duration-300 px-3 py-2 rounded-full ${
       isActive
-        ? "text-white bg-white/12"
-        : "text-white/60 hover:text-white hover:bg-white/8"
+        ? "text-white bg-white/[0.08]"
+        : "text-white/55 hover:text-white hover:bg-white/[0.06]"
     }`;
 
   return (
@@ -78,10 +82,10 @@ export const Nav = () => {
             : "bg-black/60 backdrop-blur-3xl"
       }`}
     >
-      <div className="px-4 sm:px-6 md:px-10 lg:px-14 py-4 md:py-5 flex items-center justify-between gap-4">
+      <div className="px-3.5 sm:px-5 md:px-9 lg:px-12 py-3 md:py-4 flex items-center justify-between gap-4">
 
         {/* Logo */}
-        <Link to="/" data-testid="nav-logo" className="flex items-center gap-2.5 leading-none shrink-0">
+        <Link to="/" data-testid="nav-logo" className="flex items-center gap-2 leading-none shrink-0">
           {logoUrl && (
             <img
               src={logoUrl}
@@ -90,14 +94,14 @@ export const Nav = () => {
               width={88}
               height={44}
               decoding="async"
-              className="h-8 w-auto md:h-11 transition-all duration-500 invert"
+              className="h-7 w-auto md:h-10 transition-all duration-500 invert"
             />
           )}
           <span className="flex flex-col">
-            <span className="font-medium text-sm md:text-[15px] tracking-[0.04em] text-white">
+            <span className="font-medium text-[13px] md:text-sm tracking-[0.02em] text-white">
               {content.site.name}
             </span>
-            <span className="text-[9px] md:text-[10px] tracking-[0.32em] uppercase mt-0.5 text-white/55">
+            <span className="text-[8px] md:text-[9px] tracking-[0.2em] uppercase mt-0.5 text-white/50">
               {tr(content.site.title, lang)}
             </span>
           </span>
@@ -121,11 +125,11 @@ export const Nav = () => {
           </NavLink>
 
           {/* Idioma — pill compacta */}
-          <div className="ml-3 flex items-center gap-0.5 rounded-full bg-white/8 border border-white/10 p-1">
+          <div className="ml-2.5 flex items-center gap-0.5 rounded-full bg-white/[0.05] border border-white/[0.08] p-1">
             <button
               data-testid="lang-es"
               onClick={() => setLang("es")}
-              className={`px-2.5 py-1 rounded-full text-[10px] tracking-[0.18em] uppercase transition-all duration-300 ${
+              className={`px-2.5 py-1 rounded-full text-[9px] tracking-[0.12em] uppercase transition-all duration-300 ${
                 lang === "es" ? "bg-white/15 text-white" : "text-white/50 hover:text-white"
               }`}
             >
@@ -134,7 +138,7 @@ export const Nav = () => {
             <button
               data-testid="lang-en"
               onClick={() => setLang("en")}
-              className={`px-2.5 py-1 rounded-full text-[10px] tracking-[0.18em] uppercase transition-all duration-300 ${
+              className={`px-2.5 py-1 rounded-full text-[9px] tracking-[0.12em] uppercase transition-all duration-300 ${
                 lang === "en" ? "bg-white/15 text-white" : "text-white/50 hover:text-white"
               }`}
             >

@@ -27,12 +27,31 @@ export default function Home() {
   }, []);
 
   return (
-    <div data-testid="home-page" className="bg-black text-white min-h-svh">
+    <div data-testid="home-page" className="cinema-page min-h-svh">
+      {reelOnHome && (
+        <div className="px-2.5 sm:px-4 lg:px-6 pt-[4.25rem] sm:pt-[4.5rem] md:pt-[5rem]">
+          <HomeShowreel url={showreelUrl} />
+        </div>
+      )}
+
       <section
         data-testid="home-grid-section"
-        className="px-4 sm:px-6 md:px-12 lg:px-16 pt-[4.6rem] sm:pt-[5rem] md:pt-[5.35rem] pb-6 md:pb-10"
+        className={`px-4 sm:px-6 md:px-12 lg:px-16 pb-10 md:pb-16 ${
+          reelOnHome
+            ? "pt-24 md:pt-28 lg:pt-32"
+            : "pt-[6.5rem] sm:pt-[7.5rem] md:pt-[9rem]"
+        }`}
       >
-        {reelOnHome && <HomeShowreel url={showreelUrl} />}
+        {tiles.length > 0 && (
+          <div className="mb-7 flex items-end justify-between border-b border-white/10 pb-4 md:mb-10 md:pb-5">
+            <h2 className="text-[10px] font-normal tracking-[0.2em] uppercase text-[var(--cinema-muted)]">
+              {tr(T.work.title, lang)}
+            </h2>
+            <span className="text-[10px] tabular-nums tracking-[0.14em] text-white/45">
+              {String(tiles.length).padStart(2, "0")}
+            </span>
+          </div>
+        )}
 
         {tiles.length === 0 ? (
           <div className="flex min-h-[50svh] items-center justify-center">
@@ -50,9 +69,9 @@ export default function Home() {
       {showExplore && (
         <section
           data-testid="home-see-more"
-          className="px-4 sm:px-6 md:px-12 lg:px-16 pt-6 md:pt-10 pb-16 md:pb-24 border-t border-white/10"
+          className="px-4 sm:px-6 md:px-12 lg:px-16 pt-10 md:pt-14 pb-24 md:pb-36 border-t border-white/10"
         >
-          <p className="text-[10px] tracking-[0.32em] uppercase text-white/45 mb-5 md:mb-7">
+          <p className="text-[10px] tracking-[0.2em] uppercase text-[var(--cinema-muted)] mb-5 md:mb-7">
             {tr(T.work.seeMore, lang)}
           </p>
           <CategoryExploreLinks projects={content.projects} lang={lang} />

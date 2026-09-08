@@ -1,6 +1,6 @@
 /** Cómo empaqueta cada pieza en la parrilla justificada. */
 export const HOME_SIZES = [
-  { id: "hero", es: "Destacado — en fila", en: "Featured — packed" },
+  { id: "hero", es: "Destacado — fila propia", en: "Featured — own row" },
   { id: "large", es: "Grande — en fila", en: "Large — packed" },
   { id: "wide", es: "Panorámica — fila propia", en: "Wide — own row" },
   { id: "tall", es: "En fila (vertical)", en: "Packed (vertical)" },
@@ -33,6 +33,11 @@ export function resolveHomeStill(project) {
   return cover || project?.stills?.[0] || project?.poster || "";
 }
 
+export function resolveHomeStillRatio(project) {
+  const ratio = Number(project?.home_still_ratio);
+  return Number.isFinite(ratio) && ratio > 0 ? ratio : null;
+}
+
 export function getHomeProjects(projects = [], homeMax = 12) {
   const published = (projects || []).filter((p) => p.published !== false);
   const featured = published.filter((p) => p.home_featured !== false);
@@ -51,6 +56,7 @@ export function getHomeProjects(projects = [], homeMax = 12) {
         order,
         size,
         still: resolveHomeStill(project),
+        ratio: resolveHomeStillRatio(project),
         className: HOME_SIZE_CLASS[size],
       };
     })

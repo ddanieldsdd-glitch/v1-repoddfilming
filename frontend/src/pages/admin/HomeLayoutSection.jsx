@@ -24,8 +24,17 @@ const snapshot = (content) => ({
     home_order: Number.isFinite(Number(p.home_order)) ? Number(p.home_order) : i + 1,
     home_size: p.home_size || "medium",
     home_still: p.home_still || "",
+    home_still_ratio:
+      Number.isFinite(Number(p.home_still_ratio)) && Number(p.home_still_ratio) > 0
+        ? Number(p.home_still_ratio)
+        : null,
   })),
 });
+
+const naturalRatio = (image) => {
+  if (!image?.naturalWidth || !image?.naturalHeight) return null;
+  return Number((image.naturalWidth / image.naturalHeight).toFixed(6));
+};
 
 export const HomeLayoutSection = () => {
   const { content, saveHome, saveStates, reload } = useAdminContent();
@@ -47,6 +56,7 @@ export const HomeLayoutSection = () => {
           home_order: row.home_order,
           home_size: row.home_size,
           home_still: row.home_still,
+          home_still_ratio: row.home_still_ratio,
         })),
       });
     },
@@ -57,6 +67,27 @@ export const HomeLayoutSection = () => {
       ...current,
       rows: current.rows.map((row) => (row.id === id ? { ...row, ...next } : row)),
     }));
+
+  const selectStill = (id, url, image) => {
+    const ratio = naturalRatio(image);
+    patch(id, { home_still: url, home_still_ratio: ratio });
+    if (ratio) return;
+
+    const probe = new Image();
+    probe.onload = () => {
+      const measured = naturalRatio(probe);
+      if (!measured) return;
+      setDraft((current) => ({
+        ...current,
+        rows: current.rows.map((row) =>
+          row.id === id && row.home_still === url
+            ? { ...row, home_still_ratio: measured }
+            : row,
+        ),
+      }));
+    };
+    probe.src = url;
+  };
 
   const sorted = [...draft.rows].sort(
     (a, b) => Number(a.home_order) - Number(b.home_order) || a.title.localeCompare(b.title),
@@ -117,7 +148,19 @@ export const HomeLayoutSection = () => {
           return (
             <li key={row.id} className="rounded-xl border border-white/10 p-4 grid grid-cols-1 lg:grid-cols-[160px_1fr] gap-4">
               <div className="h-24 rounded-lg overflow-hidden bg-black flex items-center justify-center">
-                {(row.home_still || row.cover) && <img src={row.home_still || row.cover} alt="" className="max-w-full max-h-full object-contain" />}
+                {(row.home_still || row.cover) && (
+                  <img
+                    src={row.home_still || row.cover}
+                    alt=""
+                    className="max-w-full max-h-full object-contain"
+                    onLoad={(event) => {
+                      const ratio = naturalRatio(event.currentTarget);
+                      if (ratio && ratio !== row.home_still_ratio) {
+                        patch(row.id, { home_still_ratio: ratio });
+                      }
+                    }}
+                  />
+                )}
               </div>
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -147,7 +190,14 @@ export const HomeLayoutSection = () => {
                 {thumbs.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
                     {thumbs.map((url) => (
-                      <button key={url} type="button" onClick={() => patch(row.id, { home_still: url })} className={`h-12 w-[4.5rem] overflow-hidden rounded-md border bg-black ${(row.home_still || row.cover) === url ? "border-white" : "border-white/15"}`}>
+                      <button
+                        key={url}
+                        type="button"
+                        onClick={(event) =>
+                          selectStill(row.id, url, event.currentTarget.querySelector("img"))
+                        }
+                        className={`h-12 w-[4.5rem] overflow-hidden rounded-md border bg-black ${(row.home_still || row.cover) === url ? "border-white" : "border-white/15"}`}
+                      >
                         <img src={url} alt="" className="h-full w-full object-contain" />
                       </button>
                     ))}

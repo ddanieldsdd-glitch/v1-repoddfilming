@@ -1,8 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { tr } from "../lib/i18n";
+import { ArrowUpRight } from "lucide-react";
+import { T, tr } from "../lib/i18n";
 import { VideoPlayer } from "./VideoPlayer";
-import { pauseAllExcept, resumePlayer } from "../lib/videoStore";
+import {
+  HOME_SHOWREEL_KEY,
+  pauseAllExcept,
+  resumePlayer,
+} from "../lib/videoStore";
 import { cloudinaryResponsive, CARD_PRESETS, optimizeCloudinaryUrl } from "../lib/cloudinary";
 import { getCardRecognitions } from "../lib/recognitions";
 
@@ -44,7 +49,6 @@ export const ProjectCard = ({
   const touchActive  = useRef(false);
 
   const previewKey = `card-preview-${project.slug}`;
-  const heroKey    = "hero-showreel";
 
   const rawPreviewUrl =
     project.preview_url ||
@@ -117,7 +121,7 @@ export const ProjectCard = ({
     setHovered(false);
     if (!alwaysPlay) {
       setPreviewVisible(false);
-      if (previewUrl) resumePlayer(heroKey);
+      if (previewUrl) resumePlayer(HOME_SHOWREEL_KEY);
     }
   };
 
@@ -134,26 +138,17 @@ export const ProjectCard = ({
         setHovered(false);
         if (!alwaysPlay) {
           setPreviewVisible(false);
-          if (previewUrl) resumePlayer(heroKey);
+          if (previewUrl) resumePlayer(HOME_SHOWREEL_KEY);
         }
       }
     }, 120);
   };
 
-  const shapeSeed = typeof index === "number"
-    ? index
-    : project.slug.length + project.title.length;
-  const organicRadius = compact
-    ? "rounded-[1.35rem] md:rounded-[1.65rem]"
-    : shapeSeed % 3 === 0
-      ? "rounded-[1.75rem] md:rounded-[2.25rem]"
-      : shapeSeed % 3 === 1
-        ? "rounded-[1.5rem] md:rounded-[2rem]"
-        : "rounded-[1.65rem] md:rounded-[2.1rem]";
-
   const contain = (fit ?? (cardSurface === "work" ? "contain" : "cover")) === "contain";
   const isHome = cardSurface === "home";
-  const noHoverScale = isHome || contain;
+  const radiusClass = compact
+    ? "rounded-[0.875rem] md:rounded-[1rem]"
+    : "rounded-[1rem] md:rounded-[1.25rem]";
   const sizeClass = fill ? "h-full min-h-0" : aspectClass;
   const imgW = ratio ? Math.round(ratio * 100) : 16;
   const imgH = 100;
@@ -171,9 +166,11 @@ export const ProjectCard = ({
       onTouchCancel={onTouchEnd}
     >
       <div
-        className={`relative overflow-hidden bg-neutral-950 ${sizeClass} w-full shadow-[0_18px_50px_-28px_rgba(0,0,0,0.85)] ring-1 ring-white/10 transition-all duration-500 ease-out group-hover:shadow-[0_28px_70px_-24px_rgba(0,0,0,0.9)] group-hover:ring-white/20 ${
-          noHoverScale ? "" : "group-hover:scale-[1.02] group-active:scale-[0.99]"
-        } ${organicRadius}`}
+        className={`relative overflow-hidden bg-neutral-950 ${sizeClass} w-full ring-1 transition-[box-shadow,outline-color] duration-500 ease-out ${
+          isHome
+            ? "ring-white/[0.06] group-hover:ring-white/[0.12]"
+            : "ring-white/[0.08] shadow-[0_18px_45px_-32px_rgba(0,0,0,0.9)] group-hover:ring-white/15"
+        } ${radiusClass}`}
       >
         <div className="absolute inset-0 z-0 bg-neutral-950" />
 
@@ -188,12 +185,12 @@ export const ProjectCard = ({
             fetchPriority={eager ? "high" : "auto"}
             width={imgW}
             height={imgH}
-            className={`absolute inset-0 z-[3] w-full h-full ${contain ? "object-contain" : "object-cover"} transition-all duration-300 ease-out ${
+            className={`absolute inset-0 z-[3] w-full h-full ${contain ? "object-contain" : "object-cover"} transition-[opacity,transform] duration-500 ease-out motion-reduce:transition-none ${
               previewVisible
                 ? contain || isHome
-                  ? "opacity-0"
+                  ? "opacity-0 scale-[1.02]"
                   : "opacity-0 scale-[1.03]"
-                : "opacity-100 scale-100"
+                : "opacity-100 scale-100 group-hover:scale-[1.02] motion-reduce:group-hover:scale-100"
             }`}
           />
         )}
@@ -219,69 +216,60 @@ export const ProjectCard = ({
         )}
 
         {/* Gradiente permanente para legibilidad de la info */}
-        <div className="pointer-events-none absolute inset-0 z-[4] bg-gradient-to-t from-black/90 via-black/15 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 z-[4] bg-gradient-to-t from-black/80 via-black/5 to-transparent transition-colors duration-500 group-hover:from-black/90" />
 
-        {/* Info overlay — título siempre visible; detalles solo en hover */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] p-4 md:p-5">
-          <div className="flex items-end justify-between gap-3">
+        {/* Info editorial: título + metadatos persistentes; CTA y director al hover. */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[5] p-3.5 sm:p-4 md:p-5">
+          <div className="flex items-end justify-between gap-4">
             <div className="min-w-0 flex-1">
               {typeof index === "number" && (
                 <span
-                  className={`block mb-1 text-[10px] tracking-[0.28em] uppercase text-white/50 transition-all duration-300 ${
+                  className={`block mb-1.5 text-[9px] tracking-[0.16em] uppercase text-white/50 transition-all duration-500 motion-reduce:transition-none ${
                     hovered ? "opacity-100" : "opacity-0"
                   }`}
                 >
                   {String(index + 1).padStart(3, "0")}
                 </span>
               )}
+              {hasCardRecognitions && (
+                <div className="mb-2 flex items-center gap-1 opacity-85">
+                  {recognitions.map((item, i) => (
+                    <img
+                      key={`${item.url}-${i}`}
+                      src={laurelUrl(item.url)}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      className={`w-auto object-contain drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)] ${laurelSizeCls}`}
+                    />
+                  ))}
+                </div>
+              )}
               <h3
                 className={`${
-                  compact ? "text-sm md:text-base" : "text-base md:text-lg lg:text-xl"
-                } font-light tracking-tight text-white leading-tight truncate`}
+                  compact ? "text-sm md:text-base" : "text-base sm:text-lg md:text-xl"
+                } font-light tracking-[-0.02em] text-white leading-tight truncate transition-transform duration-500 ease-out group-hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-y-0`}
               >
                 {project.title}
               </h3>
-              <div
-                className={`relative mt-1 ${
-                  hasCardRecognitions ? "h-5 sm:h-[22px] md:h-6" : "min-h-[14px] md:min-h-[16px]"
-                }`}
-              >
-                {hasCardRecognitions && (
-                  <div
-                    className={`absolute inset-0 flex items-center gap-0.5 sm:gap-1 transition-all duration-300 ${
-                      hovered ? "opacity-0 translate-y-1" : "opacity-90 translate-y-0"
-                    }`}
-                    aria-hidden={hovered}
-                  >
-                    {recognitions.map((item, i) => (
-                      <img
-                        key={`${item.url}-${i}`}
-                        src={laurelUrl(item.url)}
-                        alt=""
-                        loading="lazy"
-                        decoding="async"
-                        className={`w-auto object-contain drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)] ${laurelSizeCls}`}
-                      />
-                    ))}
-                  </div>
-                )}
+              <p className="mt-1.5 text-[9px] md:text-[10px] tracking-[0.12em] uppercase text-white/65 truncate">
+                {tr(project.type, lang)}{project.year ? ` · ${project.year}` : ""}
+              </p>
+              {project.director && (
                 <p
-                  className={`${
-                    hasCardRecognitions ? "absolute inset-0 flex items-center" : ""
-                  } text-[9px] md:text-[10px] tracking-[0.22em] uppercase text-white/60 truncate transition-all duration-300 ${
+                  className={`mt-1 text-[9px] text-white/50 truncate transition-[opacity,transform] duration-500 motion-reduce:transition-none ${
                     hovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"
                   }`}
                 >
-                  {project.director ? `${project.director} · ` : ""}{tr(project.type, lang)}
+                  {project.director}
                 </p>
-              </div>
+              )}
             </div>
             <span
-              className={`mb-0.5 shrink-0 text-[10px] md:text-[11px] tracking-[0.24em] uppercase text-white/55 transition-all duration-300 ${
-                hovered ? "opacity-100" : "opacity-0"
-              }`}
+              className="mb-0.5 flex shrink-0 items-center gap-1.5 text-[9px] tracking-[0.12em] uppercase text-white/70 opacity-70 transition-[opacity,transform] duration-500 md:translate-y-1 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 motion-reduce:transition-none"
             >
-              {project.year}
+              <span className="hidden lg:inline">{tr(T.project.external, lang)}</span>
+              <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
             </span>
           </div>
         </div>

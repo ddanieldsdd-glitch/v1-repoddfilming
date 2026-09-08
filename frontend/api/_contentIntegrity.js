@@ -306,7 +306,13 @@ function mergeHomeLayoutPatches(projects = [], patches = [], homeMax) {
     (patches || []).map((patch) => [String(patch.id || ''), patch]).filter(([id]) => id),
   );
 
-  const allowed = ['home_featured', 'home_order', 'home_size', 'home_still'];
+  const allowed = [
+    'home_featured',
+    'home_order',
+    'home_size',
+    'home_still',
+    'home_still_ratio',
+  ];
 
   return projects.map((project) => {
     const patch = patchById.get(project.id);
