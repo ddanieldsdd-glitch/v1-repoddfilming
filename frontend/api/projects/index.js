@@ -1,7 +1,7 @@
-const verifyToken = require('./_verifyToken');
-const applyCors = require('./_cors');
-const { getDb, COLLECTION } = require('./_content');
-const { createProject, toHttpError } = require('./_contentMutations');
+const verifyToken = require('../_verifyToken');
+const applyCors = require('../_cors');
+const { getDb, COLLECTION } = require('../_content');
+const { createProject, toHttpError } = require('../_contentMutations');
 
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
