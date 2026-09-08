@@ -272,11 +272,10 @@ export const VideoPlayer = ({
     };
   }, [playing, ready, onPlay, onPause]);
 
-  const vimeoBackground = background && cover !== false;
   const vimeoSrc = vimeoId
     ? buildVimeoSrc(vimeoId, {
         autoplay,
-        background: vimeoBackground,
+        background,
         muted: muted || background,
         loop: loop || background,
         controls: !background,
