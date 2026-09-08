@@ -38,7 +38,7 @@ export function HomeShowreel({ url }) {
         mediaReady ? "opacity-100" : "opacity-0"
       }`}
     >
-      <div className="relative h-[72svh] min-h-[28rem] max-h-[50rem] sm:h-[76svh] lg:h-[82svh] lg:max-h-[58rem] overflow-hidden rounded-[1.125rem] md:rounded-[1.5rem] bg-neutral-950 ring-1 ring-white/[0.08]">
+      <div className="relative aspect-video overflow-hidden rounded-[1.125rem] md:rounded-[1.5rem] bg-neutral-950 ring-1 ring-white/[0.08]">
         {poster && !playing && (
           <img
             src={poster}
@@ -48,7 +48,7 @@ export function HomeShowreel({ url }) {
             loading="eager"
             fetchPriority="high"
             onLoad={() => setMediaReady(true)}
-            className="absolute inset-0 z-[1] h-full w-full object-cover bg-black"
+            className="absolute inset-0 z-[1] h-full w-full object-contain bg-black"
           />
         )}
         <VideoPlayer
@@ -58,7 +58,7 @@ export function HomeShowreel({ url }) {
           muted
           loop
           background
-          cover
+          cover={false}
           className="absolute inset-0 z-[2] h-full w-full"
           testId="home-showreel-player"
           interactive={false}

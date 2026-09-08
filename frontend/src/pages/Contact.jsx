@@ -21,14 +21,11 @@ export default function Contact() {
         <p className="text-[10px] tracking-[0.18em] uppercase text-[var(--cinema-muted)] mb-7">
           {tr(T.contact.title, lang)}
         </p>
-        <h1 className="max-w-5xl text-5xl sm:text-6xl md:text-8xl lg:text-9xl tracking-[-0.045em] font-light leading-[0.88] text-[var(--cinema-fg)]">
-          {tr(T.contact.headline, lang)}
-        </h1>
-        <p className="mt-8 text-xl md:text-3xl tracking-[-0.02em] font-light leading-tight max-w-4xl text-white/65">
+        <h1 className="text-2xl md:text-4xl lg:text-5xl tracking-[-0.03em] font-light leading-[1.1] max-w-4xl text-[var(--cinema-fg)]">
           {tr(T.contact.intro, lang)}
-        </p>
+        </h1>
 
-        <div className="mt-20 md:mt-32 grid grid-cols-1 md:grid-cols-12 gap-14 md:gap-16 border-t border-white/10 pt-10 md:pt-14">
+        <div className="mt-16 md:mt-24 grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-16">
           <div className="md:col-span-7 space-y-7 md:space-y-8">
             <div>
               <p className="text-[10px] tracking-[0.16em] uppercase text-[var(--cinema-muted)] mb-4">

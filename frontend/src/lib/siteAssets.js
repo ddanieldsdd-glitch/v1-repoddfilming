@@ -1,13 +1,14 @@
 const LOGO_ID = "v1777731841/DD_BLANCO_l8xqal";
 export const LOGO_BASE = "https://res.cloudinary.com/dsphxo7mx/image/upload";
 
-/** Nav: h-8 (32px) móvil, h-11 (44px) desktop — WebP/AVIF vía f_auto. */
+/** Nav: PNG nítido en 1x/2x/3x; evitamos compresión automática en líneas finas. */
 export const SITE_NAV_LOGO =
-  `${LOGO_BASE}/e_trim,w_88,h_44,c_fit,q_auto,f_auto/${LOGO_ID}.png`;
+  `${LOGO_BASE}/e_trim,w_88,h_44,c_fit,q_100,f_png/${LOGO_ID}.png`;
 
 export const SITE_NAV_LOGO_SRCSET =
-  `${LOGO_BASE}/e_trim,w_88,h_44,c_fit,q_auto,f_auto/${LOGO_ID}.png 1x, ` +
-  `${LOGO_BASE}/e_trim,w_176,h_88,c_fit,q_auto,f_auto/${LOGO_ID}.png 2x`;
+  `${LOGO_BASE}/e_trim,w_88,h_44,c_fit,q_100,f_png/${LOGO_ID}.png 1x, ` +
+  `${LOGO_BASE}/e_trim,w_176,h_88,c_fit,q_100,f_png/${LOGO_ID}.png 2x, ` +
+  `${LOGO_BASE}/e_trim,w_264,h_132,c_fit,q_100,f_png/${LOGO_ID}.png 3x`;
 
 /** Logo escalado para favicon, PWA, redes. */
 export const SITE_FAVICON_32 =

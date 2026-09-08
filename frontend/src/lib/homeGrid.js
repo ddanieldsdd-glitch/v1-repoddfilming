@@ -1,8 +1,8 @@
 /** Cómo empaqueta cada pieza en la parrilla justificada. */
 export const HOME_SIZES = [
-  { id: "hero", es: "Destacado — fila propia", en: "Featured — own row" },
+  { id: "hero", es: "Destacado — en fila", en: "Featured — packed" },
   { id: "large", es: "Grande — en fila", en: "Large — packed" },
-  { id: "wide", es: "Panorámica — fila propia", en: "Wide — own row" },
+  { id: "wide", es: "Panorámica — en fila", en: "Wide — packed" },
   { id: "tall", es: "En fila (vertical)", en: "Packed (vertical)" },
   { id: "medium", es: "En fila", en: "Packed in a row" },
   { id: "small", es: "En fila (compacto)", en: "Packed compact" },

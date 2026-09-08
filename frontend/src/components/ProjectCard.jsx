@@ -211,7 +211,12 @@ export const ProjectCard = ({
             }`}
             testId={`card-preview-${project.slug}`}
             interactive={false}
-            onPlay={() => setPreviewVisible(true)}
+            onPlay={() => {
+              if (shouldPlay) setPreviewVisible(true);
+            }}
+            onPause={() => {
+              if (!shouldPlay) setPreviewVisible(false);
+            }}
           />
         )}
 

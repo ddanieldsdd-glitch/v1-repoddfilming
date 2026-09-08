@@ -5,7 +5,9 @@
 
 export const DEFAULT_RATIO = 16 / 9;
 
-const SOLO_SIZES = new Set(["hero", "wide"]);
+// En escritorio todas las piezas pueden compartir fila. Las proporciones reales
+// siguen creando jerarquía, pero evitamos una primera/última obra aislada.
+const SOLO_SIZES = new Set();
 
 function maxPerRowForSize(size, globalMax) {
   if (SOLO_SIZES.has(size)) return 1;

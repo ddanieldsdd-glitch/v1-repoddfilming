@@ -39,6 +39,7 @@ export const VideoPlayer = ({
   const containerRef = useRef(null);
   const playerRef = useRef(null);
   const ytPlayerRef = useRef(null);
+  const playingRef = useRef(playing);
   const [ready, setReady] = useState(false);
   const [containerRatio, setContainerRatio] = useState(16 / 9);
   const readyCalledRef = useRef(false);
@@ -47,6 +48,10 @@ export const VideoPlayer = ({
   const ytId = !vimeoId ? extractYoutubeId(url) : null;
   // API solo en tarjetas (background + control playing); hero usa iframe directo
   const useYtApi = Boolean(ytId && background);
+
+  useEffect(() => {
+    playingRef.current = playing;
+  }, [playing]);
 
   const handleReady = useCallback(() => {
     if (readyCalledRef.current) return;
@@ -86,8 +91,9 @@ export const VideoPlayer = ({
 
         handleReady();
 
+        const currentPlaying = playingRef.current;
         const shouldAutoplay =
-          playing !== false && (autoplay || background || playing === true);
+          currentPlaying !== false && (autoplay || background || currentPlaying === true);
 
         const attemptAutoplay = (retries = 0) => {
           if (playerRef.current !== player || !shouldAutoplay) return;
@@ -102,18 +108,26 @@ export const VideoPlayer = ({
 
         if (shouldAutoplay) {
           attemptAutoplay();
+        } else {
+          player.pause().catch(() => {});
         }
       })
       .catch(() => {
         handleReady();
       });
 
-    const onPlayEvent = () => onPlay?.();
+    const onPlayEvent = () => {
+      if (playingRef.current === false) {
+        player.pause().catch(() => {});
+        return;
+      }
+      onPlay?.();
+    };
     const onPauseEvent = () => {
       onPause?.();
-      if (!background || document.hidden) return;
+      if (!background || document.hidden || playingRef.current === false) return;
       window.setTimeout(() => {
-        if (playerRef.current !== player) return;
+        if (playerRef.current !== player || playingRef.current === false) return;
         player.play().catch(() => {});
       }, 280);
     };
@@ -122,10 +136,13 @@ export const VideoPlayer = ({
       onError?.(err);
     };
     const onLoadedEvent = () => {
+      const currentPlaying = playingRef.current;
       const shouldAutoplay =
-        playing !== false && (autoplay || background || playing === true);
+        currentPlaying !== false && (autoplay || background || currentPlaying === true);
       if (shouldAutoplay) {
         player.play().catch(() => {});
+      } else {
+        player.pause().catch(() => {});
       }
     };
 
@@ -255,7 +272,16 @@ export const VideoPlayer = ({
     };
   }, [playing, ready, onPlay, onPause]);
 
-  const vimeoSrc = vimeoId ? buildVimeoSrc(vimeoId, { autoplay, background, muted, loop }) : null;
+  const vimeoBackground = background && cover !== false;
+  const vimeoSrc = vimeoId
+    ? buildVimeoSrc(vimeoId, {
+        autoplay,
+        background: vimeoBackground,
+        muted: muted || background,
+        loop: loop || background,
+        controls: !background,
+      })
+    : null;
   const ytSrc =
     ytId && !useYtApi
       ? buildYtSrc(ytId, { autoplay, muted, background, loop })

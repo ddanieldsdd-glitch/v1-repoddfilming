@@ -1,7 +1,7 @@
 import { packJustified } from "./justifiedLayout";
 
 describe("packJustified", () => {
-  test("keeps featured and panoramic projects on their own editorial rows", () => {
+  test("packs featured and panoramic projects without forced empty side space", () => {
     const rows = packJustified(
       [
         { id: "featured", size: "hero", ratio: 1.9 },
@@ -14,9 +14,8 @@ describe("packJustified", () => {
     );
 
     expect(rows.map((row) => row.map((item) => item.id))).toEqual([
-      ["featured"],
-      ["first", "second"],
-      ["panoramic"],
+      ["featured", "first"],
+      ["second", "panoramic"],
     ]);
   });
 });

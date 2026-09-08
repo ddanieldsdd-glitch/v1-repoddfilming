@@ -39,10 +39,9 @@ export const T = {
   },
   contact: {
     title: { es: "Contacto", en: "Contact" },
-    headline: { es: "Trabajemos juntos", en: "Let's work together" },
     intro: {
-      es: "¿Tienes una historia que contar?",
-      en: "Do you have a story to tell?",
+      es: "Para nuevos proyectos, colaboraciones o referencias técnicas.",
+      en: "For new projects, collaborations or technical references.",
     },
     email: { es: "Correo", en: "Email" },
     phone: { es: "Teléfono", en: "Phone" },
