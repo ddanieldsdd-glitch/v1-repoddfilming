@@ -55,7 +55,9 @@ const GA4Tracker = () => {
   return null;
 };
 
-function App() {
+function AppLayout() {
+  const location = useLocation();
+  const isAdmin = location.pathname.startsWith("/admin");
   const [theme] = useTheme();
 
   useEffect(() => {
@@ -66,31 +68,37 @@ function App() {
   return (
     <div className="App relative bg-white dark:bg-black text-black dark:text-white antialiased transition-colors duration-500">
       <div className="film-grain-overlay pointer-events-none fixed inset-0 z-[100] mix-blend-overlay opacity-[0.035] dark:mix-blend-soft-light dark:opacity-[0.075]" aria-hidden />
-      <BrowserRouter>
-        <SpeedInsightsBridge />
-        <GA4Tracker />
-        <SeoHead />
-        <ScrollToTop />
-        <Nav />
-        <main>
-          <Suspense fallback={null}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/work" element={<Work />} />
-              <Route path="/work/:category" element={<Work />} />
-              <Route path="/project/:slug" element={<ProjectDetail />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/showreel" element={<Showreel />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/admin" element={<Admin />} />
-            </Routes>
-          </Suspense>
-        </main>
-        <Footer />
-        <Toaster position="bottom-right" theme={theme === "dark" ? "dark" : "light"} />
-        <Analytics />
-      </BrowserRouter>
+      <SpeedInsightsBridge />
+      <GA4Tracker />
+      <SeoHead />
+      <ScrollToTop />
+      {!isAdmin && <Nav />}
+      <main>
+        <Suspense fallback={null}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/work" element={<Work />} />
+            <Route path="/work/:category" element={<Work />} />
+            <Route path="/project/:slug" element={<ProjectDetail />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/showreel" element={<Showreel />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/admin/*" element={<Admin />} />
+          </Routes>
+        </Suspense>
+      </main>
+      {!isAdmin && <Footer />}
+      <Toaster position="bottom-right" theme={theme === "dark" ? "dark" : "light"} />
+      <Analytics />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppLayout />
+    </BrowserRouter>
   );
 }
 
