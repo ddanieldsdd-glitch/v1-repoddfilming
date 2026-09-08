@@ -1,10 +1,9 @@
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { uploadImageFile, cloudinaryFolderHint } from "../../../lib/uploadImage";
-import { ImageDropZone, handleTextareaImagePaste } from "../../../components/admin/ImageDropZone";
-import { mergeRecognitionUrls, normalizeRecognitions } from "../../../lib/recognitions";
+import { ImageDropZone } from "../../../components/admin/ImageDropZone";
 import { Field } from "./Field";
-import { inputCls, textareaCls, uploadBtnCls } from "../styles";
+import { inputCls, uploadBtnCls } from "../styles";
 export const ImageUrlField = ({
   label,
   value,

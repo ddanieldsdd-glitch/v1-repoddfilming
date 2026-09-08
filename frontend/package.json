@@ -73,6 +73,7 @@
         "diagnose:content": "node scripts/content-diagnose.js",
         "diagnose:content:json": "node scripts/content-diagnose.js --source=json",
         "backup:content": "node scripts/content-backup.js",
+        "restore:content": "node scripts/content-restore.js",
         "dedupe:content": "node scripts/content-dedupe.js",
         "dedupe:content:apply": "node scripts/content-dedupe.js --apply",
         "predeploy": "cross-env CI=false ESLINT_NO_DEV_ERRORS=true craco build && node scripts/copy-spa-html.js"
