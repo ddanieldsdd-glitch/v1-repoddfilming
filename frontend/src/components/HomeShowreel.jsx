@@ -13,7 +13,7 @@ import {
 export function HomeShowreel({ url }) {
   const [lang] = useLang();
   const [playing, setPlaying] = useState(false);
-  const [mediaReady, setMediaReady] = useState(false);
+  const [loadPlayer, setLoadPlayer] = useState(false);
   const [sectionEl, setSectionEl] = useState(null);
   const poster = getVimeoPosterUrl(url);
 
@@ -23,8 +23,13 @@ export function HomeShowreel({ url }) {
   );
 
   useEffect(() => {
-    const fallback = window.setTimeout(() => setMediaReady(true), 1400);
-    return () => window.clearTimeout(fallback);
+    const start = () => setLoadPlayer(true);
+    if (typeof requestIdleCallback === "function") {
+      const id = requestIdleCallback(start, { timeout: 800 });
+      return () => cancelIdleCallback(id);
+    }
+    const timer = window.setTimeout(start, 400);
+    return () => window.clearTimeout(timer);
   }, [url]);
 
   if (!url) return null;
@@ -34,9 +39,6 @@ export function HomeShowreel({ url }) {
       ref={setSectionEl}
       id="showreel"
       data-testid="home-showreel"
-      className={`transition-opacity duration-700 ease-out motion-reduce:transition-none ${
-        mediaReady ? "opacity-100" : "opacity-0"
-      }`}
     >
       <div className="relative aspect-video overflow-hidden rounded-[1.125rem] md:rounded-[1.5rem] bg-neutral-950 ring-1 ring-white/[0.08]">
         {poster && !playing && (
@@ -47,26 +49,24 @@ export function HomeShowreel({ url }) {
             height={1080}
             loading="eager"
             fetchPriority="high"
-            onLoad={() => setMediaReady(true)}
             className="absolute inset-0 z-[1] h-full w-full object-contain bg-black"
           />
         )}
-        <VideoPlayer
-          url={url}
-          playerKey={HOME_SHOWREEL_KEY}
-          autoplay
-          muted
-          loop
-          background
-          cover={false}
-          className="absolute inset-0 z-[2] h-full w-full"
-          testId="home-showreel-player"
-          interactive={false}
-          onPlay={() => {
-            setPlaying(true);
-            setMediaReady(true);
-          }}
-        />
+        {loadPlayer && (
+          <VideoPlayer
+            url={url}
+            playerKey={HOME_SHOWREEL_KEY}
+            autoplay
+            muted
+            loop
+            background
+            cover={false}
+            className="absolute inset-0 z-[2] h-full w-full"
+            testId="home-showreel-player"
+            interactive={false}
+            onPlay={() => setPlaying(true)}
+          />
+        )}
         <div className="pointer-events-none absolute inset-0 z-[3] bg-gradient-to-t from-black/55 via-transparent to-black/15" />
         <Link
           to="/showreel"

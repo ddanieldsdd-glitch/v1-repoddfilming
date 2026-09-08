@@ -327,14 +327,16 @@ export default function ProjectDetail() {
               type="button"
               onClick={() => openLightbox([project.poster], 0, "poster")}
               data-testid="project-poster"
-              className="hidden md:block group overflow-hidden rounded-xl ring-1 ring-white/10 hover:ring-white/30 transition-all duration-300 w-full self-start relative outline-none"
+              className="hidden md:block group overflow-hidden rounded-xl ring-1 ring-white/10 hover:ring-white/30 transition-all duration-300 w-full aspect-[2/3] self-start relative outline-none"
               style={{ WebkitTapHighlightColor: "transparent" }}
             >
               <img
                 src={oimg(project.poster, IMG.poster)}
                 alt="poster"
+                width={460}
+                height={690}
                 loading="eager"
-                className="w-full h-auto object-cover transition duration-500 group-hover:scale-[1.04] group-hover:brightness-90"
+                className="absolute inset-0 w-full h-full object-cover transition duration-500 group-hover:scale-[1.04] group-hover:brightness-90"
               />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-400 flex flex-col items-center justify-center gap-1.5">
                 <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center gap-1.5">
@@ -355,15 +357,17 @@ export default function ProjectDetail() {
               <button
                 type="button"
                 onClick={() => openLightbox([project.poster], 0, "poster")}
-                className="md:hidden float-left mr-4 mb-3 w-[108px] group overflow-hidden rounded-xl ring-1 ring-white/10 hover:ring-white/30 transition-all duration-300 relative outline-none"
+                className="md:hidden float-left mr-4 mb-3 w-[108px] aspect-[2/3] group overflow-hidden rounded-xl ring-1 ring-white/10 hover:ring-white/30 transition-all duration-300 relative outline-none"
                 style={{ WebkitTapHighlightColor: "transparent" }}
                 aria-label={lang === "es" ? "Ampliar póster" : "Expand poster"}
               >
                 <img
                   src={oimg(project.poster, IMG.poster)}
                   alt="poster"
+                  width={108}
+                  height={162}
                   loading="eager"
-                  className="w-full h-auto object-cover transition duration-300 group-hover:brightness-90"
+                  className="absolute inset-0 w-full h-full object-cover transition duration-300 group-hover:brightness-90"
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">
                   <ArrowUpRight className="w-3.5 h-3.5 text-white opacity-0 group-hover:opacity-100 transition-opacity" strokeWidth={2} />

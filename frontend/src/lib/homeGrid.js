@@ -38,6 +38,15 @@ export function resolveHomeStillRatio(project) {
   return Number.isFinite(ratio) && ratio > 0 ? ratio : null;
 }
 
+/** Ancho estimado del grid de portada (padding de Home.jsx) para el primer paint. */
+export function estimateHomeGridWidth(viewportWidth) {
+  const w = Number(viewportWidth);
+  const width = Number.isFinite(w) && w > 0 ? w : 1200;
+  const pad =
+    width >= 1024 ? 128 : width >= 768 ? 96 : width >= 640 ? 48 : 32;
+  return Math.max(80, Math.round(width - pad));
+}
+
 export function getHomeProjects(projects = [], homeMax = 12) {
   const published = (projects || []).filter((p) => p.published !== false);
   const featured = published.filter((p) => p.home_featured !== false);

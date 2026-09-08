@@ -1,6 +1,7 @@
 import {
   getHomeProjects,
   resolveHomeStillRatio,
+  estimateHomeGridWidth,
 } from "./homeGrid";
 
 describe("homeGrid", () => {
@@ -23,5 +24,10 @@ describe("homeGrid", () => {
     expect(resolveHomeStillRatio({ home_still_ratio: null })).toBeNull();
     expect(resolveHomeStillRatio({ home_still_ratio: 0 })).toBeNull();
     expect(resolveHomeStillRatio({ home_still_ratio: "1.85" })).toBe(1.85);
+  });
+
+  test("estimates home grid width from viewport padding", () => {
+    expect(estimateHomeGridWidth(1440)).toBe(1312);
+    expect(estimateHomeGridWidth(375)).toBe(343);
   });
 });

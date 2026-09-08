@@ -1,12 +1,15 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ProjectCard } from "./ProjectCard";
 import { packJustified, DEFAULT_RATIO } from "../lib/justifiedLayout";
+import { estimateHomeGridWidth } from "../lib/homeGrid";
 
 const GAP = 16;
 
 export function HomeStillGrid({ tiles, lang }) {
   const wrapRef = useRef(null);
-  const [width, setWidth] = useState(0);
+  const [width, setWidth] = useState(() =>
+    typeof window !== "undefined" ? estimateHomeGridWidth(window.innerWidth) : 1200,
+  );
   const [windowH, setWindowH] = useState(
     typeof window !== "undefined" ? window.innerHeight : 900,
   );
