@@ -1,9 +1,34 @@
 ﻿const jwt = require('jsonwebtoken');
 const { check, recordFailure, recordSuccess } = require('./_rateLimiter');
 const applyCors = require('./_cors');
+const verifyToken = require('./_verifyToken');
 
 module.exports = async (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
   if (applyCors(req, res)) return;
+
+  const authMode = req.query?.auth;
+
+  if (authMode === 'logout') {
+    if (req.method !== 'POST') {
+      return res.status(405).json({ ok: false, message: 'Method not allowed' });
+    }
+    res.setHeader(
+      'Set-Cookie',
+      'token=; HttpOnly; Path=/; Max-Age=0; SameSite=Strict; Secure',
+    );
+    return res.status(200).json({ ok: true });
+  }
+
+  if (authMode === 'session') {
+    if (req.method !== 'GET') {
+      return res.status(405).json({ ok: false, message: 'Method not allowed' });
+    }
+    const payload = verifyToken(req);
+    if (!payload) return res.status(401).json({ ok: false, message: 'No autorizado' });
+    return res.status(200).json({ ok: true });
+  }
+
   if (req.method !== 'POST') return res.status(405).end('Method Not Allowed');
 
   // Rate limiting — bloquea IPs con demasiados intentos fallidos

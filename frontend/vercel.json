@@ -17,6 +17,9 @@
     }
   ],
   "rewrites": [
+    { "source": "/api/admin-logout", "destination": "/api/admin-login?auth=logout" },
+    { "source": "/api/admin-session", "destination": "/api/admin-login?auth=session" },
+    { "source": "/api/content-history", "destination": "/api/content?action=history" },
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/showreel", "destination": "/api/og" },
     { "source": "/about", "destination": "/api/og" },
