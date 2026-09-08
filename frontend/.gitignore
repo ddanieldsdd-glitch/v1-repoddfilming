@@ -42,3 +42,6 @@ npm-audit.json
 .vercel
 api/_spa.html
 .env*
+
+# mongo backups (never commit)
+scripts/backups/
