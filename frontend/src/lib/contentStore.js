@@ -165,7 +165,7 @@ export const createProject = async (current, project, { position = "start" } = {
 };
 
 export const updateProject = async (current, project) => {
-  const data = await requestJson(`/api/projects/${encodeURIComponent(project.id)}`, {
+  const data = await requestJson(`/api/projects?id=${encodeURIComponent(project.id)}`, {
     method: "PUT",
     body: JSON.stringify({
       updated_at: project.updated_at,
@@ -181,7 +181,7 @@ export const updateProject = async (current, project) => {
 };
 
 export const deleteProject = async (current, project) => {
-  const data = await requestJson(`/api/projects/${encodeURIComponent(project.id)}`, {
+  const data = await requestJson(`/api/projects?id=${encodeURIComponent(project.id)}`, {
     method: "DELETE",
     body: JSON.stringify({ updated_at: project.updated_at }),
   });
