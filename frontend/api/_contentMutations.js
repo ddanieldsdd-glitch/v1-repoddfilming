@@ -2,7 +2,11 @@ const {
   assertUniqueProject,
   mergeHomeLayoutPatches,
   reorderProjects,
+  normalizeHomeOrder,
 } = require('./_contentIntegrity');
+const { recordHistory } = require('./_contentHistory');
+
+const HOME_LOCKED_FIELDS = ['home_featured', 'home_order', 'home_size', 'home_still'];
 
 const VALID_CATEGORIES = new Set(['fiction', 'documentary', 'commercial', 'music-video']);
 
@@ -137,6 +141,7 @@ async function createProject(db, collectionName, body) {
 
   const now = nowIso();
   project.updated_at = now;
+  await recordHistory(db, { scope: 'project-create', snapshot: doc, extra: { projectId: project.id } });
   const position = body.position === 'end' ? 'end' : 'start';
   const projects = [...(doc.projects || [])];
   if (position === 'end') projects.push(project);
@@ -170,7 +175,11 @@ async function updateProject(db, collectionName, projectId, body) {
   const current = doc.projects[index];
   assertVersion(body.updated_at ?? body.project?.updated_at, current.updated_at, 'Project');
 
-  const project = sanitizeProject({ ...current, ...body.project, id: projectId });
+  const incoming = sanitizeProject({ ...current, ...body.project, id: projectId });
+  HOME_LOCKED_FIELDS.forEach((key) => {
+    incoming[key] = current[key];
+  });
+  const project = incoming;
   const validation = validateProject(project);
   if (!validation.ok) {
     const err = new Error(validation.message);
@@ -188,6 +197,7 @@ async function updateProject(db, collectionName, projectId, body) {
 
   const now = nowIso();
   project.updated_at = now;
+  await recordHistory(db, { scope: 'project', snapshot: current, extra: { projectId } });
   const projects = [...doc.projects];
   projects[index] = project;
   const next = { ...doc, projects, updated_at: now };
@@ -219,6 +229,7 @@ async function deleteProject(db, collectionName, projectId, body) {
   assertVersion(body.updated_at ?? body.project?.updated_at, current.updated_at, 'Project');
 
   const now = nowIso();
+  await recordHistory(db, { scope: 'project-delete', snapshot: current, extra: { projectId } });
   const projects = (doc.projects || []).filter((item) => item.id !== projectId);
   const next = { ...doc, projects, updated_at: now };
 
@@ -263,6 +274,7 @@ async function updateSiteSection(db, collectionName, body) {
   assertVersion(body.site_updated_at, doc.site_updated_at, 'Site');
 
   const now = nowIso();
+  await recordHistory(db, { scope: 'site', snapshot: { site: doc.site, about: doc.about } });
   const next = {
     ...doc,
     site: { ...doc.site, ...(body.site || {}) },
@@ -298,16 +310,22 @@ async function updateHomeLayoutSection(db, collectionName, body) {
   assertVersion(body.home_updated_at, doc.home_updated_at, 'Home layout');
 
   const now = nowIso();
-  const projects = mergeHomeLayoutPatches(doc.projects || [], body.projects || [], body.home_max).map((project) => ({
+  const projects = normalizeHomeOrder(
+    mergeHomeLayoutPatches(doc.projects || [], body.projects || [], body.home_max),
+  ).map((project) => ({
     ...project,
     updated_at: project.updated_at || now,
   }));
+
+  await recordHistory(db, { scope: 'home', snapshot: { site: doc.site, projects: doc.projects } });
 
   const next = {
     ...doc,
     site: {
       ...doc.site,
       home_max: Number(body.home_max ?? doc.site?.home_max ?? 12) || 12,
+      ...(body.showreel_url !== undefined ? { showreel_url: body.showreel_url } : {}),
+      ...(body.showreel_placement !== undefined ? { showreel_placement: body.showreel_placement } : {}),
     },
     projects,
     home_updated_at: now,
@@ -351,11 +369,17 @@ async function replaceFullContent(db, collectionName, body) {
   }
 
   const existing = await readRawDocument(db, collectionName);
-  if (existing?.updated_at != null && body.updated_at != null) {
-    assertVersion(body.updated_at, existing.updated_at, 'Document');
+  if (existing) {
+    if (body.updated_at == null || body.updated_at === '') {
+      throw versionConflict(null, existing.updated_at || null, 'Document');
+    }
+    if (existing.updated_at) {
+      assertVersion(body.updated_at, existing.updated_at, 'Document');
+    }
   }
 
   const now = nowIso();
+  await recordHistory(db, { scope: 'replace', snapshot: existing });
   const payload = ensureDocumentTimestamps({
     ...body,
     updated_at: now,
@@ -367,7 +391,15 @@ async function replaceFullContent(db, collectionName, body) {
     })),
   });
 
-  await writeDocument(db, collectionName, payload, existing?._id ? { _id: existing._id } : {});
+  if (existing?._id) {
+    const result = await db.collection(collectionName).updateOne(
+      { _id: existing._id, updated_at: existing.updated_at ?? null },
+      { $set: stripInternalKeys(payload) },
+    );
+    if (result.matchedCount !== 1) throw versionConflict(body.updated_at, existing.updated_at, 'Document');
+  } else {
+    await writeDocument(db, collectionName, payload, {});
+  }
   return { updated_at: now, site_updated_at: payload.site_updated_at, home_updated_at: payload.home_updated_at };
 }
 
@@ -400,4 +432,5 @@ module.exports = {
   replaceFullContent,
   validateProjectsUnique,
   toHttpError,
+  HOME_LOCKED_FIELDS,
 };

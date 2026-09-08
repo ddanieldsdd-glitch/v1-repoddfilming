@@ -3,6 +3,7 @@ const {
   updateHomeLayoutSection,
   replaceFullContent,
   createProject,
+  updateProject,
   reorderProjectList,
   ensureDocumentTimestamps,
 } = require('../../api/_contentMutations');
@@ -42,6 +43,7 @@ describe('_contentMutations', () => {
       collection: () => ({
         findOne: async () => doc,
         updateOne: async () => ({ matchedCount: 1 }),
+        insertOne: async () => ({}),
       }),
     };
 
@@ -62,6 +64,7 @@ describe('_contentMutations', () => {
       collection: () => ({
         findOne: async () => doc,
         updateOne: async () => ({ matchedCount: 1 }),
+        insertOne: async () => ({}),
       }),
     };
 
@@ -82,6 +85,8 @@ describe('_contentMutations', () => {
       collection: () => ({
         findOne: async () => doc,
         replaceOne: async () => ({}),
+        updateOne: async () => ({ matchedCount: 1 }),
+        insertOne: async () => ({}),
       }),
     };
 
@@ -104,6 +109,7 @@ describe('_contentMutations', () => {
       collection: () => ({
         findOne: async () => doc,
         updateOne: async () => ({ matchedCount: 1 }),
+        insertOne: async () => ({}),
       }),
     };
 
@@ -121,6 +127,7 @@ describe('_contentMutations', () => {
       collection: () => ({
         findOne: async () => doc,
         updateOne: async () => ({ matchedCount: 1 }),
+        insertOne: async () => ({}),
       }),
     };
 
@@ -130,5 +137,49 @@ describe('_contentMutations', () => {
     });
 
     expect(result.order).toEqual(['p-2', 'p-1']);
+  });
+
+  test('updateProject preserves home layout fields', async () => {
+    const doc = baseDoc();
+    const db = {
+      collection: () => ({
+        findOne: async () => doc,
+        updateOne: async () => ({ matchedCount: 1 }),
+        insertOne: async () => ({}),
+      }),
+    };
+
+    const result = await updateProject(db, 'content', 'p-1', {
+      updated_at: doc.projects[0].updated_at,
+      project: {
+        ...doc.projects[0],
+        title: 'Updated',
+        home_still: 'stale.jpg',
+        home_size: 'hero',
+      },
+    });
+
+    expect(result.project.title).toBe('Updated');
+    expect(result.project.home_still).toBe('');
+    expect(result.project.home_size).toBe('medium');
+  });
+
+  test('replaceFullContent requires version when document exists', async () => {
+    const doc = baseDoc();
+    const db = {
+      collection: () => ({
+        findOne: async () => doc,
+        updateOne: async () => ({ matchedCount: 1 }),
+        insertOne: async () => ({}),
+      }),
+    };
+
+    await expect(
+      replaceFullContent(db, 'content', {
+        site: doc.site,
+        about: doc.about,
+        projects: doc.projects,
+      }),
+    ).rejects.toMatchObject({ code: 'VERSION_CONFLICT' });
   });
 });

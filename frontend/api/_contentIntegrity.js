@@ -319,6 +319,20 @@ function mergeHomeLayoutPatches(projects = [], patches = [], homeMax) {
   });
 }
 
+function normalizeHomeOrder(projects = []) {
+  const featured = projects
+    .filter((project) => project.home_featured !== false)
+    .sort((a, b) => Number(a.home_order) - Number(b.home_order) || String(a.title || '').localeCompare(String(b.title || '')));
+  const rest = projects.filter((project) => project.home_featured === false);
+  const orderById = new Map();
+  featured.forEach((project, index) => orderById.set(project.id, index + 1));
+  rest.forEach((project, index) => orderById.set(project.id, featured.length + index + 1));
+  return projects.map((project) => ({
+    ...project,
+    home_order: orderById.get(project.id) ?? project.home_order,
+  }));
+}
+
 module.exports = {
   IDENTITY_FIELDS,
   normalizeUrl,
@@ -329,4 +343,5 @@ module.exports = {
   assertUniqueProject,
   reorderProjects,
   mergeHomeLayoutPatches,
+  normalizeHomeOrder,
 };

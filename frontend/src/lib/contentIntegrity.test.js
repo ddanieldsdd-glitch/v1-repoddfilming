@@ -4,6 +4,7 @@ const {
   mergeHomeLayoutPatches,
   reorderProjects,
   assertUniqueProject,
+  normalizeHomeOrder,
 } = require('../../api/_contentIntegrity');
 
 describe('contentIntegrity', () => {
@@ -60,6 +61,17 @@ describe('contentIntegrity', () => {
     expect(next[0].home_featured).toBe(true);
     expect(next[0].home_size).toBe('wide');
     expect(next[0].title).toBe('One');
+  });
+
+  test('normalizeHomeOrder compacts featured order to 1..n', () => {
+    const next = normalizeHomeOrder([
+      { id: 'a', home_featured: true, home_order: 9, title: 'A' },
+      { id: 'b', home_featured: false, home_order: 1, title: 'B' },
+      { id: 'c', home_featured: true, home_order: 2, title: 'C' },
+    ]);
+    expect(next.find((p) => p.id === 'c').home_order).toBe(1);
+    expect(next.find((p) => p.id === 'a').home_order).toBe(2);
+    expect(next.find((p) => p.id === 'b').home_order).toBe(3);
   });
 
   test('assertUniqueProject rejects duplicate slug', () => {

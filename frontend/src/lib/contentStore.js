@@ -72,6 +72,10 @@ const requestJson = async (url, options = {}) => {
       serverUpdatedAt: data.server_updated_at,
     });
   }
+  if (res.status === 401) {
+    setAdminAuthed(false);
+    throw new Error("Sesión expirada");
+  }
   if (!res.ok) {
     throw new Error(data.message || `HTTP ${res.status}`);
   }
@@ -224,12 +228,14 @@ export const updateSite = async (current, { site, about }) => {
   });
 };
 
-export const updateHomeLayout = async (current, { home_max, projects }) => {
+export const updateHomeLayout = async (current, { home_max, projects, showreel_url, showreel_placement }) => {
   const data = await requestJson("/api/home-layout", {
     method: "PUT",
     body: JSON.stringify({
       home_updated_at: current.home_updated_at,
       home_max,
+      showreel_url,
+      showreel_placement,
       projects,
     }),
   });
@@ -272,6 +278,20 @@ export const isAdminAuthed = () =>
 export const setAdminAuthed = (val) => {
   if (val) sessionStorage.setItem(ADMIN_AUTH_KEY, "1");
   else sessionStorage.removeItem(ADMIN_AUTH_KEY);
+};
+
+export const logoutAdmin = async () => {
+  try {
+    await fetch("/api/admin-logout", { method: "POST", credentials: "same-origin" });
+  } catch {
+    /* ignore */
+  }
+  setAdminAuthed(false);
+};
+
+export const verifyAdminSession = async () => {
+  const res = await fetch("/api/admin-session", { credentials: "same-origin" });
+  return res.ok;
 };
 
 export const CATEGORIES = [
