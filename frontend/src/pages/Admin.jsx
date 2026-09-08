@@ -26,6 +26,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { HOME_SIZES, stillChoices } from "../lib/homeGrid";
 import { CropEditor } from "../components/admin/CropEditor";
 import { SHOWREEL_PLACEMENTS } from "../lib/crop";
+import { fetchVimeoMeta, isVimeoUrl as isVimeoPreviewUrl } from "../lib/vimeoMeta";
 
 const uploadBtnCls =
   "shrink-0 border border-white/25 px-3 py-2 text-[10px] tracking-[0.22em] uppercase text-white hover:bg-white hover:text-black transition disabled:opacity-30";
@@ -593,9 +594,78 @@ const ProjectForm = ({ value, onChange }) => {
   const updateI18n = (key, lang, v) =>
     onChange({ ...value, [key]: { ...(value[key] || {}), [lang]: v } });
   const projectSlug = value.slug || slugify(value.title || "");
+  const [ratioStatus, setRatioStatus] = useState("idle");
+  const ratioRequestRef = useRef(0);
   const ensureSlug = () => {
     if (!value.slug && projectSlug) update({ slug: projectSlug });
   };
+
+  const resolvePreviewRatio = async (url, { force = false } = {}) => {
+    const trimmed = String(url || "").trim();
+    if (!trimmed) {
+      setRatioStatus("idle");
+      update({ preview_url: "", preview_video_ratio: undefined });
+      return;
+    }
+
+    if (!isVimeoPreviewUrl(trimmed)) {
+      setRatioStatus("idle");
+      update({ preview_url: trimmed, preview_video_ratio: undefined });
+      return;
+    }
+
+    const requestId = ++ratioRequestRef.current;
+    setRatioStatus("loading");
+
+    try {
+      const meta = await fetchVimeoMeta(trimmed);
+      if (requestId !== ratioRequestRef.current) return;
+
+      update({
+        preview_url: trimmed,
+        preview_video_ratio: meta?.aspect_ratio ?? undefined,
+      });
+      setRatioStatus(meta?.aspect_ratio ? "ok" : "error");
+    } catch {
+      if (requestId !== ratioRequestRef.current) return;
+      update({ preview_url: trimmed });
+      setRatioStatus("error");
+    }
+  };
+
+  useEffect(() => {
+    const url = String(value.preview_url || "").trim();
+    if (!url) {
+      setRatioStatus("idle");
+      return undefined;
+    }
+    if (!isVimeoPreviewUrl(url)) {
+      setRatioStatus("idle");
+      return undefined;
+    }
+    if (typeof value.preview_video_ratio === "number" && value.preview_video_ratio > 0) {
+      setRatioStatus("ok");
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      resolvePreviewRatio(url);
+    }, 450);
+
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value.preview_url, value.preview_video_ratio]);
+
+  const ratioLabel =
+    ratioStatus === "loading"
+      ? "Calculando ratio del vídeo…"
+      : ratioStatus === "ok" && typeof value.preview_video_ratio === "number"
+        ? `Ratio detectado: ${value.preview_video_ratio.toFixed(3)} (${Math.round(value.preview_video_ratio * 1000) / 1000}:1)`
+        : ratioStatus === "error"
+          ? "No se pudo resolver el ratio de Vimeo. Se usará 16:9 al mostrar la miniatura."
+          : projectVimeoPreview(value) && typeof value.preview_video_ratio !== "number"
+            ? "Ratio pendiente de calcular."
+            : "";
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -690,13 +760,43 @@ const ProjectForm = ({ value, onChange }) => {
           data-testid="form-preview"
           className={inputCls}
           value={value.preview_url || ""}
-          onChange={(e) => update({ preview_url: e.target.value })}
+          onChange={(e) => {
+            const nextUrl = e.target.value;
+            update({
+              preview_url: nextUrl,
+              preview_video_ratio: undefined,
+            });
+            if (!nextUrl.trim()) setRatioStatus("idle");
+            else if (!isVimeoPreviewUrl(nextUrl.trim())) setRatioStatus("idle");
+            else setRatioStatus("loading");
+          }}
           placeholder="https://vimeo.com/... o https://youtube.com/watch?v=..."
         />
         <p className="mt-1 text-[11px] text-neutral-500">
           Con URL de vídeo, la página del proyecto se indexa automáticamente como watch page en Google.
           En Obra el vídeo se autoreproduce en la miniatura; en la portada, al pasar el ratón.
         </p>
+        {projectVimeoPreview(value) && (
+          <div className="mt-2 flex flex-wrap items-center gap-3">
+            {ratioLabel && (
+              <p
+                className={`text-[11px] ${
+                  ratioStatus === "error" ? "text-amber-400" : "text-neutral-500"
+                }`}
+              >
+                {ratioLabel}
+              </p>
+            )}
+            <button
+              type="button"
+              className="border border-white/20 px-2.5 py-1 text-[10px] tracking-[0.18em] uppercase text-white/80 hover:bg-white hover:text-black transition disabled:opacity-40"
+              disabled={ratioStatus === "loading"}
+              onClick={() => resolvePreviewRatio(value.preview_url, { force: true })}
+            >
+              Recalcular ratio
+            </button>
+          </div>
+        )}
       </Field>
       {projectVimeoPreview(value) && (
         <div className="md:col-span-2 rounded-xl border border-white/10 p-4 space-y-3">

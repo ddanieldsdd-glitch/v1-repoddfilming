@@ -131,11 +131,13 @@ a:focus-visible {
   position: absolute !important;
   top: 50% !important;
   left: 50% !important;
-  width: 320% !important;
-  height: 320% !important;
+  width: calc(100% * var(--vf-cover-w, 1)) !important;
+  height: calc(100% * var(--vf-cover-h, 1)) !important;
+  min-width: 100% !important;
+  min-height: 100% !important;
   max-width: none !important;
-  transform-origin: var(--vf-x, 50%) var(--vf-y, 54%) !important;
-  transform: translate(-50%, -54%) scale(calc(3.2 * var(--vf-zoom, 1))) !important;
+  transform-origin: var(--vf-x, 50%) var(--vf-y, 50%) !important;
+  transform: translate(-50%, -50%) scale(var(--vf-zoom, 1)) !important;
   pointer-events: none !important;
   border: 0 !important;
 }

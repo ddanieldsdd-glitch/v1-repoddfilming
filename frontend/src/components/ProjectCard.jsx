@@ -33,6 +33,8 @@ export const ProjectCard = ({
   ratio,
   /** Recorte 16:9 para la miniatura Vimeo al hover/reproducir. */
   previewCrop,
+  /** Relación ancho/alto real del preview Vimeo. */
+  previewVideoRatio,
 }) => {
   const [inView, setInView]           = useState(false);
   const [playInView, setPlayInView]   = useState(false);
@@ -204,8 +206,9 @@ export const ProjectCard = ({
             muted
             playing={shouldPlay}
             loop
-            cover={!contain}
+            cover
             crop={previewCrop}
+            previewVideoRatio={previewVideoRatio ?? project.preview_video_ratio}
             className={`absolute inset-0 z-[1] w-full h-full bg-black transition-opacity duration-300 ${
               previewVisible ? "opacity-100" : "opacity-0"
             }`}

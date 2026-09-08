@@ -1,16 +1,11 @@
-import { useEffect, useRef, useCallback, useState } from "react";
+import { useEffect, useRef, useCallback, useState, useMemo } from "react";
 import Player from "@vimeo/player";
 import {
   registerPlayer,
   unregisterPlayer,
   getGlobalMuted,
 } from "../lib/videoStore";
-import { normalizeCrop } from "../lib/crop";
-
-function isFullCropNormalized(crop) {
-  const c = normalizeCrop(crop);
-  return c.w >= 0.99 && c.h >= 0.99 && c.x <= 0.01 && c.y <= 0.01;
-}
+import { computeVideoCoverVars } from "../lib/videoCover";
 
 /**
  * Vimeo: @vimeo/player SDK.
@@ -30,6 +25,8 @@ export const VideoPlayer = ({
   interactive = true,
   /** Recorta el iframe para llenar el marco. Por defecto sigue a `background`. */
   cover,
+  /** Relación ancho/alto real del vídeo (p. ej. desde oEmbed de Vimeo). */
+  previewVideoRatio,
   /** Ventana 16:9 sobre el vídeo (miniatura / preview en tarjetas). */
   crop,
   onReady,
@@ -38,10 +35,12 @@ export const VideoPlayer = ({
   onError,
   onRef,
 }) => {
+  const wrapperRef = useRef(null);
   const containerRef = useRef(null);
   const playerRef = useRef(null);
   const ytPlayerRef = useRef(null);
   const [ready, setReady] = useState(false);
+  const [containerRatio, setContainerRatio] = useState(16 / 9);
   const readyCalledRef = useRef(false);
 
   const vimeoId = extractVimeoId(url);
@@ -268,19 +267,40 @@ export const VideoPlayer = ({
 
   const iframeCls = `absolute inset-0 h-full w-full border-0 bg-black [color-scheme:dark] ${interactive ? "" : "pointer-events-none"}`;
   const shouldCover = cover === true;
-  const cropVars = crop && !isFullCropNormalized(crop)
-    ? {
-        "--vf-x": `${(normalizeCrop(crop).x + normalizeCrop(crop).w / 2) * 100}%`,
-        "--vf-y": `${(normalizeCrop(crop).y + normalizeCrop(crop).h / 2) * 100}%`,
-        "--vf-zoom": String(1 / Math.min(normalizeCrop(crop).w, normalizeCrop(crop).h)),
+
+  useEffect(() => {
+    if (!shouldCover || !wrapperRef.current) return undefined;
+
+    const el = wrapperRef.current;
+    const read = () => {
+      const { width, height } = el.getBoundingClientRect();
+      if (width > 0 && height > 0) {
+        setContainerRatio(width / height);
       }
-    : undefined;
+    };
+
+    const ro = new ResizeObserver(read);
+    ro.observe(el);
+    read();
+
+    return () => ro.disconnect();
+  }, [shouldCover]);
+
+  const coverStyle = useMemo(() => {
+    if (!shouldCover) return undefined;
+    return computeVideoCoverVars({
+      previewVideoRatio,
+      containerRatio,
+      crop,
+    });
+  }, [shouldCover, previewVideoRatio, containerRatio, crop]);
 
   return (
     <div
+      ref={wrapperRef}
       className={`relative w-full h-full bg-black ${shouldCover ? "video-bg-cover" : ""} ${className} ${interactive ? "" : "pointer-events-none"}`}
       data-testid={testId}
-      style={cropVars}
+      style={coverStyle}
     >
       {vimeoId ? (
         <iframe
