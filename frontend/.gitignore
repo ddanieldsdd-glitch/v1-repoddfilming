@@ -23,6 +23,14 @@ dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.log
+
+# backup files
+*.bak
+*.bak.*
+
+# audit reports
+npm-audit.json
 
 # editor / OS
 .DS_Store

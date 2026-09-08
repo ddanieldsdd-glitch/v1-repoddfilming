@@ -40,7 +40,15 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
 dump.rdb
+
+# Backup files
+*.bak
+*.bak.*
+
+# Audit reports
+npm-audit.json
 
 # System files
 .DS_Store
