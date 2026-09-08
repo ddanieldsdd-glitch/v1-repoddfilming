@@ -1,39 +1,47 @@
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { Link } from "react-router-dom";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { HOME_SIZES, stillChoices } from "../../lib/homeGrid";
+import { SHOWREEL_PLACEMENTS } from "../../lib/crop";
 import { Field } from "./fields/Field";
 import { inputCls } from "./styles";
+import { AdminSection } from "./AdminSection";
+import { SaveStatus } from "./SaveStatus";
+import { useAdminContent } from "./hooks/useAdminContent";
+import { useSectionDraft } from "./hooks/useSectionDraft";
+import { useMemo, useState } from "react";
 
-export const HomeLayoutSection = ({ content, onSave, saving }) => {
-  const snapshot = (projects, site) =>
-    (projects || []).map((p, i) => ({
-      id: p.id,
-      title: p.title,
-      slug: p.slug,
-      cover: p.cover,
-      stills: p.stills || [],
-      home_featured: p.home_featured !== false,
-      home_order: Number.isFinite(Number(p.home_order)) ? Number(p.home_order) : i + 1,
-      home_size: p.home_size || "medium",
-      home_still: p.home_still || "",
-    }));
+const snapshot = (content) => ({
+  home_max: content.site?.home_max ?? 12,
+  showreel_url: content.site?.showreel_url || "",
+  showreel_placement: content.site?.showreel_placement || "nav",
+  rows: (content.projects || []).map((p, i) => ({
+    id: p.id,
+    title: p.title,
+    slug: p.slug,
+    cover: p.cover,
+    stills: p.stills || [],
+    home_featured: p.home_featured !== false,
+    home_order: Number.isFinite(Number(p.home_order)) ? Number(p.home_order) : i + 1,
+    home_size: p.home_size || "medium",
+    home_still: p.home_still || "",
+  })),
+});
 
-  const [rows, setRows] = useState(() => snapshot(content.projects, content.site));
-  const [homeMax, setHomeMax] = useState(content.site?.home_max ?? 12);
-  useEffect(() => {
-    setRows(snapshot(content.projects, content.site));
-    setHomeMax(content.site?.home_max ?? 12);
-  }, [content.projects, content.site]);
+export const HomeLayoutSection = () => {
+  const { content, saveHome, saveStates, reload } = useAdminContent();
+  const initial = useMemo(() => snapshot(content), [content]);
+  const [query, setQuery] = useState("");
+  const [homeOnly, setHomeOnly] = useState(true);
 
-  const patch = (id, next) =>
-    setRows((list) => list.map((r) => (r.id === id ? { ...r, ...next } : r)));
-
-  const handleSave = async () => {
-    try {
-      await onSave({
-        home_max: Number(homeMax) || 12,
-        projects: rows.map((row) => ({
+  const { draft, setDraft, status } = useSectionDraft({
+    initial,
+    debounceMs: 1800,
+    onSave: async (next) => {
+      await saveHome({
+        home_max: Number(next.home_max) || 12,
+        showreel_url: next.showreel_url,
+        showreel_placement: next.showreel_placement,
+        projects: next.rows.map((row) => ({
           id: row.id,
           home_featured: row.home_featured,
           home_order: row.home_order,
@@ -41,146 +49,105 @@ export const HomeLayoutSection = ({ content, onSave, saving }) => {
           home_still: row.home_still,
         })),
       });
-      toast.success("Portada guardada");
-    } catch {
-      /* parent handles errors */
-    }
-  };
+    },
+  });
 
-  const sorted = [...rows].sort(
+  const patch = (id, next) =>
+    setDraft((current) => ({
+      ...current,
+      rows: current.rows.map((row) => (row.id === id ? { ...row, ...next } : row)),
+    }));
+
+  const sorted = [...draft.rows].sort(
     (a, b) => Number(a.home_order) - Number(b.home_order) || a.title.localeCompare(b.title),
   );
+  const visible = sorted.filter((row) => {
+    if (homeOnly && !row.home_featured) return false;
+    if (!query.trim()) return true;
+    return `${row.title} ${row.slug}`.toLowerCase().includes(query.trim().toLowerCase());
+  });
 
   const move = (id, dir) => {
     const featured = sorted.filter((r) => r.home_featured);
-    const rest = sorted.filter((r) => !r.home_featured);
     const i = featured.findIndex((r) => r.id === id);
     const j = i + dir;
     if (i < 0 || j < 0 || j >= featured.length) return;
     const next = [...featured];
     [next[i], next[j]] = [next[j], next[i]];
-    setRows([
-      ...next.map((r, idx) => ({ ...r, home_order: idx + 1 })),
-      ...rest.map((r, idx) => ({ ...r, home_order: next.length + idx + 1 })),
-    ]);
+    setDraft((current) => ({
+      ...current,
+      rows: current.rows.map((row) => {
+        const idx = next.findIndex((item) => item.id === row.id);
+        return idx >= 0 ? { ...row, home_order: idx + 1 } : row;
+      }),
+    }));
   };
 
   return (
-    <div className="border border-white/10 p-6 md:p-8 mb-10" data-testid="admin-home-layout">
-      <h2 className="text-xl tracking-tight mb-2">Pantalla principal</h2>
-      <p className="text-[12px] text-neutral-500 mb-6 max-w-2xl">
-        Qué proyectos salen en la parrilla, su still, tamaño y orden. El reencuadre del vídeo Vimeo
-        (miniaturas en Obra y preview en portada) se configura en cada proyecto, junto a la URL de
-        preview. El showreel y el máximo de piezas global se ajustan aquí; la URL del reel en Site.
-      </p>
-      <div className="mb-6 max-w-xs">
-        <Field label="Máximo de piezas en portada">
-          <input
-            type="number"
-            min={1}
-            max={24}
-            className={inputCls}
-            value={homeMax}
-            onChange={(e) => setHomeMax(parseInt(e.target.value, 10) || 12)}
-            data-testid="site-home-max"
-          />
+    <AdminSection
+      title="Pantalla principal"
+      description="Controla qué proyectos salen en portada, su still, tamaño y el showreel. El recorte del vídeo se edita en cada proyecto."
+      actions={<SaveStatus saveState={status === "dirty" ? "idle" : status === "saving" ? "saving" : saveStates.home} onReload={reload} lastSavedAt={status === "saved" ? new Date() : null} />}
+      testId="admin-home-layout"
+    >
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+        <Field label="Máximo de piezas">
+          <input type="number" min={1} max={24} className={inputCls} value={draft.home_max} data-testid="site-home-max" onChange={(e) => setDraft((d) => ({ ...d, home_max: parseInt(e.target.value, 10) || 12 }))} />
+        </Field>
+        <Field label="Showreel URL">
+          <input className={inputCls} value={draft.showreel_url} onChange={(e) => setDraft((d) => ({ ...d, showreel_url: e.target.value }))} />
+        </Field>
+        <Field label="Dónde mostrar el showreel">
+          <select className={inputCls} value={draft.showreel_placement} onChange={(e) => setDraft((d) => ({ ...d, showreel_placement: e.target.value }))}>
+            {SHOWREEL_PLACEMENTS.map((p) => <option key={p.id} value={p.id}>{p.es}</option>)}
+          </select>
         </Field>
       </div>
+      <div className="flex flex-wrap gap-3 mb-6">
+        <input className={inputCls + " max-w-sm"} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar en portada" />
+        <button type="button" onClick={() => setHomeOnly((v) => !v)} className={`border px-3 py-2 text-[10px] tracking-[0.18em] uppercase ${homeOnly ? "bg-white text-black" : "border-white/20 text-neutral-400"}`}>
+          Solo en portada
+        </button>
+      </div>
       <ul className="space-y-4">
-        {sorted.map((row) => {
+        {visible.map((row) => {
           const project = content.projects.find((p) => p.id === row.id) || row;
           const thumbs = stillChoices(project);
-          const featuredList = sorted.filter((r) => r.home_featured);
-          const featIndex = featuredList.findIndex((r) => r.id === row.id);
+          const missingStill = row.home_still && !thumbs.includes(row.home_still) && row.home_still !== row.cover;
           return (
-            <li
-              key={row.id}
-              className="rounded-xl border border-white/10 p-4 grid grid-cols-1 lg:grid-cols-[160px_1fr] gap-4"
-            >
-              <div className="h-24 lg:h-full min-h-[96px] rounded-lg overflow-hidden bg-black flex items-center justify-center">
-                {(row.home_still || row.cover) && (
-                  <img
-                    src={row.home_still || row.cover}
-                    alt=""
-                    className="max-w-full max-h-full object-contain"
-                  />
-                )}
+            <li key={row.id} className="rounded-xl border border-white/10 p-4 grid grid-cols-1 lg:grid-cols-[160px_1fr] gap-4">
+              <div className="h-24 rounded-lg overflow-hidden bg-black flex items-center justify-center">
+                {(row.home_still || row.cover) && <img src={row.home_still || row.cover} alt="" className="max-w-full max-h-full object-contain" />}
               </div>
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm text-white">{row.title}</p>
-                  <div className="flex items-center gap-3">
+                  <div>
+                    <p className="text-sm text-white">{row.title}</p>
+                    <Link to={`/admin/projects/${row.id}`} className="text-[10px] uppercase tracking-[0.18em] text-neutral-500 hover:text-white">Editar proyecto</Link>
+                    {missingStill && <p className="text-[11px] text-amber-400">El still elegido ya no está en cover/stills.</p>}
+                  </div>
+                  <div className="flex items-center gap-2">
                     {row.home_featured && (
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => move(row.id, -1)}
-                          disabled={featIndex <= 0}
-                          className="p-1.5 border border-white/20 text-white hover:bg-white hover:text-black disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-white transition"
-                          aria-label="Subir"
-                          title="Subir"
-                        >
-                          <ChevronUp className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => move(row.id, 1)}
-                          disabled={featIndex < 0 || featIndex >= featuredList.length - 1}
-                          className="p-1.5 border border-white/20 text-white hover:bg-white hover:text-black disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-white transition"
-                          aria-label="Bajar"
-                          title="Bajar"
-                        >
-                          <ChevronDown className="w-4 h-4" />
-                        </button>
-                      </div>
+                      <>
+                        <button type="button" onClick={() => move(row.id, -1)} className="p-1.5 border border-white/20" aria-label="Subir"><ChevronUp className="w-4 h-4" /></button>
+                        <button type="button" onClick={() => move(row.id, 1)} className="p-1.5 border border-white/20" aria-label="Bajar"><ChevronDown className="w-4 h-4" /></button>
+                      </>
                     )}
-                    <label className="flex items-center gap-2 text-[11px] tracking-[0.18em] uppercase text-neutral-400">
-                      <input
-                        type="checkbox"
-                        checked={row.home_featured}
-                        onChange={(e) => patch(row.id, { home_featured: e.target.checked })}
-                        className="accent-white"
-                      />
+                    <label className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-neutral-400">
+                      <input type="checkbox" className="accent-white" checked={row.home_featured} onChange={(e) => patch(row.id, { home_featured: e.target.checked })} />
                       En home
                     </label>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  <Field label="Orden">
-                    <input
-                      type="number"
-                      min={1}
-                      className={inputCls}
-                      value={row.home_order}
-                      onChange={(e) => patch(row.id, { home_order: parseInt(e.target.value, 10) || 1 })}
-                    />
-                  </Field>
-                  <Field label="Tamaño">
-                    <select
-                      className={inputCls}
-                      value={row.home_size}
-                      onChange={(e) => patch(row.id, { home_size: e.target.value })}
-                    >
-                      {HOME_SIZES.map((s) => (
-                        <option key={s.id} value={s.id}>{s.es}</option>
-                      ))}
-                    </select>
-                  </Field>
-                </div>
+                <Field label="Tamaño">
+                  <select className={inputCls} value={row.home_size} onChange={(e) => patch(row.id, { home_size: e.target.value })}>
+                    {HOME_SIZES.map((s) => <option key={s.id} value={s.id}>{s.es}</option>)}
+                  </select>
+                </Field>
                 {thumbs.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
                     {thumbs.map((url) => (
-                      <button
-                        key={url}
-                        type="button"
-                        onClick={() => patch(row.id, { home_still: url })}
-                        className={`h-12 w-[4.5rem] overflow-hidden rounded-md border bg-black ${
-                          (row.home_still || row.cover) === url
-                            ? "border-white"
-                            : "border-white/15 hover:border-white/40"
-                        }`}
-                        title="Usar este still"
-                      >
+                      <button key={url} type="button" onClick={() => patch(row.id, { home_still: url })} className={`h-12 w-[4.5rem] overflow-hidden rounded-md border bg-black ${(row.home_still || row.cover) === url ? "border-white" : "border-white/15"}`}>
                         <img src={url} alt="" className="h-full w-full object-contain" />
                       </button>
                     ))}
@@ -191,14 +158,6 @@ export const HomeLayoutSection = ({ content, onSave, saving }) => {
           );
         })}
       </ul>
-      <button
-        data-testid="save-home-layout"
-        onClick={handleSave}
-        disabled={saving}
-        className="mt-6 border border-white/30 px-5 py-2 text-[11px] tracking-[0.28em] uppercase text-white hover:bg-white hover:text-black transition disabled:opacity-50"
-      >
-        {saving ? "Saving…" : "Guardar portada"}
-      </button>
-    </div>
+    </AdminSection>
   );
 };
