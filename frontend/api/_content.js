@@ -18,6 +18,9 @@ function mergeContent(doc) {
   return {
     ...defaultContent,
     ...doc,
+    updated_at: doc.updated_at,
+    site_updated_at: doc.site_updated_at,
+    home_updated_at: doc.home_updated_at,
     site: {
       ...defaultContent.site,
       ...doc.site,
@@ -44,6 +47,18 @@ async function getDb() {
   return _client.db(DB_NAME);
 }
 
+/** Raw Mongo document including _id and timestamps. */
+async function getRawContentDocument() {
+  if (!MONGO_URL) return null;
+  try {
+    const db = await getDb();
+    return db.collection(COLLECTION).findOne({});
+  } catch (err) {
+    console.error('[api/_content] MongoDB raw read error:', err.message);
+    return null;
+  }
+}
+
 /** Contenido completo (MongoDB → defaults). Sin filtrar publicados. */
 async function getMergedContent() {
   if (!MONGO_URL) return mergeContent(null);
@@ -66,7 +81,9 @@ module.exports = {
   defaultContent,
   mergeContent,
   getMergedContent,
+  getRawContentDocument,
   getPublishedProjects,
+  getDb,
   DB_NAME,
   COLLECTION,
 };

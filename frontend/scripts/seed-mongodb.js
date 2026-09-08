@@ -20,15 +20,21 @@ const contentPath = path.join(__dirname, '../src/data/content.json');
 const rawContent = fs.readFileSync(contentPath, 'utf-8');
 const content = JSON.parse(rawContent);
 
-// Mark all existing projects as published
+const now = new Date().toISOString();
 content.projects = content.projects.map((p) => ({
   ...p,
   published: p.published !== undefined ? p.published : true,
+  updated_at: p.updated_at || now,
 }));
 
 // Strip internal README keys before inserting
 const doc = Object.fromEntries(
-  Object.entries(content).filter(([k]) => !k.startsWith('_'))
+  Object.entries({
+    ...content,
+    updated_at: now,
+    site_updated_at: now,
+    home_updated_at: now,
+  }).filter(([k]) => !k.startsWith('_'))
 );
 
 async function seed() {

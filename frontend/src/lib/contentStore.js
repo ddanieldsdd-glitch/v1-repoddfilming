@@ -1,11 +1,20 @@
 ﻿import defaultContent from "../data/content.json";
 import { defaultWorkCrop } from "./crop";
 
-const STORAGE_KEY = "ddp_content_v7";
+const STORAGE_KEY = "ddp_content_v8";
 const LANG_KEY = "ddp_lang";
 const ADMIN_AUTH_KEY = "ddp_admin_auth";
 
 const listeners = new Set();
+
+export class ContentConflictError extends Error {
+  constructor(message, meta = {}) {
+    super(message);
+    this.name = "ContentConflictError";
+    this.code = meta.code || "VERSION_CONFLICT";
+    this.serverUpdatedAt = meta.serverUpdatedAt || null;
+  }
+}
 
 const safeParse = (raw) => {
   try {
@@ -42,6 +51,33 @@ const applyHomeDefaults = (content) => {
   };
 };
 
+const mergeContentPatch = (current, patch) => applyHomeDefaults({
+  ...current,
+  ...patch,
+  site: patch.site ? { ...current.site, ...patch.site } : current.site,
+  about: patch.about ? { ...current.about, ...patch.about } : current.about,
+  projects: patch.projects ?? current.projects,
+});
+
+const requestJson = async (url, options = {}) => {
+  const res = await fetch(url, {
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+    ...options,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 409) {
+    throw new ContentConflictError(data.message || "Este contenido se modificó en otra sesión", {
+      code: data.code,
+      serverUpdatedAt: data.server_updated_at,
+    });
+  }
+  if (!res.ok) {
+    throw new Error(data.message || `HTTP ${res.status}`);
+  }
+  return data;
+};
+
 // Synchronous read from localStorage cache — used for instant first render
 export const loadContent = () => {
   if (typeof window === "undefined") return applyHomeDefaults(defaultContent);
@@ -68,7 +104,9 @@ export const loadContent = () => {
 export const fetchContent = async () => {
   const res = await fetch("/api/content", { credentials: "same-origin" });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return applyHomeDefaults(await res.json());
+  const data = applyHomeDefaults(await res.json());
+  saveContent(data);
+  return data;
 };
 
 // Update localStorage cache and notify all subscribers (local only, no server write)
@@ -77,20 +115,131 @@ export const saveContent = (next) => {
   listeners.forEach((fn) => fn(next));
 };
 
-// Write to server via PUT, then update cache on success
-export const pushContent = async (next) => {
-  const res = await fetch("/api/content", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    credentials: "same-origin",
-    body: JSON.stringify(next),
-  });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.message || `HTTP ${res.status}`);
-  }
+const persistMerged = (current, patch) => {
+  const next = mergeContentPatch(current, patch);
   saveContent(next);
   return next;
+};
+
+// Write to server via PUT, then update cache on success
+export const pushContent = async (next) => {
+  const data = await requestJson("/api/content", {
+    method: "PUT",
+    body: JSON.stringify({
+      ...next,
+      updated_at: next.updated_at,
+    }),
+  });
+  const merged = persistMerged(next, {
+    updated_at: data.updated_at,
+    site_updated_at: data.site_updated_at,
+    home_updated_at: data.home_updated_at,
+  });
+  return merged;
+};
+
+export const createProject = async (current, project, { position = "start" } = {}) => {
+  const data = await requestJson("/api/projects", {
+    method: "POST",
+    body: JSON.stringify({
+      updated_at: current.updated_at,
+      project,
+      position,
+    }),
+  });
+  const projects =
+    position === "end"
+      ? [...current.projects, data.project]
+      : [data.project, ...current.projects];
+  return persistMerged(current, {
+    updated_at: data.updated_at,
+    site_updated_at: data.site_updated_at,
+    home_updated_at: data.home_updated_at,
+    projects,
+  });
+};
+
+export const updateProject = async (current, project) => {
+  const data = await requestJson(`/api/projects/${encodeURIComponent(project.id)}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      updated_at: project.updated_at,
+      project,
+    }),
+  });
+  return persistMerged(current, {
+    updated_at: data.updated_at,
+    site_updated_at: data.site_updated_at,
+    home_updated_at: data.home_updated_at,
+    projects: current.projects.map((item) => (item.id === data.project.id ? data.project : item)),
+  });
+};
+
+export const deleteProject = async (current, project) => {
+  const data = await requestJson(`/api/projects/${encodeURIComponent(project.id)}`, {
+    method: "DELETE",
+    body: JSON.stringify({ updated_at: project.updated_at }),
+  });
+  return persistMerged(current, {
+    updated_at: data.updated_at,
+    site_updated_at: data.site_updated_at,
+    home_updated_at: data.home_updated_at,
+    projects: current.projects.filter((item) => item.id !== project.id),
+  });
+};
+
+export const reorderProjects = async (current, order) => {
+  const data = await requestJson("/api/projects/reorder", {
+    method: "PUT",
+    body: JSON.stringify({
+      updated_at: current.updated_at,
+      order,
+    }),
+  });
+  const byId = new Map(current.projects.map((project) => [project.id, project]));
+  const projects = (data.order || order).map((id) => byId.get(id)).filter(Boolean);
+  return persistMerged(current, {
+    updated_at: data.updated_at,
+    site_updated_at: data.site_updated_at,
+    home_updated_at: data.home_updated_at,
+    projects,
+  });
+};
+
+export const updateSite = async (current, { site, about }) => {
+  const data = await requestJson("/api/site", {
+    method: "PUT",
+    body: JSON.stringify({
+      site_updated_at: current.site_updated_at,
+      site,
+      about,
+    }),
+  });
+  return persistMerged(current, {
+    updated_at: data.updated_at,
+    site_updated_at: data.site_updated_at,
+    home_updated_at: data.home_updated_at,
+    site: data.site,
+    about: data.about,
+  });
+};
+
+export const updateHomeLayout = async (current, { home_max, projects }) => {
+  const data = await requestJson("/api/home-layout", {
+    method: "PUT",
+    body: JSON.stringify({
+      home_updated_at: current.home_updated_at,
+      home_max,
+      projects,
+    }),
+  });
+  return persistMerged(current, {
+    updated_at: data.updated_at,
+    site_updated_at: data.site_updated_at,
+    home_updated_at: data.home_updated_at,
+    site: data.site,
+    projects: data.projects,
+  });
 };
 
 export const resetContent = async () => {

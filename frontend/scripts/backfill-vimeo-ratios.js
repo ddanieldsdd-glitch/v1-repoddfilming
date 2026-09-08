@@ -86,7 +86,12 @@ async function backfill() {
 
     await col.updateOne(
       { _id: doc._id },
-      { $set: { projects: nextProjects } },
+      {
+        $set: {
+          projects: nextProjects,
+          updated_at: new Date().toISOString(),
+        },
+      },
     );
 
     console.log(`\nActualizados ${updates.length} proyecto(s) en ${DB_NAME}.${COLLECTION}.`);
