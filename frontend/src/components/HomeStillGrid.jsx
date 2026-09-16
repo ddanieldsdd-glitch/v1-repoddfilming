@@ -3,7 +3,8 @@ import { ProjectCard } from "./ProjectCard";
 import { packJustified, DEFAULT_RATIO } from "../lib/justifiedLayout";
 import { estimateHomeGridWidth } from "../lib/homeGrid";
 
-const GAP = 16;
+const DESKTOP_GAP = 16;
+const MOBILE_GAP = 12;
 
 export function HomeStillGrid({ tiles, lang }) {
   const wrapRef = useRef(null);
@@ -44,17 +45,20 @@ export function HomeStillGrid({ tiles, lang }) {
     [tiles],
   );
 
+  const isMobile = width < 640;
+  const gap = isMobile ? MOBILE_GAP : DESKTOP_GAP;
+
   const rows = useMemo(
     () =>
       packJustified(items, width, {
-        gap: GAP,
-        minH: width < 640 ? 180 : 240,
-        maxH: Math.round(windowH * (width < 640 ? 0.48 : 0.46)),
+        gap,
+        minH: isMobile ? 228 : 240,
+        maxH: Math.round(windowH * (isMobile ? 0.55 : 0.46)),
         windowH,
-        maxPerRow: width < 640 ? 1 : 2,
+        maxPerRow: isMobile ? 1 : 2,
         soloAll: false,
       }),
-    [items, width, windowH],
+    [items, width, windowH, gap, isMobile],
   );
 
   return (
@@ -62,13 +66,13 @@ export function HomeStillGrid({ tiles, lang }) {
       ref={wrapRef}
       data-testid="home-still-grid"
       className="flex flex-col"
-      style={{ gap: GAP }}
+      style={{ gap }}
     >
       {rows.map((row) => (
         <div
           key={row.map((item) => item.id).join("-")}
           className="flex justify-center"
-          style={{ gap: GAP }}
+          style={{ gap }}
         >
           {row.map((item) => (
             <div

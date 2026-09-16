@@ -6,6 +6,9 @@
 
 const PLAYERS = new Map(); // key → Vimeo Player instance
 const listeners = new Set();
+/** Players observed for viewport: only resume while intersecting. */
+const VIEW_GATED = new Set();
+const IN_VIEW = new Set();
 
 export const HOME_SHOWREEL_KEY = "home-showreel";
 
@@ -99,11 +102,16 @@ const kickPlayer = (player) => {
   return player.play();
 };
 
-/**
- * Resumes playback for a specific player.
- * Useful after pauseAll() to bring one back.
- */
+export const pausePlayer = (key) => {
+  const player = PLAYERS.get(key);
+  if (!player) return;
+  try {
+    player.pause().catch(() => {});
+  } catch {}
+};
+
 export const resumePlayer = (key, retries = 0) => {
+  if (VIEW_GATED.has(key) && !IN_VIEW.has(key)) return;
   const player = PLAYERS.get(key);
   if (!player) return;
   try {
@@ -120,14 +128,16 @@ export const resumePlayer = (key, retries = 0) => {
 };
 
 /**
- * Reintenta un vídeo de fondo cuando vuelve a ser visible. No lo pausa al
- * salir del viewport: únicamente recupera la reproducción si el navegador
- * suspendió el iframe durante scroll, cambio de pestaña o bfcache.
+ * Recupera la reproducción al volver a ser visible y pausa al salir del
+ * viewport (scroll, pestaña oculta o bfcache).
  */
 export const observePlayerRecovery = (key, element) => {
   if (!element || typeof document === "undefined" || typeof window === "undefined") {
     return () => {};
   }
+
+  VIEW_GATED.add(key);
+  IN_VIEW.add(key);
 
   let inView = true;
   let watchdog = null;
@@ -168,13 +178,16 @@ export const observePlayerRecovery = (key, element) => {
           ([entry]) => {
             inView = Boolean(entry?.isIntersecting);
             if (inView) {
+              IN_VIEW.add(key);
               resumeIfVisible();
               startWatchdog();
             } else {
+              IN_VIEW.delete(key);
               stopWatchdog();
+              pausePlayer(key);
             }
           },
-          { threshold: [0, 0.01, 0.15], rootMargin: "120px 0px" },
+          { threshold: [0, 0.08, 0.2], rootMargin: "0px" },
         )
       : null;
 
@@ -187,6 +200,8 @@ export const observePlayerRecovery = (key, element) => {
   return () => {
     stopWatchdog();
     observer?.disconnect();
+    VIEW_GATED.delete(key);
+    IN_VIEW.delete(key);
     document.removeEventListener("visibilitychange", onVisibilityChange);
     window.removeEventListener("pageshow", onPageShow);
     window.removeEventListener("scroll", onScroll);

@@ -59,4 +59,30 @@ describe("videoStore home showreel", () => {
     cleanup();
     expect(disconnect).toHaveBeenCalledTimes(1);
   });
+
+  test("pauses the showreel when it leaves the viewport", () => {
+    const showreel = player();
+    registerPlayer(HOME_SHOWREEL_KEY, showreel, { forceMuted: true });
+
+    let intersectionCallback;
+    global.IntersectionObserver = jest.fn((callback) => {
+      intersectionCallback = callback;
+      return { observe: jest.fn(), disconnect: jest.fn() };
+    });
+
+    const cleanup = observePlayerRecovery(
+      HOME_SHOWREEL_KEY,
+      document.createElement("section"),
+    );
+    intersectionCallback([{ isIntersecting: false }]);
+    expect(showreel.pause).toHaveBeenCalled();
+
+    showreel.play.mockClear();
+    resumePlayer(HOME_SHOWREEL_KEY);
+    expect(showreel.play).not.toHaveBeenCalled();
+
+    intersectionCallback([{ isIntersecting: true }]);
+    expect(showreel.play).toHaveBeenCalled();
+    cleanup();
+  });
 });

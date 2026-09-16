@@ -9,6 +9,7 @@ import { CategoryExploreLinks } from "../components/CategoryExploreLinks";
 import { getHomeProjects } from "../lib/homeGrid";
 import { getActiveCategories } from "../lib/contentStore";
 import { showreelOnHome } from "../lib/crop";
+import { isImmersiveHomeHero } from "../lib/homeHero";
 
 export default function Home() {
   const content = useContent();
@@ -21,30 +22,39 @@ export default function Home() {
   const showExplore = getActiveCategories(content.projects).length > 0;
   const showreelUrl = content.site?.showreel_url;
   const reelOnHome = showreelOnHome(content.site?.showreel_placement) && showreelUrl;
+  const immersiveHero = isImmersiveHomeHero();
 
   useEffect(() => {
     document.getElementById("static-hero-poster")?.remove();
   }, []);
 
+  const gridPad =
+    reelOnHome && immersiveHero
+      ? "pt-10 md:pt-14 lg:pt-16"
+      : reelOnHome
+        ? "pt-24 md:pt-28 lg:pt-32"
+        : "pt-[6.5rem] sm:pt-[7.5rem] md:pt-[9rem]";
+
   return (
     <div data-testid="home-page" className="cinema-page min-h-svh">
       {reelOnHome && (
-        <div className="px-2.5 sm:px-4 lg:px-6 pt-[4.25rem] sm:pt-[4.5rem] md:pt-[5rem]">
+        immersiveHero ? (
           <HomeShowreel url={showreelUrl} />
-        </div>
+        ) : (
+          <div className="px-2.5 sm:px-4 lg:px-6 pt-[4.25rem] sm:pt-[4.5rem] md:pt-[5rem]">
+            <HomeShowreel url={showreelUrl} />
+          </div>
+        )
       )}
 
       <section
+        id="home-work"
         data-testid="home-grid-section"
-        className={`px-4 sm:px-6 md:px-12 lg:px-16 pb-10 md:pb-16 ${
-          reelOnHome
-            ? "pt-24 md:pt-28 lg:pt-32"
-            : "pt-[6.5rem] sm:pt-[7.5rem] md:pt-[9rem]"
-        }`}
+        className={`px-4 sm:px-6 md:px-12 lg:px-16 pb-12 md:pb-16 ${gridPad}`}
       >
         {tiles.length > 0 && (
-          <div className="mb-7 flex items-end justify-between border-b border-white/10 pb-4 md:mb-10 md:pb-5">
-            <h2 className="text-[10px] font-normal tracking-[0.2em] uppercase text-[var(--cinema-muted)]">
+          <div className="mb-6 flex items-end justify-between border-b border-white/10 pb-3.5 md:mb-10 md:pb-5">
+            <h2 className="text-[10px] font-normal tracking-[0.22em] uppercase text-[var(--cinema-muted)]">
               {tr(T.work.title, lang)}
             </h2>
             <span className="text-[10px] tabular-nums tracking-[0.14em] text-white/45">
@@ -69,9 +79,9 @@ export default function Home() {
       {showExplore && (
         <section
           data-testid="home-see-more"
-          className="px-4 sm:px-6 md:px-12 lg:px-16 pt-10 md:pt-14 pb-24 md:pb-36 border-t border-white/10"
+          className="px-4 sm:px-6 md:px-12 lg:px-16 pt-12 md:pt-14 pb-28 md:pb-36 border-t border-white/10"
         >
-          <p className="text-[10px] tracking-[0.2em] uppercase text-[var(--cinema-muted)] mb-5 md:mb-7">
+          <p className="text-[10px] tracking-[0.22em] uppercase text-[var(--cinema-muted)] mb-5 md:mb-7">
             {tr(T.work.seeMore, lang)}
           </p>
           <CategoryExploreLinks projects={content.projects} lang={lang} />

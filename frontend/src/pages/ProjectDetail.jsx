@@ -664,7 +664,6 @@ export default function ProjectDetail() {
                   eager={i < 4}
                   index={i}
                   aspectClass="aspect-video"
-                  alwaysPlay
                   fit="contain"
                   previewCrop={p.preview_crop ?? p.work_crop}
                 />
