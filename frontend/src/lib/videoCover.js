@@ -25,21 +25,33 @@ export const computeCropZoom = (crop) => {
   return 1 / minSide;
 };
 
+const clampCoverAmount = (value) => {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return 1;
+  return Math.min(1, Math.max(0, amount));
+};
+
 export const computeVideoCoverVars = ({
   previewVideoRatio,
   containerRatio,
   crop,
+  coverAmount = 1,
 }) => {
   const videoRatio = resolveVideoRatio(previewVideoRatio);
   const coverScale = computeCoverScale(videoRatio, containerRatio);
   const cropZoom = computeCropZoom(crop);
+  const amount = clampCoverAmount(coverAmount);
+  const containW = Math.min(1, videoRatio / containerRatio);
+  const containH = Math.min(1, containerRatio / videoRatio);
+  const coverW = Math.max(1, videoRatio / containerRatio);
+  const coverH = Math.max(1, containerRatio / videoRatio);
   const normalized = crop ? normalizeCrop(crop) : null;
   const hasCrop = normalized && !(normalized.w >= 0.99 && normalized.h >= 0.99 && normalized.x <= 0.01 && normalized.y <= 0.01);
 
   return {
-    "--vf-cover-w": String(Math.max(1, videoRatio / containerRatio)),
-    "--vf-cover-h": String(Math.max(1, containerRatio / videoRatio)),
-    "--vf-zoom": String(coverScale * cropZoom),
+    "--vf-cover-w": String(containW + (coverW - containW) * amount),
+    "--vf-cover-h": String(containH + (coverH - containH) * amount),
+    "--vf-zoom": String((1 + (coverScale - 1) * amount) * cropZoom),
     ...(hasCrop
       ? {
           "--vf-x": `${(normalized.x + normalized.w / 2) * 100}%`,

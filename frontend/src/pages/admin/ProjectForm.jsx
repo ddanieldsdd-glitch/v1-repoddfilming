@@ -115,7 +115,10 @@ export const ProjectForm = ({ value, onChange, errors = {} }) => {
             <button type="button" className="border border-white/20 px-3 py-1 text-[10px] uppercase tracking-[0.18em]" onClick={() => resolvePreviewRatio(value.preview_url)}>
               Recalcular ratio
             </button>
-            <CropEditor label="Ventana visible en miniatura" imageUrl={previewCropGuideUrl(value)} crop={value.preview_crop ?? value.work_crop} onChange={(preview_crop) => update({ preview_crop })} mode="16:9" />
+            <CropEditor label="Reencuadre del still y del preview" imageUrl={previewCropGuideUrl(value)} crop={value.preview_crop ?? value.work_crop} onChange={(preview_crop) => update({ preview_crop })} mode="16:9" />
+            <p className="text-[11px] text-neutral-500">
+              Mueve y acerca el encuadre para portada (hover) y Obra. Afecta a la foto de la tarjeta y al vídeo.
+            </p>
           </div>
         )}
         <ImageUrlField label="Póster" testId="form-poster" value={value.poster || ""} onChange={(url) => update({ poster: url })} projectSlug={projectSlug} assetType="poster" onUploadStart={ensureSlug} />

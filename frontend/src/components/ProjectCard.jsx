@@ -10,6 +10,7 @@ import {
 } from "../lib/videoStore";
 import { cloudinaryResponsive, CARD_PRESETS, optimizeCloudinaryUrl } from "../lib/cloudinary";
 import { getCardRecognitions } from "../lib/recognitions";
+import { cropObjectPosition } from "../lib/crop";
 
 const isVideoUrl = (url) =>
   /vimeo\.com|youtube\.com|youtu\.be/.test(String(url || ""));
@@ -146,6 +147,8 @@ export const ProjectCard = ({
 
   const contain = (fit ?? (cardSurface === "work" ? "contain" : "cover")) === "contain";
   const isHome = cardSurface === "home";
+  const stillCrop = previewCrop ?? project.preview_crop ?? project.work_crop;
+  const stillPosition = !contain ? cropObjectPosition(stillCrop) : undefined;
   const radiusClass = compact
     ? "rounded-[0.875rem] md:rounded-[1rem]"
     : "rounded-[1rem] md:rounded-[1.25rem]";
@@ -192,6 +195,7 @@ export const ProjectCard = ({
                   : "opacity-0 scale-[1.03]"
                 : "opacity-100 scale-100 group-hover:scale-[1.02] motion-reduce:group-hover:scale-100"
             }`}
+            style={stillPosition ? { objectPosition: stillPosition } : undefined}
           />
         )}
 

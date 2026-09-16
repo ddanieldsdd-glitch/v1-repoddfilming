@@ -46,6 +46,7 @@ export function HomeStillGrid({ tiles, lang }) {
   );
 
   const isMobile = width < 640;
+  const isNarrow = width < 1024;
   const gap = isMobile ? MOBILE_GAP : DESKTOP_GAP;
 
   const rows = useMemo(
@@ -55,10 +56,10 @@ export function HomeStillGrid({ tiles, lang }) {
         minH: isMobile ? 228 : 240,
         maxH: Math.round(windowH * (isMobile ? 0.55 : 0.46)),
         windowH,
-        maxPerRow: isMobile ? 1 : 2,
+        maxPerRow: isNarrow ? 1 : 2,
         soloAll: false,
       }),
-    [items, width, windowH, gap, isMobile],
+    [items, width, windowH, gap, isMobile, isNarrow],
   );
 
   return (
@@ -71,7 +72,7 @@ export function HomeStillGrid({ tiles, lang }) {
       {rows.map((row) => (
         <div
           key={row.map((item) => item.id).join("-")}
-          className="flex justify-center"
+          className="flex w-full"
           style={{ gap }}
         >
           {row.map((item) => (
@@ -88,7 +89,7 @@ export function HomeStillGrid({ tiles, lang }) {
                 eager={item.index < 4}
                 index={item.index}
                 fill
-                fit="contain"
+                fit="cover"
                 ratio={item.ratio}
                 imageOverride={item.still}
                 previewCrop={item.project.preview_crop ?? item.project.work_crop}

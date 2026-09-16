@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { HOME_SIZES, stillChoices } from "../../lib/homeGrid";
+import { stillChoices } from "../../lib/homeGrid";
 import { SHOWREEL_PLACEMENTS } from "../../lib/crop";
 import { Field } from "./fields/Field";
 import { inputCls } from "./styles";
@@ -117,7 +117,7 @@ export const HomeLayoutSection = () => {
   return (
     <AdminSection
       title="Pantalla principal"
-      description="Controla qué proyectos salen en portada, su still, tamaño y el showreel. El recorte del vídeo se edita en cada proyecto."
+      description="Elige still, orden y showreel. El reencuadre del still y del vídeo se edita en cada proyecto."
       actions={<SaveStatus saveState={status === "dirty" ? "idle" : status === "saving" ? "saving" : saveStates.home} onReload={reload} lastSavedAt={status === "saved" ? new Date() : null} />}
       testId="admin-home-layout"
     >
@@ -152,7 +152,7 @@ export const HomeLayoutSection = () => {
                   <img
                     src={row.home_still || row.cover}
                     alt=""
-                    className="max-w-full max-h-full object-contain"
+                    className="h-full w-full object-cover"
                     onLoad={(event) => {
                       const ratio = naturalRatio(event.currentTarget);
                       if (ratio && ratio !== row.home_still_ratio) {
@@ -182,11 +182,6 @@ export const HomeLayoutSection = () => {
                     </label>
                   </div>
                 </div>
-                <Field label="Tamaño">
-                  <select className={inputCls} value={row.home_size} onChange={(e) => patch(row.id, { home_size: e.target.value })}>
-                    {HOME_SIZES.map((s) => <option key={s.id} value={s.id}>{s.es}</option>)}
-                  </select>
-                </Field>
                 {thumbs.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
                     {thumbs.map((url) => (
@@ -198,7 +193,7 @@ export const HomeLayoutSection = () => {
                         }
                         className={`h-12 w-[4.5rem] overflow-hidden rounded-md border bg-black ${(row.home_still || row.cover) === url ? "border-white" : "border-white/15"}`}
                       >
-                        <img src={url} alt="" className="h-full w-full object-contain" />
+                        <img src={url} alt="" className="h-full w-full object-cover" />
                       </button>
                     ))}
                   </div>

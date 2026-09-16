@@ -1,9 +1,10 @@
 /**
- * Justified rows: packing by crop aspect ratio.
- * home_size controls solo rows (hero/wide/large) vs packed rows.
+ * Justified rows: packing by still aspect ratio.
+ * Solo tiles span the column; height follows the still (capped only if very tall).
  */
 
 export const DEFAULT_RATIO = 16 / 9;
+const SOLO_PORTRAIT_VH = 0.7;
 
 // En escritorio todas las piezas pueden compartir fila. Las proporciones reales
 // siguen creando jerarquía, pero evitamos una primera/última obra aislada.
@@ -15,13 +16,6 @@ function maxPerRowForSize(size, globalMax) {
   return Math.min(2, globalMax);
 }
 
-function soloMaxHForSize(size, windowH) {
-  if (size === "hero") return Math.round(windowH * 0.55);
-  if (size === "wide") return Math.round(windowH * 0.36);
-  if (size === "large") return Math.round(windowH * 0.48);
-  return Math.round(windowH * 0.4);
-}
-
 export function packJustified(items, containerWidth, opts = {}) {
   const gap = opts.gap ?? 14;
   const minH = opts.minH ?? 240;
@@ -29,6 +23,7 @@ export function packJustified(items, containerWidth, opts = {}) {
   const maxH = opts.maxH ?? Math.round(windowH * 0.48);
   const globalMaxPerRow = opts.maxPerRow ?? 2;
   const soloAll = Boolean(opts.soloAll);
+  const soloCap = Math.round(windowH * SOLO_PORTRAIT_VH);
 
   if (!containerWidth || containerWidth < 80 || !items.length) {
     return [];
@@ -48,13 +43,15 @@ export function packJustified(items, containerWidth, opts = {}) {
 
   const flush = () => {
     if (!current.length) return;
+    if (current.length === 1) {
+      const item = current[0];
+      const height = Math.min(soloCap, containerWidth / item.ratio);
+      rows.push([{ ...item, height, width: containerWidth }]);
+      current = [];
+      return;
+    }
     let height = fillH(current);
-    const cap =
-      current.length === 1
-        ? Math.min(maxH, soloMaxHForSize(current[0].size, windowH))
-        : maxH;
-    height = Math.min(height, cap);
-    if (current.length > 1) height = Math.max(minH, Math.min(height, maxH));
+    height = Math.max(minH, Math.min(height, maxH));
     height = Math.min(height, fillH(current));
     rows.push(
       current.map((item) => ({

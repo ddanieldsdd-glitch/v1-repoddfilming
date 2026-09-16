@@ -29,6 +29,8 @@ export const VideoPlayer = ({
   previewVideoRatio,
   /** Ventana 16:9 sobre el vídeo (miniatura / preview en tarjetas). */
   crop,
+  /** 0 = contain, 1 = cover. Por defecto cover completo. */
+  coverAmount,
   onReady,
   onPlay,
   onPause,
@@ -324,8 +326,9 @@ export const VideoPlayer = ({
       previewVideoRatio,
       containerRatio,
       crop,
+      coverAmount,
     });
-  }, [shouldCover, previewVideoRatio, containerRatio, crop]);
+  }, [shouldCover, previewVideoRatio, containerRatio, crop, coverAmount]);
 
   return (
     <div

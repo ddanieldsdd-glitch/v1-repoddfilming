@@ -45,4 +45,54 @@ describe("videoCover", () => {
     expect(vars["--vf-y"]).toMatch(/%$/);
     expect(Number(vars["--vf-cover-w"])).toBeGreaterThan(1);
   });
+
+  test("coverAmount 0 keeps contain zoom at 1", () => {
+    const vars = computeVideoCoverVars({
+      previewVideoRatio: 16 / 9,
+      containerRatio: 9 / 16,
+      coverAmount: 0,
+    });
+    expect(Number(vars["--vf-zoom"])).toBeCloseTo(1);
+    expect(Number(vars["--vf-cover-w"])).toBeCloseTo(1);
+    expect(Number(vars["--vf-cover-h"])).toBeLessThan(1);
+  });
+
+  test("coverAmount 1 matches full cover zoom", () => {
+    const full = computeVideoCoverVars({
+      previewVideoRatio: 16 / 9,
+      containerRatio: 9 / 16,
+    });
+    const explicit = computeVideoCoverVars({
+      previewVideoRatio: 16 / 9,
+      containerRatio: 9 / 16,
+      coverAmount: 1,
+    });
+    const coverScale = computeCoverScale(16 / 9, 9 / 16);
+    expect(Number(full["--vf-zoom"])).toBeCloseTo(coverScale);
+    expect(Number(explicit["--vf-zoom"])).toBeCloseTo(Number(full["--vf-zoom"]));
+  });
+
+  test("coverAmount interpolates between contain and cover", () => {
+    const contain = computeVideoCoverVars({
+      previewVideoRatio: 16 / 9,
+      containerRatio: 9 / 16,
+      coverAmount: 0,
+    });
+    const cover = computeVideoCoverVars({
+      previewVideoRatio: 16 / 9,
+      containerRatio: 9 / 16,
+      coverAmount: 1,
+    });
+    const mid = computeVideoCoverVars({
+      previewVideoRatio: 16 / 9,
+      containerRatio: 9 / 16,
+      coverAmount: 0.15,
+    });
+    const containZoom = Number(contain["--vf-zoom"]);
+    const coverZoom = Number(cover["--vf-zoom"]);
+    const midZoom = Number(mid["--vf-zoom"]);
+    expect(midZoom).toBeGreaterThan(containZoom);
+    expect(midZoom).toBeLessThan(coverZoom);
+    expect(midZoom).toBeCloseTo(containZoom + (coverZoom - containZoom) * 0.15);
+  });
 });
