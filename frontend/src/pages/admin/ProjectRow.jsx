@@ -2,15 +2,21 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { getProjectVideoSeoLabel } from "../../lib/videoSeo";
 import { isVimeoUrl } from "../../lib/vimeoMeta";
+import { getVimeoPosterUrl } from "../../lib/vimeo";
 import { AdminButton } from "./AdminButton";
 
 export const needsRatio = (project) =>
   isVimeoUrl(project.preview_url) &&
   !(typeof project.preview_video_ratio === "number" && project.preview_video_ratio > 0);
 
-export const ProjectRow = ({ project, index, total, onMove, onDelete, onRecalculateRatio, saving }) => {
+export const ProjectRow = ({ project, index, total, canReorder = true, onMove, onDelete, onRecalculateRatio, saving }) => {
   const videoSeo = getProjectVideoSeoLabel(project);
   const ratioPending = needsRatio(project);
+  const coverIsImage = project.cover && !isVimeoUrl(project.cover);
+  const thumb =
+    (coverIsImage ? project.cover : null) ||
+    project.poster ||
+    getVimeoPosterUrl(project.preview_url || project.cover);
 
   return (
     <li
@@ -19,8 +25,11 @@ export const ProjectRow = ({ project, index, total, onMove, onDelete, onRecalcul
         project.published === false ? "opacity-80 border-l-2 border-amber-500/70 pl-3" : ""
       }`}
     >
+      <span className="w-8 shrink-0 text-[10px] tracking-[0.16em] uppercase text-neutral-500">
+        {String(index + 1).padStart(2, "0")}
+      </span>
       <div className="w-16 h-12 bg-neutral-800 overflow-hidden shrink-0">
-        {project.cover && <img src={project.cover} alt="" className="w-full h-full object-cover" />}
+        {thumb && <img src={thumb} alt="" className="w-full h-full object-cover" />}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
@@ -67,8 +76,8 @@ export const ProjectRow = ({ project, index, total, onMove, onDelete, onRecalcul
             Recalcular ratio
           </AdminButton>
         )}
-        <button type="button" onClick={() => onMove(index, -1)} disabled={saving || index <= 0} aria-label="Subir" className="px-2 text-neutral-400">↑</button>
-        <button type="button" onClick={() => onMove(index, 1)} disabled={saving || index >= total - 1} aria-label="Bajar" className="px-2 text-neutral-400">↓</button>
+        <button type="button" onClick={() => onMove(index, -1)} disabled={saving || !canReorder || index <= 0} aria-label="Subir" className="px-2 text-neutral-400">↑</button>
+        <button type="button" onClick={() => onMove(index, 1)} disabled={saving || !canReorder || index >= total - 1} aria-label="Bajar" className="px-2 text-neutral-400">↓</button>
         <Link
           to={`/admin/projects/${project.id}`}
           data-testid={`admin-edit-${project.slug}`}

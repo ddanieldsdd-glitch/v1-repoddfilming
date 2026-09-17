@@ -20,14 +20,13 @@ export default function Work() {
     navigate(path, { replace: true, preventScrollReset: true });
   };
 
-  const allProjects = useMemo(() => content.projects || [], [content.projects]);
+  const allProjects = useMemo(
+    () => (content.projects || []).filter((p) => p.published !== false),
+    [content.projects],
+  );
 
-  // Número de proyectos visibles según el filtro activo
-  const visibleCount = useMemo(
-    () =>
-      active === "all"
-        ? allProjects.length
-        : allProjects.filter((p) => p.category === active).length,
+  const visibleProjects = useMemo(
+    () => (active === "all" ? allProjects : allProjects.filter((p) => p.category === active)),
     [active, allProjects],
   );
 
@@ -74,33 +73,26 @@ export default function Work() {
           ))}
         </div>
 
-        {/* GRID — se renderizan todos los proyectos y se ocultan con CSS los que
-            no coincidan con el filtro. Así los iframes de vídeo permanecen montados
-            y la reproducción no se reinicia al cambiar de categoría. */}
-        {visibleCount === 0 ? (
+        {visibleProjects.length === 0 ? (
           <p className="py-32 text-neutral-500 dark:text-neutral-400" data-testid="work-empty">
             {tr(T.work.none, lang)}
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-5 py-10 sm:py-12 md:py-16">
-            {allProjects.map((p, i) => {
-              const visible = active === "all" || p.category === active;
-              return (
-                <div key={p.id} className={visible ? undefined : "hidden"} aria-hidden={!visible}>
-                  <ProjectCard
-                    project={p}
-                    lang={lang}
-                    cardSurface="work"
-                    eager={i < 4}
-                    index={i}
-                    aspectClass="aspect-video"
-                    alwaysPlay
-                    fit="cover"
-                    previewCrop={p.preview_crop ?? p.work_crop}
-                  />
-                </div>
-              );
-            })}
+            {visibleProjects.map((p, i) => (
+              <ProjectCard
+                key={p.id}
+                project={p}
+                lang={lang}
+                cardSurface="work"
+                eager={i < 4}
+                index={i}
+                aspectClass="aspect-video"
+                alwaysPlay
+                fit="cover"
+                previewCrop={p.preview_crop ?? p.work_crop}
+              />
+            ))}
           </div>
         )}
       </div>

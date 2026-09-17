@@ -25,3 +25,18 @@ export const filterProjects = (projects, { query = "", status = "all", category 
   if (sort === "year") list = [...list].sort((a, b) => Number(b.project.year) - Number(a.project.year));
   return list;
 };
+
+export const canReorderProjects = ({ query = "", homeOnly = false, ratioOnly = false, sort = "position" } = {}) =>
+  sort === "position" && !String(query || "").trim() && !homeOnly && !ratioOnly;
+
+/** Swap adjacent items in a visible subsequence; other slots stay put. */
+export const swapAdjacentInSubsequence = (projects, visibleIds, visibleIndex, dir) => {
+  const ids = (projects || []).map((project) => project.id);
+  const j = visibleIndex + dir;
+  if (visibleIndex < 0 || j < 0 || j >= visibleIds.length) return ids;
+  const nextVisible = [...visibleIds];
+  [nextVisible[visibleIndex], nextVisible[j]] = [nextVisible[j], nextVisible[visibleIndex]];
+  const queue = [...nextVisible];
+  const visibleSet = new Set(visibleIds);
+  return ids.map((id) => (visibleSet.has(id) ? queue.shift() : id));
+};

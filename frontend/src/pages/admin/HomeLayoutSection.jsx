@@ -117,15 +117,15 @@ export const HomeLayoutSection = () => {
   return (
     <AdminSection
       title="Pantalla principal"
-      description="Elige still, orden y showreel. El reencuadre del still y del vídeo se edita en cada proyecto."
+      description="Still, orden y showreel de la portada. El vídeo de cada pieza se desvela al pasar el cursor; el reencuadre se edita en el proyecto. El orden de Obra está en Proyectos."
       actions={<SaveStatus saveState={status === "dirty" ? "idle" : status === "saving" ? "saving" : saveStates.home} onReload={reload} lastSavedAt={status === "saved" ? new Date() : null} />}
       testId="admin-home-layout"
     >
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-        <Field label="Máximo de piezas">
+        <Field label="Máximo en portada">
           <input type="number" min={1} max={24} className={inputCls} value={draft.home_max} data-testid="site-home-max" onChange={(e) => setDraft((d) => ({ ...d, home_max: parseInt(e.target.value, 10) || 12 }))} />
         </Field>
-        <Field label="Showreel URL">
+        <Field label="URL del showreel">
           <input className={inputCls} value={draft.showreel_url} onChange={(e) => setDraft((d) => ({ ...d, showreel_url: e.target.value }))} />
         </Field>
         <Field label="Dónde mostrar el showreel">
@@ -134,6 +134,9 @@ export const HomeLayoutSection = () => {
           </select>
         </Field>
       </div>
+      <p className="text-[11px] text-neutral-500 mb-6">
+        El showreel se autoreproduce. En la cuadrícula, el vídeo se desvela al pasar el cursor.
+      </p>
       <div className="flex flex-wrap gap-3 mb-6">
         <input className={inputCls + " max-w-sm"} value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar en portada" />
         <button type="button" onClick={() => setHomeOnly((v) => !v)} className={`border px-3 py-2 text-[10px] tracking-[0.18em] uppercase ${homeOnly ? "bg-white text-black" : "border-white/20 text-neutral-400"}`}>

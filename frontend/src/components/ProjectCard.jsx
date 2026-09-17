@@ -11,6 +11,7 @@ import {
 import { cloudinaryResponsive, CARD_PRESETS, optimizeCloudinaryUrl } from "../lib/cloudinary";
 import { getCardRecognitions } from "../lib/recognitions";
 import { cropObjectPosition } from "../lib/crop";
+import { getVimeoPosterUrl } from "../lib/vimeo";
 
 const isVideoUrl = (url) =>
   /vimeo\.com|youtube\.com|youtu\.be/.test(String(url || ""));
@@ -60,7 +61,8 @@ export const ProjectCard = ({
     rawPreviewUrl && !isYoutubeUrl(rawPreviewUrl) ? rawPreviewUrl : null;
 
   const coverIsImage  = project.cover && !isVideoUrl(project.cover);
-  const imageUrl      = imageOverride || (coverIsImage ? project.cover : project.poster);
+  const stillUrl      = imageOverride || (coverIsImage ? project.cover : project.poster);
+  const imageUrl      = stillUrl || getVimeoPosterUrl(previewUrl);
   const cardImage     = imageUrl
     ? cloudinaryResponsive(
         imageUrl,
@@ -107,9 +109,8 @@ export const ProjectCard = ({
     return () => obs.disconnect();
   }, [alwaysPlay, previewUrl]);
 
-  // Con alwaysPlay el VideoPlayer permanece montado aunque la tarjeta esté
-  // oculta por el filtro de categoría, evitando así reiniciar la reproducción.
-  const shouldPreload = Boolean(previewUrl && (alwaysPlay || inView || hovered));
+  // Preload al acercarse o al hover. No montar todos los iframes de Obra a la vez.
+  const shouldPreload = Boolean(previewUrl && (inView || hovered));
   const shouldPlay    = Boolean(previewUrl && (hovered || (alwaysPlay && playInView)));
 
   const onMouseEnter = () => {

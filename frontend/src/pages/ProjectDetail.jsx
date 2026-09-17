@@ -214,7 +214,9 @@ export default function ProjectDetail() {
 
   const sameCatProjects = useMemo(() => {
     if (!project) return [];
-    return projects.filter((p) => p.slug !== project.slug && p.category === project.category);
+    return projects.filter(
+      (p) => p.slug !== project.slug && p.category === project.category && p.published !== false,
+    );
   }, [project, projects]);
 
   const otherCategories = useMemo(() => {

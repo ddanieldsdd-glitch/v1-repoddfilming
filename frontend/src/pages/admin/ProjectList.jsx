@@ -6,7 +6,7 @@ import { AdminSection } from "./AdminSection";
 import { AdminButton } from "./AdminButton";
 import { AdminDialog } from "./AdminDialog";
 import { ProjectRow } from "./ProjectRow";
-import { filterProjects } from "./lib/filterProjects";
+import { canReorderProjects, filterProjects, swapAdjacentInSubsequence } from "./lib/filterProjects";
 import { inputCls } from "./styles";
 import { fetchVimeoMeta } from "../../lib/vimeoMeta";
 
@@ -24,19 +24,20 @@ export const ProjectList = () => {
     () => filterProjects(content.projects, { query, status, category, homeOnly, ratioOnly, sort }),
     [category, content.projects, homeOnly, query, ratioOnly, sort, status],
   );
+  const canReorder = canReorderProjects({ query, homeOnly, ratioOnly, sort });
 
-  const move = async (index, dir) => {
-    const next = [...content.projects];
-    const j = index + dir;
-    if (j < 0 || j >= next.length) return;
-    [next[index], next[j]] = [next[j], next[index]];
-    await moveProjects(next.map((project) => project.id));
+  const move = async (visibleIndex, dir) => {
+    if (!canReorder) return;
+    const visibleIds = filtered.map(({ project }) => project.id);
+    const nextIds = swapAdjacentInSubsequence(content.projects, visibleIds, visibleIndex, dir);
+    if (nextIds.every((id, i) => id === (content.projects[i]?.id))) return;
+    await moveProjects(nextIds);
   };
 
   return (
     <AdminSection
       title={`Proyectos (${content.projects.length})`}
-      description="Busca, filtra y edita cada pieza en su propia pantalla."
+      description="Este orden es el de Obra. Filtra por categoría para reordenar ficción, documental, publicidad…"
       actions={
         <Link to="/admin/projects/new" data-testid="admin-add-project">
           <AdminButton variant="primary">+ Añadir proyecto</AdminButton>
@@ -58,11 +59,16 @@ export const ProjectList = () => {
           ))}
         </select>
         <select className={inputCls} value={sort} onChange={(e) => setSort(e.target.value)}>
-          <option value="position">Orden actual</option>
+          <option value="position">Orden de Obra</option>
           <option value="title">Título</option>
           <option value="year">Año</option>
         </select>
       </div>
+      {!canReorder && (
+        <p className="text-[11px] text-neutral-500 mb-4">
+          Las flechas reordenan Obra solo con «Orden de Obra» y sin búsqueda extra. Filtra por categoría para mover piezas dentro de ese grupo.
+        </p>
+      )}
       <div className="flex flex-wrap gap-2 mb-6">
         {[
           ["all", "Todos"],
@@ -88,12 +94,13 @@ export const ProjectList = () => {
         </button>
       </div>
       <ul className="divide-y divide-white/10">
-        {filtered.map(({ project, index }) => (
+        {filtered.map(({ project }, displayIndex) => (
           <ProjectRow
             key={project.id}
             project={project}
-            index={index}
-            total={content.projects.length}
+            index={displayIndex}
+            total={filtered.length}
+            canReorder={canReorder}
             saving={saveStates.projects === "saving"}
             onMove={move}
             onDelete={setDeleteTarget}

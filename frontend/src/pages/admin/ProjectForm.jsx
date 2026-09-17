@@ -92,7 +92,7 @@ export const ProjectForm = ({ value, onChange, errors = {} }) => {
 
       <Block title="Vídeo y portada del proyecto">
         <ImageUrlField label="Cover" testId="form-cover" value={value.cover || ""} onChange={(url) => update({ cover: url })} projectSlug={projectSlug} assetType="cover" onUploadStart={ensureSlug} />
-        <ValidatedField label="URL de preview" error={errors.preview_url} hint="Vimeo o YouTube. En Obra se autoreproduce; en portada, al hover.">
+        <ValidatedField label="URL de preview" error={errors.preview_url} hint="Vimeo o YouTube. En Obra el vídeo se autoreproduce; en portada y en relacionados de ficha, al pasar el cursor.">
           <input
             data-testid="form-preview"
             className={inputCls}
@@ -146,7 +146,7 @@ export const ProjectForm = ({ value, onChange, errors = {} }) => {
         <Field label="Visibilidad">
           <label className="flex items-center gap-3 cursor-pointer">
             <input type="checkbox" className="accent-white w-4 h-4" checked={value.published !== false} onChange={(e) => update({ published: e.target.checked })} />
-            <span>Publicado — visible en el sitio</span>
+            <span>Publicado — visible en Obra y portada</span>
           </label>
         </Field>
       </Block>
