@@ -31,16 +31,16 @@ export default function Work() {
   );
 
   const btnBase =
-    "text-[10px] tracking-[0.16em] uppercase pb-1 transition-colors whitespace-nowrap cursor-pointer bg-transparent border-0 p-0 font-inherit";
+    "text-[10px] tracking-[0.22em] uppercase pb-1 transition-colors whitespace-nowrap cursor-pointer bg-transparent border-0 p-0 font-inherit";
 
   return (
     <div data-testid="work-page" className="cinema-page pt-24 sm:pt-32 md:pt-40 transition-colors duration-500">
       <div className="px-4 sm:px-6 md:px-12 lg:px-16">
-        <p className="text-[10px] tracking-[0.18em] uppercase text-[var(--cinema-muted)] mb-4">
+        <p className="text-[10px] tracking-[0.22em] uppercase text-[var(--cinema-muted)] mb-4">
           {String(allProjects.length).padStart(2, "0")} —{" "}
           {tr(T.work.title, lang)}
         </p>
-        <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl tracking-tight font-light max-w-4xl text-black dark:text-white">
+        <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl tracking-tight font-light max-w-4xl text-[var(--cinema-fg)]">
           {tr(T.work.title, lang)}
         </h1>
 
@@ -51,8 +51,8 @@ export default function Work() {
             data-testid="filter-all"
             className={`${btnBase} ${
               active === "all"
-                ? "text-black dark:text-white border-b border-black dark:border-white"
-                : "text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white border-b border-transparent"
+                ? "text-[var(--cinema-fg)] border-b border-[var(--cinema-fg)]"
+                : "text-[var(--cinema-muted)] hover:text-[var(--cinema-fg)] border-b border-transparent"
             }`}
           >
             {tr(T.work.all, lang)}
@@ -64,8 +64,8 @@ export default function Work() {
               data-testid={`filter-${c.id}`}
               className={`${btnBase} ${
                 active === c.id
-                  ? "text-black dark:text-white border-b border-black dark:border-white"
-                  : "text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white border-b border-transparent"
+                  ? "text-[var(--cinema-fg)] border-b border-[var(--cinema-fg)]"
+                  : "text-[var(--cinema-muted)] hover:text-[var(--cinema-fg)] border-b border-transparent"
               }`}
             >
               {c[lang]}
@@ -74,7 +74,7 @@ export default function Work() {
         </div>
 
         {visibleProjects.length === 0 ? (
-          <p className="py-32 text-neutral-500 dark:text-neutral-400" data-testid="work-empty">
+          <p className="py-32 text-[var(--cinema-muted)]" data-testid="work-empty">
             {tr(T.work.none, lang)}
           </p>
         ) : (

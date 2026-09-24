@@ -49,6 +49,7 @@ export const ProjectCard = ({
   const [previewVisible, setPreviewVisible] = useState(false);
   const cardRef      = useRef(null);
   const touchActive  = useRef(false);
+  const scrollingRef = useRef(false);
 
   const previewKey = `card-preview-${project.slug}`;
 
@@ -96,30 +97,56 @@ export const ProjectCard = ({
     return () => obs.disconnect();
   }, [previewUrl]);
 
-  // Observer 2: autoplay (solo cuando la tarjeta es realmente visible)
+  // Observer 2: arranca al entrar y pausa solo al salir del todo.
   useEffect(() => {
     if (!alwaysPlay || !previewUrl) return undefined;
     const el = cardRef.current;
     if (!el) return undefined;
     const obs = new IntersectionObserver(
-      ([e]) => setPlayInView(e.isIntersecting),
-      { threshold: 0.25 },
+      ([e]) => {
+        const ratio = e?.intersectionRatio ?? 0;
+        setPlayInView((prev) => {
+          if (ratio >= 0.35) return true;
+          if (ratio <= 0) return false;
+          return prev;
+        });
+      },
+      { threshold: [0, 0.35] },
     );
     obs.observe(el);
     return () => obs.disconnect();
   }, [alwaysPlay, previewUrl]);
+
+  useEffect(() => {
+    let timer = 0;
+    const markScrolling = () => {
+      scrollingRef.current = true;
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        scrollingRef.current = false;
+      }, 180);
+    };
+    window.addEventListener("wheel", markScrolling, { passive: true });
+    window.addEventListener("scroll", markScrolling, { passive: true });
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("wheel", markScrolling);
+      window.removeEventListener("scroll", markScrolling);
+    };
+  }, []);
 
   // Preload al acercarse o al hover. No montar todos los iframes de Obra a la vez.
   const shouldPreload = Boolean(previewUrl && (inView || hovered));
   const shouldPlay    = Boolean(previewUrl && (hovered || (alwaysPlay && playInView)));
 
   const onMouseEnter = () => {
+    if (scrollingRef.current) return;
     setHovered(true);
     if (previewUrl && !alwaysPlay) pauseAllExcept(previewKey);
   };
 
   const onMouseLeave = () => {
-    if (touchActive.current) return;
+    if (touchActive.current || scrollingRef.current) return;
     setHovered(false);
     if (!alwaysPlay) {
       setPreviewVisible(false);
@@ -170,11 +197,7 @@ export const ProjectCard = ({
       onTouchCancel={onTouchEnd}
     >
       <div
-        className={`relative overflow-hidden bg-neutral-950 ${sizeClass} w-full ring-1 transition-[box-shadow,outline-color] duration-500 ease-out ${
-          isHome
-            ? "ring-white/[0.06] group-hover:ring-white/[0.12]"
-            : "ring-white/[0.08] shadow-[0_18px_45px_-32px_rgba(0,0,0,0.9)] group-hover:ring-white/15"
-        } ${radiusClass}`}
+        className={`relative overflow-hidden bg-neutral-950 ${sizeClass} w-full ring-1 ring-white/[0.08] transition-[box-shadow,outline-color] duration-500 ease-out group-hover:ring-white/[0.16] ${radiusClass}`}
       >
         <div className="absolute inset-0 z-0 bg-neutral-950" />
 

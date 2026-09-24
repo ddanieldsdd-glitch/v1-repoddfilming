@@ -24,21 +24,21 @@ describe("videoStore home showreel", () => {
     jest.restoreAllMocks();
   });
 
-  test("resumes the same showreel key after a card preview pauses it", () => {
+  test("resumes the same showreel key after a card preview pauses it", async () => {
     const showreel = player();
     const preview = player();
     registerPlayer(HOME_SHOWREEL_KEY, showreel, { forceMuted: true });
     registerPlayer("card-preview-test", preview, { forceMuted: true });
 
     pauseAllExcept("card-preview-test");
-    resumePlayer(HOME_SHOWREEL_KEY);
+    await resumePlayer(HOME_SHOWREEL_KEY);
 
     expect(showreel.pause).not.toHaveBeenCalled();
     expect(showreel.play).toHaveBeenCalled();
     expect(preview.pause).not.toHaveBeenCalled();
   });
 
-  test("recovers playback when the showreel enters the viewport", () => {
+  test("recovers playback when the showreel enters the viewport", async () => {
     const showreel = player();
     registerPlayer(HOME_SHOWREEL_KEY, showreel, { forceMuted: true });
 
@@ -54,13 +54,14 @@ describe("videoStore home showreel", () => {
       document.createElement("section"),
     );
     intersectionCallback([{ isIntersecting: true }]);
+    await Promise.resolve();
 
     expect(showreel.play).toHaveBeenCalled();
     cleanup();
     expect(disconnect).toHaveBeenCalledTimes(1);
   });
 
-  test("pauses the showreel when it leaves the viewport", () => {
+  test("pauses the showreel when it leaves the viewport", async () => {
     const showreel = player();
     registerPlayer(HOME_SHOWREEL_KEY, showreel, { forceMuted: true });
 
@@ -78,11 +79,22 @@ describe("videoStore home showreel", () => {
     expect(showreel.pause).toHaveBeenCalled();
 
     showreel.play.mockClear();
-    resumePlayer(HOME_SHOWREEL_KEY);
+    await resumePlayer(HOME_SHOWREEL_KEY);
     expect(showreel.play).not.toHaveBeenCalled();
 
     intersectionCallback([{ isIntersecting: true }]);
+    await Promise.resolve();
     expect(showreel.play).toHaveBeenCalled();
     cleanup();
+  });
+
+  test("does not call play when the showreel is already playing", async () => {
+    const showreel = player();
+    showreel.getPaused = jest.fn(() => Promise.resolve(false));
+    registerPlayer(HOME_SHOWREEL_KEY, showreel, { forceMuted: true });
+
+    await resumePlayer(HOME_SHOWREEL_KEY);
+
+    expect(showreel.play).not.toHaveBeenCalled();
   });
 });

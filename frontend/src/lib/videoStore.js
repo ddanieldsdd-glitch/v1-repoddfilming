@@ -5,6 +5,7 @@
  */
 
 const PLAYERS = new Map(); // key → Vimeo Player instance
+const POSITIONS = new Map(); // key → segundos al pausar
 const listeners = new Set();
 /** Players observed for viewport: only resume while intersecting. */
 const VIEW_GATED = new Set();
@@ -95,18 +96,32 @@ export const pauseAllExcept = (exceptKey) => {
   });
 };
 
-const kickPlayer = (player) => {
-  try {
-    player.setMuted?.(true)?.catch?.(() => {});
-  } catch {}
-  return player.play();
+const rememberPosition = (key, player) => {
+  if (!player?.getCurrentTime) return;
+  player
+    .getCurrentTime()
+    .then((time) => {
+      if (Number.isFinite(time) && time > 0.2) POSITIONS.set(key, time);
+    })
+    .catch(() => {});
 };
+
+export const getSavedTime = (key) => POSITIONS.get(key) || 0;
 
 export const pausePlayer = (key) => {
   const player = PLAYERS.get(key);
   if (!player) return;
+  rememberPosition(key, player);
   try {
     player.pause().catch(() => {});
+  } catch {}
+};
+
+const restorePosition = async (key, player) => {
+  const saved = POSITIONS.get(key);
+  if (!saved || saved <= 0.2 || !player.setCurrentTime) return;
+  try {
+    await player.setCurrentTime(saved);
   } catch {}
 };
 
@@ -114,17 +129,28 @@ export const resumePlayer = (key, retries = 0) => {
   if (VIEW_GATED.has(key) && !IN_VIEW.has(key)) return;
   const player = PLAYERS.get(key);
   if (!player) return;
-  try {
-    Promise.resolve(kickPlayer(player)).catch(() => {
-      if (retries < 12) {
-        window.setTimeout(() => resumePlayer(key, retries + 1), 160 + retries * 90);
-      }
-    });
-  } catch {
+  const retry = () => {
     if (retries < 12) {
       window.setTimeout(() => resumePlayer(key, retries + 1), 160 + retries * 90);
     }
-  }
+  };
+  const start = async () => {
+    try {
+      player.setMuted?.(true)?.catch?.(() => {});
+    } catch {}
+    let paused = true;
+    if (player.getPaused) {
+      try {
+        paused = await player.getPaused();
+      } catch {
+        paused = true;
+      }
+    }
+    if (!paused) return;
+    await restorePosition(key, player);
+    await player.play();
+  };
+  return Promise.resolve(start()).catch(retry);
 };
 
 /**
@@ -170,7 +196,6 @@ export const observePlayerRecovery = (key, element) => {
 
   const onVisibilityChange = () => resumeIfVisible();
   const onPageShow = () => resumeIfVisible();
-  const onScroll = () => resumeIfVisible();
 
   const observer =
     typeof IntersectionObserver === "function"
@@ -195,7 +220,6 @@ export const observePlayerRecovery = (key, element) => {
   startWatchdog();
   document.addEventListener("visibilitychange", onVisibilityChange);
   window.addEventListener("pageshow", onPageShow);
-  window.addEventListener("scroll", onScroll, { passive: true });
 
   return () => {
     stopWatchdog();
@@ -204,7 +228,6 @@ export const observePlayerRecovery = (key, element) => {
     IN_VIEW.delete(key);
     document.removeEventListener("visibilitychange", onVisibilityChange);
     window.removeEventListener("pageshow", onPageShow);
-    window.removeEventListener("scroll", onScroll);
   };
 };
 

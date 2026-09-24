@@ -304,7 +304,7 @@ export default function ProjectDetail() {
       >
         {/* Título */}
         <div className="mb-8 md:mb-10">
-          <p className="text-[10px] tracking-[0.34em] uppercase text-neutral-500 mb-2.5">
+          <p className="text-[10px] tracking-[0.22em] uppercase text-neutral-500 mb-2.5">
             {catLabel && `${catLabel} · `}{tr(project.type, lang)} — {project.year}
           </p>
           <h1
@@ -383,7 +383,7 @@ export default function ProjectDetail() {
 
             {hasRecognitions && (
               <div className="mt-6 clear-left md:clear-none">
-                <p className="text-[10px] tracking-[0.28em] uppercase text-white/35 mb-3">
+                <p className="text-[10px] tracking-[0.22em] uppercase text-white/35 mb-3">
                   {tr(T.project.recognitions, lang)}
                   <span className="ml-2 normal-case tracking-normal text-white/25">
                     · {lang === "es" ? "clic para ampliar" : "click to enlarge"}
@@ -482,29 +482,29 @@ export default function ProjectDetail() {
             <div className="rounded-2xl bg-white/5 ring-1 ring-white/10 p-4 md:p-5 space-y-4">
               {project.director && (
                 <div>
-                  <dt className="text-[9px] tracking-[0.3em] uppercase text-neutral-600 mb-0.5">{tr(T.project.director, lang)}</dt>
+                  <dt className="text-[9px] tracking-[0.22em] uppercase text-neutral-600 mb-0.5">{tr(T.project.director, lang)}</dt>
                   <dd className="text-[13px] text-neutral-200 leading-snug">{project.director}</dd>
                 </div>
               )}
               {project.production_company && (
                 <div>
-                  <dt className="text-[9px] tracking-[0.3em] uppercase text-neutral-600 mb-0.5">{tr(T.project.productionCompany, lang)}</dt>
+                  <dt className="text-[9px] tracking-[0.22em] uppercase text-neutral-600 mb-0.5">{tr(T.project.productionCompany, lang)}</dt>
                   <dd className="text-[13px] text-neutral-200 leading-snug">{project.production_company}</dd>
                 </div>
               )}
               <div className="flex gap-6">
                 <div>
-                  <dt className="text-[9px] tracking-[0.3em] uppercase text-neutral-600 mb-0.5">{tr(T.project.year, lang)}</dt>
+                  <dt className="text-[9px] tracking-[0.22em] uppercase text-neutral-600 mb-0.5">{tr(T.project.year, lang)}</dt>
                   <dd className="text-[13px] text-neutral-200">{project.year}</dd>
                 </div>
                 <div>
-                  <dt className="text-[9px] tracking-[0.3em] uppercase text-neutral-600 mb-0.5">{tr(T.project.type, lang)}</dt>
+                  <dt className="text-[9px] tracking-[0.22em] uppercase text-neutral-600 mb-0.5">{tr(T.project.type, lang)}</dt>
                   <dd className="text-[13px] text-neutral-200">{tr(project.type, lang)}</dd>
                 </div>
               </div>
               {project.format && (
                 <div>
-                  <dt className="text-[9px] tracking-[0.3em] uppercase text-neutral-600 mb-0.5">{tr(T.project.format, lang)}</dt>
+                  <dt className="text-[9px] tracking-[0.22em] uppercase text-neutral-600 mb-0.5">{tr(T.project.format, lang)}</dt>
                   <dd className="text-[13px] text-neutral-200 leading-snug">{project.format}</dd>
                 </div>
               )}
@@ -517,7 +517,7 @@ export default function ProjectDetail() {
       {hasStills && (
         <section className="px-1.5 sm:px-4 md:px-8 lg:px-12 pb-10 md:pb-14">
           <div className="flex items-center gap-4 mb-3 px-1">
-            <p className="text-[10px] tracking-[0.34em] uppercase text-neutral-500 shrink-0">
+            <p className="text-[10px] tracking-[0.22em] uppercase text-neutral-500 shrink-0">
               {lang === "es" ? "Fotogramas" : "Stills"} — {String(project.stills.length).padStart(2, "0")}
             </p>
             <div className="flex-1 h-px bg-white/6" />
@@ -548,7 +548,7 @@ export default function ProjectDetail() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 <div className="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transition-all duration-400 translate-y-1 group-hover:translate-y-0">
-                  <span className="inline-flex items-center gap-2 text-[9px] tracking-[0.28em] uppercase text-white/80 bg-black/50 backdrop-blur-md rounded-full px-3.5 py-1.5 border border-white/10">
+                  <span className="inline-flex items-center gap-2 text-[9px] tracking-[0.22em] uppercase text-white/80 bg-black/50 backdrop-blur-md rounded-full px-3.5 py-1.5 border border-white/10">
                     {lang === "es" ? "Ver galería" : "View gallery"} · {project.stills.length}
                   </span>
                 </div>
@@ -641,7 +641,7 @@ export default function ProjectDetail() {
       {sameCatProjects.length > 0 && (
         <section className="border-t border-white/8 px-1.5 sm:px-4 md:px-8 lg:px-12 pt-10 pb-14 md:pt-14 md:pb-20">
           <div className="px-3 sm:px-0 mb-8">
-            <p className="text-[10px] tracking-[0.34em] uppercase text-neutral-600 mb-1">
+            <p className="text-[10px] tracking-[0.22em] uppercase text-neutral-600 mb-1">
               {lang === "es" ? "Más en" : "More in"}
             </p>
             <h2 className="text-xl sm:text-2xl font-light tracking-tight text-white">
@@ -681,7 +681,7 @@ export default function ProjectDetail() {
           ref={exploreRef}
           className="reveal border-t border-white/8 px-4 sm:px-6 md:px-10 lg:px-14 py-10 md:py-14"
         >
-          <p className="text-[10px] tracking-[0.34em] uppercase text-neutral-600 mb-6">
+          <p className="text-[10px] tracking-[0.22em] uppercase text-neutral-600 mb-6">
             {lang === "es" ? "Explorar otras ramas" : "Explore other categories"}
           </p>
           <CategoryExploreLinks

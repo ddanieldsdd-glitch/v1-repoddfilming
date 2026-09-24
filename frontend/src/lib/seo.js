@@ -43,9 +43,14 @@ export function getPageSeo(pathname, content, lang) {
 
   if (pathname === "/") {
     return withImage(
-      { title: getSiteTitle(content, lang), description: siteDesc, canonical, ogType: "website" },
+      {
+        title: getSiteTitle(content, "es"),
+        description: getSiteDescription(content, "es"),
+        canonical: `${BASE_URL}/`,
+        ogType: "website",
+      },
       getHomeShareImage(content),
-      logoAlt,
+      "Logotipo DD de Dani Díaz, Director de Fotografía",
     );
   }
 
@@ -74,7 +79,7 @@ export function getPageSeo(pathname, content, lang) {
 
   if (pathname === "/work" || pathname.startsWith("/work/")) {
     const catMatch = pathname.match(/^\/work\/([^/]+)/);
-    let title = `${tr(T.work.title, lang)} — ${name}`;
+    let title = `${tr(T.nav.work, lang)} — ${name}`;
     if (catMatch) {
       const cat = getActiveCategories(content.projects || []).find((c) => c.id === catMatch[1]);
       if (cat) title = `${cat[lang]} — ${name}`;
@@ -96,7 +101,7 @@ export function getPageSeo(pathname, content, lang) {
   if (pathname === "/about") {
     return withImage(
       {
-        title: `${tr(T.about.title, lang)} — ${name}`,
+        title: `${tr(T.nav.about, lang)} — ${name}`,
         description: siteDesc,
         canonical: `${BASE_URL}/about`,
         ogType: "website",
@@ -108,7 +113,7 @@ export function getPageSeo(pathname, content, lang) {
   if (pathname === "/contact") {
     return withImage(
       {
-        title: `${tr(T.contact.title, lang)} — ${name}`,
+        title: `${tr(T.nav.contact, lang)} — ${name}`,
         description: tr(T.contact.intro, lang),
         canonical: `${BASE_URL}/contact`,
         ogType: "website",
@@ -120,7 +125,7 @@ export function getPageSeo(pathname, content, lang) {
   if (pathname === "/showreel") {
     return withImage(
       {
-        title: `${tr(T.hero.showreel, lang)} — ${name}`,
+        title: `${tr(T.nav.showreel, lang)} — ${name}`,
         description:
           lang === "es"
             ? `Showreel de ${name}, Director de Fotografía. Selección de trabajos en ficción, documental, publicidad y videoclips.`

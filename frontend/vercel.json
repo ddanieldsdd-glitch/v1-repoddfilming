@@ -21,6 +21,7 @@
     { "source": "/api/admin-session", "destination": "/api/admin-login?auth=session" },
     { "source": "/api/content-history", "destination": "/api/content?action=history" },
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
+    { "source": "/", "destination": "/api/og" },
     { "source": "/showreel", "destination": "/api/og" },
     { "source": "/about", "destination": "/api/og" },
     { "source": "/contact", "destination": "/api/og" },

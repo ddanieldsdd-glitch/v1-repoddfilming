@@ -13,7 +13,7 @@ import {
 
 export function HomeShowreel({ url }) {
   const [lang] = useLang();
-  const [playing, setPlaying] = useState(false);
+  const [frameReady, setFrameReady] = useState(false);
   const [loadPlayer, setLoadPlayer] = useState(false);
   const [sectionEl, setSectionEl] = useState(null);
   const poster = getVimeoPosterUrl(url);
@@ -32,6 +32,10 @@ export function HomeShowreel({ url }) {
     }
     const timer = window.setTimeout(start, 400);
     return () => window.clearTimeout(timer);
+  }, [url]);
+
+  useEffect(() => {
+    setFrameReady(false);
   }, [url]);
 
   const scrollToWork = () => {
@@ -57,21 +61,6 @@ export function HomeShowreel({ url }) {
             : "relative aspect-video overflow-hidden rounded-[1.125rem] md:rounded-[1.5rem] bg-neutral-950 ring-1 ring-white/[0.08]"
         }
       >
-        {poster && !playing && (
-          <img
-            src={poster}
-            alt=""
-            width={1920}
-            height={1080}
-            loading="eager"
-            fetchPriority="high"
-            className={`absolute inset-0 z-[1] h-full w-full bg-black ${
-              immersive
-                ? "object-contain scale-[1.15] origin-center"
-                : "object-contain"
-            }`}
-          />
-        )}
         {loadPlayer && (
           <VideoPlayer
             url={url}
@@ -82,10 +71,27 @@ export function HomeShowreel({ url }) {
             background
             cover={immersive}
             coverAmount={immersive ? HOME_HERO_COVER_AMOUNT : undefined}
-            className="absolute inset-0 z-[2] h-full w-full"
+            className="absolute inset-0 z-[1] h-full w-full"
             testId="home-showreel-player"
             interactive={false}
-            onPlay={() => setPlaying(true)}
+            onFirstFrame={() => setFrameReady(true)}
+          />
+        )}
+        {poster && (
+          <img
+            src={poster}
+            alt=""
+            width={1920}
+            height={1080}
+            loading="eager"
+            fetchPriority="high"
+            className={`pointer-events-none absolute inset-0 z-[2] h-full w-full bg-black transition-opacity duration-500 ${
+              frameReady ? "opacity-0" : "opacity-100"
+            } ${
+              immersive
+                ? "object-contain scale-[1.15] origin-center"
+                : "object-contain"
+            }`}
           />
         )}
         <div

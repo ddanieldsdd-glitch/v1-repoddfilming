@@ -102,28 +102,62 @@ function getProjectShareImage(project) {
   return OG_LOGO;
 }
 
+function siteSections() {
+  return [
+    { name: 'Obra', url: `${BASE_URL}/work` },
+    { name: 'Showreel', url: `${BASE_URL}/showreel` },
+    { name: 'Sobre mí', url: `${BASE_URL}/about` },
+    { name: 'Contacto', url: `${BASE_URL}/contact` },
+  ];
+}
+
 function buildStaticPageJsonLd(pathname, content) {
   const meta = getPageMeta(pathname, content);
   if (!meta) return '';
-  return JSON.stringify(
+  const graph = [
     {
-      '@context': 'https://schema.org',
-      '@graph': [
-        {
-          '@type': 'WebPage',
-          '@id': `${meta.url}#webpage`,
-          url: meta.url,
-          name: meta.title,
-          description: meta.description,
-          inLanguage: ['es', 'en'],
-          author: { '@id': 'https://ddanidiaz.com/#person' },
-          isPartOf: { '@id': 'https://ddanidiaz.com/#website' },
-        },
-      ],
+      '@type': 'WebPage',
+      '@id': `${meta.url}#webpage`,
+      url: meta.url,
+      name: meta.title,
+      description: meta.description,
+      inLanguage: 'es',
+      author: { '@id': 'https://ddanidiaz.com/#person' },
+      isPartOf: { '@id': 'https://ddanidiaz.com/#website' },
     },
-    null,
-    2,
-  );
+  ];
+
+  if (pathname === '/') {
+    const sections = siteSections();
+    const projects = getPublishedProjects(content).map((p) => ({
+      name: p.title,
+      url: `${BASE_URL}/project/${p.slug}`,
+    }));
+    graph.push({
+      '@type': 'ItemList',
+      '@id': `${BASE_URL}/#navigation`,
+      name: 'Secciones',
+      itemListElement: sections.map((item, index) => ({
+        '@type': 'SiteNavigationElement',
+        position: index + 1,
+        name: item.name,
+        url: item.url,
+      })),
+    });
+    graph.push({
+      '@type': 'ItemList',
+      '@id': `${BASE_URL}/#projects`,
+      name: 'Obra',
+      itemListElement: projects.map((item, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: item.name,
+        url: item.url,
+      })),
+    });
+  }
+
+  return JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }, null, 2);
 }
 
 /** Metadatos sin escapar (JSON-LD, etc.). */
@@ -131,9 +165,20 @@ function getPageMeta(pathname, content) {
   const name = content?.site?.name || 'Dani Díaz';
   const siteDesc = getSiteDescription(content);
 
+  if (pathname === '/') {
+    return {
+      title: getSiteTitle(content),
+      description: siteDesc,
+      url: `${BASE_URL}/`,
+      image: getHomeShareImage(content),
+      ogType: 'website',
+      imageAlt: 'Logotipo DD de Dani Díaz, Director de Fotografía',
+    };
+  }
+
   if (pathname === '/about') {
     return {
-      title: `${tr(T.about.title)} — ${name}`,
+      title: `Sobre mí — ${name}`,
       description: siteDesc,
       url: `${BASE_URL}/about`,
       image: getHomeShareImage(content),
@@ -144,7 +189,7 @@ function getPageMeta(pathname, content) {
 
   if (pathname === '/contact') {
     return {
-      title: `${tr(T.contact.title)} — ${name}`,
+      title: `Contacto — ${name}`,
       description: tr(T.contact.intro),
       url: `${BASE_URL}/contact`,
       image: getHomeShareImage(content),
@@ -155,7 +200,7 @@ function getPageMeta(pathname, content) {
 
   if (pathname === '/work' || pathname.startsWith('/work/')) {
     const catMatch = pathname.match(/^\/work\/([^/]+)/);
-    let title = `${tr(T.work.title)} — ${name}`;
+    let title = `Obra — ${name}`;
     if (catMatch) {
       const cat = getActiveCategories(content.projects || []).find((c) => c.id === catMatch[1]);
       if (cat) title = `${cat.es} — ${name}`;
@@ -201,6 +246,22 @@ function buildSiteNavHtml() {
 function buildStaticBodyHtml(pathname, content, embedHtml = '') {
   const name = content?.site?.name || 'Dani Díaz';
   const nav = buildSiteNavHtml();
+
+  if (pathname === '/') {
+    const projects = getPublishedProjects(content)
+      .map(
+        (p) =>
+          `<li><a href="${BASE_URL}/project/${esc(p.slug)}">${esc(p.title)}</a></li>`,
+      )
+      .join('\n');
+    return `<main id="seo-static-content">
+  <h1>${esc(getSiteTitle(content))}</h1>
+  <p>${esc(getSiteDescription(content))}</p>
+  ${nav}
+  <h2>Obra</h2>
+  <ul>${projects}</ul>
+</main>`;
+  }
 
   if (pathname === '/about') {
     const paragraphs = String(content.about?.es || defaultContent.about?.es || '')

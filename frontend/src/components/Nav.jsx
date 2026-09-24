@@ -65,7 +65,7 @@ export const Nav = () => {
   const logoUrl = SITE_NAV_LOGO;
 
   const linkClass = ({ isActive }) =>
-    `text-[11px] tracking-[0.14em] uppercase transition-all duration-300 px-3 py-2 rounded-full ${
+    `text-[11px] tracking-[0.18em] uppercase transition-all duration-300 px-3 py-2 rounded-full ${
       isActive
         ? "text-white bg-white/[0.08]"
         : "text-white/55 hover:text-white hover:bg-white/[0.06]"
@@ -170,7 +170,7 @@ export const Nav = () => {
             <NavLink
               to="/work"
               className={({ isActive }) =>
-                `px-4 py-2.5 rounded-xl text-[12px] tracking-[0.24em] uppercase transition-all ${
+                `px-4 py-2.5 rounded-xl text-[12px] tracking-[0.18em] uppercase transition-all ${
                   isActive ? "text-white bg-white/10" : "text-white/65 hover:text-white hover:bg-white/8"
                 }`
               }
@@ -181,7 +181,7 @@ export const Nav = () => {
               <NavLink
                 to="/showreel"
                 className={({ isActive }) =>
-                  `px-4 py-2.5 rounded-xl text-[12px] tracking-[0.24em] uppercase transition-all ${
+                  `px-4 py-2.5 rounded-xl text-[12px] tracking-[0.18em] uppercase transition-all ${
                     isActive ? "text-white bg-white/10" : "text-white/65 hover:text-white hover:bg-white/8"
                   }`
                 }
@@ -192,7 +192,7 @@ export const Nav = () => {
             <NavLink
               to="/about"
               className={({ isActive }) =>
-                `px-4 py-2.5 rounded-xl text-[12px] tracking-[0.24em] uppercase transition-all ${
+                `px-4 py-2.5 rounded-xl text-[12px] tracking-[0.18em] uppercase transition-all ${
                   isActive ? "text-white bg-white/10" : "text-white/65 hover:text-white hover:bg-white/8"
                 }`
               }
@@ -202,7 +202,7 @@ export const Nav = () => {
             <NavLink
               to="/contact"
               className={({ isActive }) =>
-                `px-4 py-2.5 rounded-xl text-[12px] tracking-[0.24em] uppercase transition-all ${
+                `px-4 py-2.5 rounded-xl text-[12px] tracking-[0.18em] uppercase transition-all ${
                   isActive ? "text-white bg-white/10" : "text-white/65 hover:text-white hover:bg-white/8"
                 }`
               }

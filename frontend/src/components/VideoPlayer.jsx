@@ -4,6 +4,9 @@ import {
   registerPlayer,
   unregisterPlayer,
   getGlobalMuted,
+  getSavedTime,
+  pausePlayer,
+  resumePlayer,
 } from "../lib/videoStore";
 import { computeVideoCoverVars } from "../lib/videoCover";
 
@@ -36,6 +39,8 @@ export const VideoPlayer = ({
   onPause,
   onError,
   onRef,
+  /** Primer fotograma pintado (timeupdate), no el evento play. */
+  onFirstFrame,
 }) => {
   const wrapperRef = useRef(null);
   const containerRef = useRef(null);
@@ -43,8 +48,12 @@ export const VideoPlayer = ({
   const ytPlayerRef = useRef(null);
   const playingRef = useRef(playing);
   const [ready, setReady] = useState(false);
+  const [painted, setPainted] = useState(false);
   const [containerRatio, setContainerRatio] = useState(16 / 9);
   const readyCalledRef = useRef(false);
+  const paintedRef = useRef(false);
+  const onFirstFrameRef = useRef(onFirstFrame);
+  onFirstFrameRef.current = onFirstFrame;
 
   const vimeoId = extractVimeoId(url);
   const ytId = !vimeoId ? extractYoutubeId(url) : null;
@@ -67,7 +76,9 @@ export const VideoPlayer = ({
     if (!vimeoId || !containerRef.current) return undefined;
 
     readyCalledRef.current = false;
+    paintedRef.current = false;
     setReady(false);
+    setPainted(false);
 
     const iframe = containerRef.current;
     const player = new Player(iframe);
@@ -99,8 +110,14 @@ export const VideoPlayer = ({
 
         const attemptAutoplay = (retries = 0) => {
           if (playerRef.current !== player || !shouldAutoplay) return;
-          player
-            .play()
+          const saved = getSavedTime(playerKey);
+          const start = () => player.play();
+          const afterSeek =
+            saved > 0.2 && player.setCurrentTime
+              ? player.setCurrentTime(saved).catch(() => {})
+              : Promise.resolve();
+          afterSeek
+            .then(start)
             .catch(() => {
               if (retries < 8) {
                 window.setTimeout(() => attemptAutoplay(retries + 1), 180 + retries * 120);
@@ -118,6 +135,12 @@ export const VideoPlayer = ({
         handleReady();
       });
 
+    const markFrame = () => {
+      if (paintedRef.current || playerRef.current !== player) return;
+      paintedRef.current = true;
+      setPainted(true);
+      onFirstFrameRef.current?.();
+    };
     const onPlayEvent = () => {
       if (playingRef.current === false) {
         player.pause().catch(() => {});
@@ -127,11 +150,6 @@ export const VideoPlayer = ({
     };
     const onPauseEvent = () => {
       onPause?.();
-      if (!background || document.hidden || playingRef.current === false) return;
-      window.setTimeout(() => {
-        if (playerRef.current !== player || playingRef.current === false) return;
-        player.play().catch(() => {});
-      }, 280);
     };
     const onErrorEvent = (err) => {
       console.warn("[VideoPlayer] error:", err?.message || err);
@@ -141,15 +159,22 @@ export const VideoPlayer = ({
       const currentPlaying = playingRef.current;
       const shouldAutoplay =
         currentPlaying !== false && (autoplay || background || currentPlaying === true);
-      if (shouldAutoplay) {
-        player.play().catch(() => {});
-      } else {
+      if (!shouldAutoplay) {
         player.pause().catch(() => {});
+        return;
       }
+      if (!player.getPaused) return;
+      player
+        .getPaused()
+        .then((paused) => {
+          if (paused && playerRef.current === player) player.play().catch(() => {});
+        })
+        .catch(() => {});
     };
 
     player.on("play", onPlayEvent);
     player.on("pause", onPauseEvent);
+    player.on("timeupdate", markFrame);
     player.on("error", onErrorEvent);
     player.on("loaded", onLoadedEvent);
 
@@ -157,6 +182,7 @@ export const VideoPlayer = ({
       clearTimeout(safetyTimer);
       onRef?.(null, null);
       playerRef.current = null;
+      pausePlayer(playerKey);
       try {
         player.pause().catch(() => {});
         player.setMuted(true).catch(() => {});
@@ -171,7 +197,9 @@ export const VideoPlayer = ({
     if (!useYtApi || !containerRef.current) return undefined;
 
     readyCalledRef.current = false;
+    paintedRef.current = false;
     setReady(false);
+    setPainted(false);
 
     let cancelled = false;
     const safetyTimer = setTimeout(handleReady, 2000);
@@ -217,7 +245,14 @@ export const VideoPlayer = ({
               }
             },
             onStateChange: (event) => {
-              if (event.data === YT.PlayerState.PLAYING) onPlay?.();
+              if (event.data === YT.PlayerState.PLAYING) {
+                onPlay?.();
+                if (!paintedRef.current) {
+                  paintedRef.current = true;
+                  setPainted(true);
+                  onFirstFrameRef.current?.();
+                }
+              }
               if (event.data === YT.PlayerState.PAUSED) onPause?.();
             },
             onError: () => {
@@ -242,6 +277,7 @@ export const VideoPlayer = ({
         ytPlayerRef.current?.destroy?.();
       } catch {}
       ytPlayerRef.current = null;
+      pausePlayer(playerKey);
       unregisterPlayer(playerKey);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -254,13 +290,13 @@ export const VideoPlayer = ({
 
     let cancelled = false;
     if (playing) {
-      player
-        .play()
+      Promise.resolve(resumePlayer(playerKey))
         .then(() => {
           if (!cancelled) onPlay?.();
         })
         .catch(() => {});
     } else {
+      pausePlayer(playerKey);
       player
         .pause()
         .then(() => {
@@ -274,19 +310,23 @@ export const VideoPlayer = ({
     };
   }, [playing, ready, onPlay, onPause]);
 
-  const vimeoSrc = vimeoId
-    ? buildVimeoSrc(vimeoId, {
-        autoplay,
-        background,
-        muted: muted || background,
-        loop: loop || background,
-        controls: !background,
-      })
-    : null;
-  const ytSrc =
-    ytId && !useYtApi
-      ? buildYtSrc(ytId, { autoplay, muted, background, loop })
-      : null;
+  const vimeoSrc = useMemo(() => {
+    if (!vimeoId) return null;
+    return buildVimeoSrc(vimeoId, {
+      autoplay,
+      background,
+      muted: muted || background,
+      loop: loop || background,
+      controls: !background,
+    });
+    // El mute en caliente no debe recargar el iframe (reinicia el vídeo).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vimeoId, autoplay, background, loop]);
+  const ytSrc = useMemo(() => {
+    if (!ytId || useYtApi) return null;
+    return buildYtSrc(ytId, { autoplay, muted, background, loop });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ytId, useYtApi, autoplay, background, loop]);
 
   if (!vimeoId && !ytId) {
     return (
@@ -363,11 +403,9 @@ export const VideoPlayer = ({
           className={iframeCls}
         />
       )}
-      {!background && (
-        <div
-          className={`pointer-events-none absolute inset-0 z-[1] bg-black transition-opacity duration-500 ${ready ? "opacity-0 pointer-events-none" : "opacity-100"}`}
-        />
-      )}
+      <div
+        className={`pointer-events-none absolute inset-0 z-[2] bg-black transition-opacity duration-500 ${painted ? "opacity-0" : "opacity-100"}`}
+      />
     </div>
   );
 };

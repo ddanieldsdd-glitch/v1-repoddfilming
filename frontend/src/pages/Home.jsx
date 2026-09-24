@@ -88,7 +88,7 @@ export default function Home() {
           <Link
             to="/work"
             data-testid="home-view-all"
-            className="mt-6 md:mt-8 inline-flex items-center gap-2 text-[11px] tracking-[0.28em] uppercase text-white border-b border-white pb-1 hover:opacity-60 transition"
+            className="mt-6 md:mt-8 inline-flex items-center gap-2 text-[11px] tracking-[0.22em] uppercase text-white border-b border-white pb-1 hover:opacity-60 transition"
           >
             {tr(T.work.all, lang)} <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={1.5} />
           </Link>

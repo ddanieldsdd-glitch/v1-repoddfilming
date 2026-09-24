@@ -34,7 +34,7 @@ export default function Showreel() {
   const playerWrapRef = useRef(null);
   const [muted, setMuted] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const [playing, setPlaying] = useState(false);
+  const [frameReady, setFrameReady] = useState(false);
   const url = content.site?.showreel_url;
   const watchVideo = parseVideoUrl(url);
   const poster = getVimeoPosterUrl(url) || watchVideo?.defaultThumbnail;
@@ -251,14 +251,6 @@ export default function Showreel() {
               : "h-full max-h-none flex-1 sm:h-auto sm:max-h-[calc(100svh-8rem)] sm:flex-none sm:aspect-video sm:max-w-5xl sm:rounded-2xl sm:shadow-[0_32px_100px_-24px_rgba(0,0,0,0.95)] sm:ring-1 sm:ring-white/10"
           }`}
         >
-          {poster && !playing && (
-            <img
-              src={poster}
-              alt=""
-              className="absolute inset-0 z-[1] h-full w-full object-cover"
-            />
-          )}
-
           <div className="relative min-h-0 flex-1">
             <VideoPlayer
               url={url}
@@ -269,8 +261,17 @@ export default function Showreel() {
               testId="showreel-player"
               interactive
               onReady={handlePlayerReady}
-              onPlay={() => setPlaying(true)}
+              onFirstFrame={() => setFrameReady(true)}
             />
+            {poster && (
+              <img
+                src={poster}
+                alt=""
+                className={`pointer-events-none absolute inset-0 z-[2] h-full w-full bg-black object-cover transition-opacity duration-500 ${
+                  frameReady ? "opacity-0" : "opacity-100"
+                }`}
+              />
+            )}
           </div>
 
           {/* Barra táctil — siempre visible encima del vídeo (móvil + desktop) */}
