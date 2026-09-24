@@ -5,9 +5,8 @@
  * distinta según el User-Agent):
  *  - Rewrite en vercel.json envía /project/:slug, /about, etc. aquí
  *  - Se parte del index.html del SPA (copiado al build como api/_spa.html)
- *  - Se inyectan meta OG, JSON-LD y el iframe de vídeo si aplica
- *  - React monta la ficha completa; el HTML mínimo de crawlers solo se usa
- *    si el shell del SPA no está disponible, y nunca se cachea en el CDN
+ *  - Se inyectan meta OG, JSON-LD y el bloque indexable (#seo-static-content)
+ *  - React lo retira al arrancar. El HTML mínimo solo se usa si no hay shell del SPA
  */
 
 const fs = require('fs');
@@ -114,22 +113,6 @@ async function getBaseHtml() {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-// Bots sociales y buscadores: HTML estático con meta tags y contenido rastreable.
-const SOCIAL_BOT_RE = /facebookexternalhit|whatsapp|telegram|slack|discord|twitterbot|linkedinbot|pinterest/i;
-const SEARCH_BOT_RE = /googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|applebot|semrushbot|ahrefsbot|mj12bot|dotbot|petalbot/i;
-
-function isSocialBot(ua) {
-  return SOCIAL_BOT_RE.test(ua || '');
-}
-
-function isSearchBot(ua) {
-  return SEARCH_BOT_RE.test(ua || '');
-}
-
-function isCrawler(ua) {
-  return isSocialBot(ua) || isSearchBot(ua);
-}
 
 function esc(str) {
   return String(str || '')
@@ -336,7 +319,33 @@ function buildBotHTML(
  * Inyecta meta tags OG de proyecto en el HTML real del SPA.
  * Elimina los meta tags genéricos del home y añade los del proyecto.
  */
-function injectOGTags(html, { title, description, image, url, ogType = 'article', imageAlt = title, embedUrl = null }, jsonLd = '') {
+function showreelPrefetchHead(content) {
+  const raw = content?.site?.showreel_url || '';
+  const match = String(raw).match(/vimeo\.com\/(?:video\/)?(\d+)/i);
+  if (!match) return '';
+  const params = new URLSearchParams({
+    title: '0',
+    byline: '0',
+    portrait: '0',
+    dnt: '1',
+    color: '000000',
+    transparent: '0',
+    playsinline: '1',
+    autoplay: '1',
+    background: '1',
+    muted: '1',
+    loop: '1',
+    autopause: '0',
+  });
+  const href = `https://player.vimeo.com/video/${match[1]}?${params.toString()}`;
+  return `
+  <link rel="preconnect" href="https://player.vimeo.com" />
+  <link rel="preconnect" href="https://i.vimeocdn.com" />
+  <link rel="preconnect" href="https://f.vimeocdn.com" />
+  <link rel="prefetch" href="${href}" as="document" />`;
+}
+
+function injectOGTags(html, { title, description, image, url, ogType = 'article', imageAlt = title, embedUrl = null }, jsonLd = '', { bodyHtml = '', extraHead = '' } = {}) {
   let out = html;
 
   // Reemplazar <title>
@@ -370,32 +379,28 @@ function injectOGTags(html, { title, description, image, url, ogType = 'article'
   <meta name="twitter:description" content="${description}" />
   <meta name="twitter:image" content="${image}" />
   <meta name="twitter:image:alt" content="${imageAlt}" />${buildVideoMetaTags(embedUrl)}
-  ${jsonLd ? `<script type="application/ld+json">${jsonLd}</script>` : ''}`;
+  ${jsonLd ? `<script type="application/ld+json">${jsonLd}</script>` : ''}${extraHead}`;
 
   out = out.replace('</head>', `${tags}\n</head>`);
-  out = injectVideoEmbed(out, embedUrl, title);
+  if (bodyHtml && out.includes('<div id="root">')) {
+    out = out.replace('<div id="root">', `${bodyHtml}\n<div id="root">`);
+  } else if (!bodyHtml) {
+    out = injectVideoEmbed(out, embedUrl, title);
+  }
   return out;
 }
 
 async function serveSeoPage(req, res, { ogData, jsonLd, pathname, content }) {
-  const ua = req.headers['user-agent'] || '';
   const bodyHtml = buildStaticBodyHtml(pathname, content);
+  const extraHead = pathname === '/' ? showreelPrefetchHead(content) : '';
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('X-Robots-Tag', 'index, follow');
-  res.setHeader('Vary', 'User-Agent');
-
-  // Nunca cachear el HTML de crawlers en el CDN: comparte URL con la ficha
-  // real y un HIT serviría la versión escueta a quien recargue la página.
-  if (isCrawler(ua)) {
-    res.setHeader('Cache-Control', 'private, no-store');
-    return res.status(200).send(buildBotHTML({ ...ogData, bodyHtml }, jsonLd));
-  }
 
   const baseHtml = await getBaseHtml();
   if (baseHtml) {
     res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=3600, stale-while-revalidate=86400');
-    return res.status(200).send(injectOGTags(baseHtml, ogData, jsonLd));
+    return res.status(200).send(injectOGTags(baseHtml, ogData, jsonLd, { bodyHtml, extraHead }));
   }
 
   res.setHeader('Cache-Control', 'private, no-store');

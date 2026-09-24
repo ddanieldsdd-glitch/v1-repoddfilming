@@ -14,7 +14,6 @@ import {
 export function HomeShowreel({ url }) {
   const [lang] = useLang();
   const [frameReady, setFrameReady] = useState(false);
-  const [loadPlayer, setLoadPlayer] = useState(false);
   const [sectionEl, setSectionEl] = useState(null);
   const poster = getVimeoPosterUrl(url);
   const immersive = isImmersiveHomeHero();
@@ -23,16 +22,6 @@ export function HomeShowreel({ url }) {
     () => observePlayerRecovery(HOME_SHOWREEL_KEY, sectionEl),
     [sectionEl],
   );
-
-  useEffect(() => {
-    const start = () => setLoadPlayer(true);
-    if (typeof requestIdleCallback === "function") {
-      const id = requestIdleCallback(start, { timeout: 800 });
-      return () => cancelIdleCallback(id);
-    }
-    const timer = window.setTimeout(start, 400);
-    return () => window.clearTimeout(timer);
-  }, [url]);
 
   useEffect(() => {
     setFrameReady(false);
@@ -61,8 +50,7 @@ export function HomeShowreel({ url }) {
             : "relative aspect-video overflow-hidden rounded-[1.125rem] md:rounded-[1.5rem] bg-neutral-950 ring-1 ring-white/[0.08]"
         }
       >
-        {loadPlayer && (
-          <VideoPlayer
+        <VideoPlayer
             url={url}
             playerKey={HOME_SHOWREEL_KEY}
             autoplay
@@ -76,7 +64,6 @@ export function HomeShowreel({ url }) {
             interactive={false}
             onFirstFrame={() => setFrameReady(true)}
           />
-        )}
         {poster && (
           <img
             src={poster}

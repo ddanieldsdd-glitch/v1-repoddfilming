@@ -92,17 +92,16 @@ export const VideoPlayer = ({
       .then(() => {
         if (playerRef.current !== player) return;
 
+        registerPlayer(playerKey, player, { forceMuted: background || muted });
+        onRef?.(player, iframe);
+        handleReady();
+
         if (background || getGlobalMuted() || muted) {
           player.setMuted(true).catch(() => {});
         }
         if (background) {
           player.setLoop(true).catch(() => {});
         }
-
-        registerPlayer(playerKey, player, { forceMuted: background || muted });
-        onRef?.(player, iframe);
-
-        handleReady();
 
         const currentPlaying = playingRef.current;
         const shouldAutoplay =
@@ -111,18 +110,24 @@ export const VideoPlayer = ({
         const attemptAutoplay = (retries = 0) => {
           if (playerRef.current !== player || !shouldAutoplay) return;
           const saved = getSavedTime(playerKey);
-          const start = () => player.play();
-          const afterSeek =
-            saved > 0.2 && player.setCurrentTime
-              ? player.setCurrentTime(saved).catch(() => {})
-              : Promise.resolve();
-          afterSeek
-            .then(start)
-            .catch(() => {
-              if (retries < 8) {
-                window.setTimeout(() => attemptAutoplay(retries + 1), 180 + retries * 120);
-              }
-            });
+          const resume = () => {
+            const seek =
+              saved > 0.2 && player.setCurrentTime
+                ? player.setCurrentTime(saved).catch(() => {})
+                : Promise.resolve();
+            return seek.then(() => player.play());
+          };
+          const start = player.getPaused
+            ? player.getPaused().then((paused) => {
+                if (!paused || playerRef.current !== player) return undefined;
+                return resume();
+              })
+            : resume();
+          Promise.resolve(start).catch(() => {
+            if (retries < 8) {
+              window.setTimeout(() => attemptAutoplay(retries + 1), 180 + retries * 120);
+            }
+          });
         };
 
         if (shouldAutoplay) {
@@ -173,6 +178,7 @@ export const VideoPlayer = ({
     };
 
     player.on("play", onPlayEvent);
+    player.on("playing", markFrame);
     player.on("pause", onPauseEvent);
     player.on("timeupdate", markFrame);
     player.on("error", onErrorEvent);
