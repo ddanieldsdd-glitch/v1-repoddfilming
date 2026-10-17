@@ -54,10 +54,10 @@ export default function Home() {
       >
         {tiles.length > 0 && (
           <div className="mb-6 flex items-end justify-between border-b border-white/10 pb-3.5 md:mb-10 md:pb-5">
-            <h2 className="text-[10px] font-normal tracking-[0.22em] uppercase text-[var(--cinema-muted)]">
+            <h2 className="text-[11px] font-normal tracking-[0.22em] uppercase text-[var(--cinema-muted)]">
               {tr(T.work.title, lang)}
             </h2>
-            <span className="text-[10px] tabular-nums tracking-[0.14em] text-white/45">
+            <span className="text-[11px] tabular-nums tracking-[0.14em] text-white/60">
               {String(tiles.length).padStart(2, "0")}
             </span>
           </div>
@@ -79,9 +79,9 @@ export default function Home() {
       {showExplore && (
         <section
           data-testid="home-see-more"
-          className="px-4 sm:px-6 md:px-12 lg:px-16 pt-12 md:pt-14 pb-28 md:pb-36 border-t border-white/10"
+          className="px-4 sm:px-6 md:px-12 lg:px-16 pt-12 md:pt-14 pb-20 md:pb-28 border-t border-white/10"
         >
-          <p className="text-[10px] tracking-[0.22em] uppercase text-[var(--cinema-muted)] mb-5 md:mb-7">
+          <p className="text-[11px] tracking-[0.22em] uppercase text-[var(--cinema-muted)] mb-5 md:mb-7">
             {tr(T.work.seeMore, lang)}
           </p>
           <CategoryExploreLinks projects={content.projects} lang={lang} />

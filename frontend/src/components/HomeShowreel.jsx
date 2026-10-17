@@ -5,34 +5,35 @@ import { useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 import { VideoPlayer } from "./VideoPlayer";
 import { getVimeoPosterUrl } from "../lib/vimeo";
-import { isImmersiveHomeHero, HOME_HERO_COVER_AMOUNT } from "../lib/homeHero";
+import {
+  isImmersiveHomeHero,
+  isPortraitViewport,
+  subscribePortrait,
+  HOME_HERO_COVER_AMOUNT,
+  HOME_HERO_PICTURE_RATIO,
+} from "../lib/homeHero";
+import { DEFAULT_VIDEO_RATIO } from "../lib/videoCover";
 import {
   HOME_SHOWREEL_KEY,
+  markHomeHeroReady,
   observePlayerRecovery,
 } from "../lib/videoStore";
 
 export function HomeShowreel({ url }) {
   const [lang] = useLang();
   const [frameReady, setFrameReady] = useState(false);
-  const [loadPlayer, setLoadPlayer] = useState(false);
   const [sectionEl, setSectionEl] = useState(null);
   const poster = getVimeoPosterUrl(url);
   const immersive = isImmersiveHomeHero();
+  const [portrait, setPortrait] = useState(isPortraitViewport);
+  const fillPortrait = immersive && portrait;
+
+  useEffect(() => subscribePortrait(setPortrait), []);
 
   useEffect(
     () => observePlayerRecovery(HOME_SHOWREEL_KEY, sectionEl),
     [sectionEl],
   );
-
-  useEffect(() => {
-    const start = () => setLoadPlayer(true);
-    if (typeof requestIdleCallback === "function") {
-      const id = requestIdleCallback(start, { timeout: 800 });
-      return () => cancelIdleCallback(id);
-    }
-    const timer = window.setTimeout(start, 400);
-    return () => window.clearTimeout(timer);
-  }, [url]);
 
   useEffect(() => {
     setFrameReady(false);
@@ -61,8 +62,7 @@ export function HomeShowreel({ url }) {
             : "relative aspect-video overflow-hidden rounded-[1.125rem] md:rounded-[1.5rem] bg-neutral-950 ring-1 ring-white/[0.08]"
         }
       >
-        {loadPlayer && (
-          <VideoPlayer
+        <VideoPlayer
             url={url}
             playerKey={HOME_SHOWREEL_KEY}
             autoplay
@@ -71,12 +71,15 @@ export function HomeShowreel({ url }) {
             background
             cover={immersive}
             coverAmount={immersive ? HOME_HERO_COVER_AMOUNT : undefined}
+            pictureRatio={fillPortrait ? HOME_HERO_PICTURE_RATIO : undefined}
             className="absolute inset-0 z-[1] h-full w-full"
             testId="home-showreel-player"
             interactive={false}
-            onFirstFrame={() => setFrameReady(true)}
+            onFirstFrame={() => {
+              setFrameReady(true);
+              markHomeHeroReady();
+            }}
           />
-        )}
         {poster && (
           <img
             src={poster}
@@ -88,10 +91,17 @@ export function HomeShowreel({ url }) {
             className={`pointer-events-none absolute inset-0 z-[2] h-full w-full bg-black transition-opacity duration-500 ${
               frameReady ? "opacity-0" : "opacity-100"
             } ${
-              immersive
-                ? "object-contain scale-[1.15] origin-center"
-                : "object-contain"
+              fillPortrait
+                ? "object-cover origin-center"
+                : immersive
+                  ? "object-contain scale-[1.15] origin-center"
+                  : "object-contain"
             }`}
+            style={
+              fillPortrait
+                ? { transform: `scale(${HOME_HERO_PICTURE_RATIO / DEFAULT_VIDEO_RATIO})` }
+                : undefined
+            }
           />
         )}
         <div
@@ -109,7 +119,7 @@ export function HomeShowreel({ url }) {
           <div className="absolute inset-x-0 bottom-0 z-[4] flex flex-col items-center px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-10 md:pb-12">
             <Link
               to="/showreel"
-              className="flex items-center gap-2 rounded-full border border-white/20 bg-black/45 px-5 py-3 text-[10px] tracking-[0.18em] uppercase text-white backdrop-blur-md transition duration-300 hover:border-white/40 hover:bg-black/65 focus-visible:outline-white md:px-6"
+              className="flex items-center gap-2 rounded-full border border-white/20 bg-black/45 px-5 py-3 text-[11px] tracking-[0.18em] uppercase text-white backdrop-blur-md transition duration-300 hover:border-white/40 hover:bg-black/65 focus-visible:outline-white md:px-6"
             >
               {tr(T.hero.showreel, lang)}
               <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={1.5} />
@@ -117,7 +127,7 @@ export function HomeShowreel({ url }) {
             <button
               type="button"
               onClick={scrollToWork}
-              className="mt-14 flex items-center justify-center text-white/40 transition hover:text-white/75 md:mt-16"
+              className="mt-14 flex items-center justify-center text-white/55 transition hover:text-white/75 md:mt-16"
               aria-label={tr(T.hero.scroll, lang)}
             >
               <ChevronDown className="h-5 w-5 animate-bounce" strokeWidth={1.5} />
@@ -126,7 +136,7 @@ export function HomeShowreel({ url }) {
         ) : (
           <Link
             to="/showreel"
-            className="absolute right-4 bottom-4 z-[4] flex items-center gap-2 rounded-full border border-white/20 bg-black/45 px-4 py-2.5 text-[10px] tracking-[0.16em] uppercase text-white backdrop-blur-md transition duration-300 hover:border-white/35 hover:bg-black/65 focus-visible:outline-white md:right-6 md:bottom-6 md:px-5"
+            className="absolute right-4 bottom-4 z-[4] flex items-center gap-2 rounded-full border border-white/20 bg-black/45 px-4 py-2.5 text-[11px] tracking-[0.16em] uppercase text-white backdrop-blur-md transition duration-300 hover:border-white/35 hover:bg-black/65 focus-visible:outline-white md:right-6 md:bottom-6 md:px-5"
           >
             {tr(T.hero.showreel, lang)}
             <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={1.5} />

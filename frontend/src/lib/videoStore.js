@@ -283,3 +283,30 @@ export const silenceAllWithRestore = (keepKey) => {
     }
   };
 };
+/**
+ * El reel del inicio va primero: los previews de las tarjetas de la portada
+ * esperan a su primer fotograma (o a un tope) para no robarle ancho de banda.
+ */
+const HERO_WAIT_MAX_MS = 4000;
+let _heroReady = false;
+const heroListeners = new Set();
+
+export const markHomeHeroReady = () => {
+  if (_heroReady) return;
+  _heroReady = true;
+  heroListeners.forEach((fn) => fn());
+  heroListeners.clear();
+};
+
+export const whenHomeHeroReady = (fn) => {
+  if (_heroReady) {
+    fn();
+    return () => {};
+  }
+  heroListeners.add(fn);
+  const timer = setTimeout(markHomeHeroReady, HERO_WAIT_MAX_MS);
+  return () => {
+    clearTimeout(timer);
+    heroListeners.delete(fn);
+  };
+};

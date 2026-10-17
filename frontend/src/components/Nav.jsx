@@ -101,7 +101,7 @@ export const Nav = () => {
             <span className="font-medium text-[13px] md:text-sm tracking-[0.02em] text-white">
               {content.site.name}
             </span>
-            <span className="text-[8px] md:text-[9px] tracking-[0.2em] uppercase mt-0.5 text-white/50">
+            <span className="text-[8px] md:text-[10px] tracking-[0.2em] uppercase mt-0.5 text-white/50">
               {tr(content.site.title, lang)}
             </span>
           </span>
@@ -129,7 +129,7 @@ export const Nav = () => {
             <button
               data-testid="lang-es"
               onClick={() => setLang("es")}
-              className={`px-2.5 py-1 rounded-full text-[9px] tracking-[0.12em] uppercase transition-all duration-300 ${
+              className={`px-2.5 py-1 rounded-full text-[10px] tracking-[0.12em] uppercase transition-all duration-300 ${
                 lang === "es" ? "bg-white/15 text-white" : "text-white/50 hover:text-white"
               }`}
             >
@@ -138,7 +138,7 @@ export const Nav = () => {
             <button
               data-testid="lang-en"
               onClick={() => setLang("en")}
-              className={`px-2.5 py-1 rounded-full text-[9px] tracking-[0.12em] uppercase transition-all duration-300 ${
+              className={`px-2.5 py-1 rounded-full text-[10px] tracking-[0.12em] uppercase transition-all duration-300 ${
                 lang === "en" ? "bg-white/15 text-white" : "text-white/50 hover:text-white"
               }`}
             >
@@ -214,7 +214,7 @@ export const Nav = () => {
               <button
                 onClick={() => setLang("es")}
                 className={`flex-1 py-2 rounded-xl text-[11px] tracking-[0.2em] uppercase transition-all ${
-                  lang === "es" ? "bg-white/12 text-white" : "text-white/45 hover:bg-white/6 hover:text-white"
+                  lang === "es" ? "bg-white/12 text-white" : "text-white/60 hover:bg-white/6 hover:text-white"
                 }`}
               >
                 ES
@@ -222,7 +222,7 @@ export const Nav = () => {
               <button
                 onClick={() => setLang("en")}
                 className={`flex-1 py-2 rounded-xl text-[11px] tracking-[0.2em] uppercase transition-all ${
-                  lang === "en" ? "bg-white/12 text-white" : "text-white/45 hover:bg-white/6 hover:text-white"
+                  lang === "en" ? "bg-white/12 text-white" : "text-white/60 hover:bg-white/6 hover:text-white"
                 }`}
               >
                 EN

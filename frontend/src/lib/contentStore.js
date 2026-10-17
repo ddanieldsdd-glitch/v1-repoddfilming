@@ -105,13 +105,21 @@ export const loadContent = () => {
   });
 };
 
-// Async fetch from the server — returns fresh data from MongoDB
-export const fetchContent = async () => {
-  const res = await fetch("/api/content", { credentials: "same-origin" });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = applyHomeDefaults(await res.json());
-  saveContent(data);
-  return data;
+// Async fetch from the server — returns fresh data from MongoDB.
+// Concurrent callers (one per useContent) share the same in-flight request.
+let inflightContent = null;
+export const fetchContent = () => {
+  if (inflightContent) return inflightContent;
+  inflightContent = (async () => {
+    const res = await fetch("/api/content", { credentials: "same-origin" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = applyHomeDefaults(await res.json());
+    saveContent(data);
+    return data;
+  })().finally(() => {
+    inflightContent = null;
+  });
+  return inflightContent;
 };
 
 // Update localStorage cache and notify all subscribers (local only, no server write)

@@ -31,12 +31,12 @@ export default function Work() {
   );
 
   const btnBase =
-    "text-[10px] tracking-[0.22em] uppercase pb-1 transition-colors whitespace-nowrap cursor-pointer bg-transparent border-0 p-0 font-inherit";
+    "text-[11px] tracking-[0.22em] uppercase pb-1 transition-colors whitespace-nowrap cursor-pointer bg-transparent border-0 p-0 font-inherit";
 
   return (
     <div data-testid="work-page" className="cinema-page pt-24 sm:pt-32 md:pt-40 transition-colors duration-500">
       <div className="px-4 sm:px-6 md:px-12 lg:px-16">
-        <p className="text-[10px] tracking-[0.22em] uppercase text-[var(--cinema-muted)] mb-4">
+        <p className="text-[11px] tracking-[0.22em] uppercase text-[var(--cinema-muted)] mb-4">
           {String(allProjects.length).padStart(2, "0")} —{" "}
           {tr(T.work.title, lang)}
         </p>

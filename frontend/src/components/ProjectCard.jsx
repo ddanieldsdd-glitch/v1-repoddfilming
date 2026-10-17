@@ -7,6 +7,7 @@ import {
   HOME_SHOWREEL_KEY,
   pauseAllExcept,
   resumePlayer,
+  whenHomeHeroReady,
 } from "../lib/videoStore";
 import { cloudinaryResponsive, CARD_PRESETS, optimizeCloudinaryUrl } from "../lib/cloudinary";
 import { getCardRecognitions } from "../lib/recognitions";
@@ -135,8 +136,15 @@ export const ProjectCard = ({
     };
   }, []);
 
+  // En la portada, los previews esperan a que arranque el reel del hero.
+  const [heroReady, setHeroReady] = useState(cardSurface !== "home");
+  useEffect(() => {
+    if (cardSurface !== "home") return undefined;
+    return whenHomeHeroReady(() => setHeroReady(true));
+  }, [cardSurface]);
+
   // Preload al acercarse o al hover. No montar todos los iframes de Obra a la vez.
-  const shouldPreload = Boolean(previewUrl && (inView || hovered));
+  const shouldPreload = Boolean(previewUrl && ((inView && heroReady) || hovered));
   const shouldPlay    = Boolean(previewUrl && (hovered || (alwaysPlay && playInView)));
 
   const onMouseEnter = () => {
@@ -257,7 +265,7 @@ export const ProjectCard = ({
             <div className="min-w-0 flex-1">
               {typeof index === "number" && (
                 <span
-                  className={`block mb-1.5 text-[9px] tracking-[0.16em] uppercase text-white/50 transition-all duration-500 motion-reduce:transition-none ${
+                  className={`block mb-1.5 text-[10px] tracking-[0.16em] uppercase text-white/50 transition-all duration-500 motion-reduce:transition-none ${
                     hovered ? "opacity-100" : "opacity-0"
                   }`}
                 >
@@ -285,12 +293,12 @@ export const ProjectCard = ({
               >
                 {project.title}
               </h3>
-              <p className="mt-1.5 text-[9px] md:text-[10px] tracking-[0.12em] uppercase text-white/65 truncate">
+              <p className="mt-1.5 text-[10px] md:text-[11px] tracking-[0.12em] uppercase text-white/65 truncate">
                 {tr(project.type, lang)}{project.year ? ` · ${project.year}` : ""}
               </p>
               {project.director && (
                 <p
-                  className={`mt-1 text-[9px] text-white/50 truncate transition-[opacity,transform] duration-500 motion-reduce:transition-none ${
+                  className={`mt-1 text-[10px] text-white/50 truncate transition-[opacity,transform] duration-500 motion-reduce:transition-none ${
                     hovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"
                   }`}
                 >
@@ -299,7 +307,7 @@ export const ProjectCard = ({
               )}
             </div>
             <span
-              className="mb-0.5 flex shrink-0 items-center gap-1.5 text-[9px] tracking-[0.12em] uppercase text-white/70 opacity-70 transition-[opacity,transform] duration-500 md:translate-y-1 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 motion-reduce:transition-none"
+              className="mb-0.5 flex shrink-0 items-center gap-1.5 text-[10px] tracking-[0.12em] uppercase text-white/70 opacity-70 transition-[opacity,transform] duration-500 md:translate-y-1 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 motion-reduce:transition-none"
             >
               <span className="hidden lg:inline">{tr(T.project.external, lang)}</span>
               <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.5} />
