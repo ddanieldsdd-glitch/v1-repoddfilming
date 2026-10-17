@@ -21,7 +21,6 @@ export default function Home() {
   );
   const showExplore = getActiveCategories(content.projects).length > 0;
   const showreelUrl = content.site?.showreel_url;
-  const email = content.site?.social?.email;
   const reelOnHome = showreelOnHome(content.site?.showreel_placement) && showreelUrl;
   const immersiveHero = isImmersiveHomeHero();
 
@@ -80,7 +79,7 @@ export default function Home() {
       {showExplore && (
         <section
           data-testid="home-see-more"
-          className="px-4 sm:px-6 md:px-12 lg:px-16 pt-12 md:pt-14 pb-16 md:pb-20 border-t border-white/10"
+          className="px-4 sm:px-6 md:px-12 lg:px-16 pt-12 md:pt-14 pb-20 md:pb-28 border-t border-white/10"
         >
           <p className="text-[11px] tracking-[0.22em] uppercase text-[var(--cinema-muted)] mb-5 md:mb-7">
             {tr(T.work.seeMore, lang)}
@@ -95,35 +94,6 @@ export default function Home() {
           </Link>
         </section>
       )}
-
-      <section
-        data-testid="home-contact"
-        className="px-4 sm:px-6 md:px-12 lg:px-16 py-16 md:py-24 border-t border-white/10"
-      >
-        <p className="text-[11px] tracking-[0.22em] uppercase text-[var(--cinema-muted)] mb-5 md:mb-7">
-          {tr(T.homeContact.eyebrow, lang)}
-        </p>
-        <h2 className="max-w-3xl text-3xl sm:text-4xl md:text-5xl font-light tracking-[-0.02em] text-white">
-          {tr(T.homeContact.title, lang)}
-        </h2>
-        <div className="mt-8 md:mt-10 flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-8">
-          {email && (
-            <a
-              href={`mailto:${email}`}
-              className="text-lg md:text-2xl font-light text-white underline decoration-white/25 underline-offset-[6px] hover:decoration-white transition"
-            >
-              {email}
-            </a>
-          )}
-          <Link
-            to="/contact"
-            className="inline-flex w-fit items-center gap-2 rounded-full border border-white/20 px-5 py-3 text-[11px] tracking-[0.18em] uppercase text-white transition duration-300 hover:border-white/40 hover:bg-white/5"
-          >
-            {tr(T.homeContact.cta, lang)}
-            <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={1.5} />
-          </Link>
-        </div>
-      </section>
     </div>
   );
 }

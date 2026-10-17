@@ -323,29 +323,13 @@ function showreelPrefetchHead(content) {
   const raw = content?.site?.showreel_url || '';
   const match = String(raw).match(/vimeo\.com\/(?:video\/)?(\d+)/i);
   if (!match) return '';
-  const params = new URLSearchParams({
-    title: '0',
-    byline: '0',
-    portrait: '0',
-    dnt: '1',
-    color: '000000',
-    transparent: '0',
-    playsinline: '1',
-    autoplay: '1',
-    background: '1',
-    muted: '1',
-    loop: '1',
-    autopause: '0',
-  });
-  const href = `https://player.vimeo.com/video/${match[1]}?${params.toString()}`;
   // El póster es lo primero que se pinta en el hero: que empiece a bajar con el HTML.
   const poster = `https://vumbnail.com/${match[1]}.jpg`;
   return `
   <link rel="preload" href="${poster}" as="image" fetchpriority="high" />
   <link rel="preconnect" href="https://player.vimeo.com" />
   <link rel="preconnect" href="https://i.vimeocdn.com" />
-  <link rel="preconnect" href="https://f.vimeocdn.com" />
-  <link rel="prefetch" href="${href}" as="document" />`;
+  <link rel="preconnect" href="https://f.vimeocdn.com" />`;
 }
 
 function injectOGTags(html, { title, description, image, url, ogType = 'article', imageAlt = title, embedUrl = null }, jsonLd = '', { bodyHtml = '', extraHead = '' } = {}) {

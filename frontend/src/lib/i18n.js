@@ -10,11 +10,6 @@ export const T = {
     showreel: { es: "Ver showreel", en: "View showreel" },
     scroll: { es: "Desplázate", en: "Scroll" },
   },
-  homeContact: {
-    eyebrow: { es: "Contacto", en: "Contact" },
-    title: { es: "¿Tienes un proyecto en mente?", en: "Have a project in mind?" },
-    cta: { es: "Escríbeme", en: "Get in touch" },
-  },
   work: {
     title: { es: "Obra seleccionada", en: "Selected work" },
     all: { es: "Todo", en: "All" },

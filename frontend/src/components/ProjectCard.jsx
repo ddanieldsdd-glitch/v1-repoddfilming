@@ -7,6 +7,7 @@ import {
   HOME_SHOWREEL_KEY,
   pauseAllExcept,
   resumePlayer,
+  whenHomeHeroReady,
 } from "../lib/videoStore";
 import { cloudinaryResponsive, CARD_PRESETS, optimizeCloudinaryUrl } from "../lib/cloudinary";
 import { getCardRecognitions } from "../lib/recognitions";
@@ -135,8 +136,15 @@ export const ProjectCard = ({
     };
   }, []);
 
+  // En la portada, los previews esperan a que arranque el reel del hero.
+  const [heroReady, setHeroReady] = useState(cardSurface !== "home");
+  useEffect(() => {
+    if (cardSurface !== "home") return undefined;
+    return whenHomeHeroReady(() => setHeroReady(true));
+  }, [cardSurface]);
+
   // Preload al acercarse o al hover. No montar todos los iframes de Obra a la vez.
-  const shouldPreload = Boolean(previewUrl && (inView || hovered));
+  const shouldPreload = Boolean(previewUrl && ((inView && heroReady) || hovered));
   const shouldPlay    = Boolean(previewUrl && (hovered || (alwaysPlay && playInView)));
 
   const onMouseEnter = () => {

@@ -15,6 +15,7 @@ import {
 import { DEFAULT_VIDEO_RATIO } from "../lib/videoCover";
 import {
   HOME_SHOWREEL_KEY,
+  markHomeHeroReady,
   observePlayerRecovery,
 } from "../lib/videoStore";
 
@@ -74,7 +75,10 @@ export function HomeShowreel({ url }) {
             className="absolute inset-0 z-[1] h-full w-full"
             testId="home-showreel-player"
             interactive={false}
-            onFirstFrame={() => setFrameReady(true)}
+            onFirstFrame={() => {
+              setFrameReady(true);
+              markHomeHeroReady();
+            }}
           />
         {poster && (
           <img
