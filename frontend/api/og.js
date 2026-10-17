@@ -338,7 +338,10 @@ function showreelPrefetchHead(content) {
     autopause: '0',
   });
   const href = `https://player.vimeo.com/video/${match[1]}?${params.toString()}`;
+  // El póster es lo primero que se pinta en el hero: que empiece a bajar con el HTML.
+  const poster = `https://vumbnail.com/${match[1]}.jpg`;
   return `
+  <link rel="preload" href="${poster}" as="image" fetchpriority="high" />
   <link rel="preconnect" href="https://player.vimeo.com" />
   <link rel="preconnect" href="https://i.vimeocdn.com" />
   <link rel="preconnect" href="https://f.vimeocdn.com" />
@@ -390,6 +393,19 @@ function injectOGTags(html, { title, description, image, url, ogType = 'article'
   return out;
 }
 
+// El navegador siempre revalida (tras un deploy el HTML apunta a JS nuevo);
+// la CDN de Vercel lo cachea y se purga en cada despliegue.
+const HTML_CACHE_CONTROL = 'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400';
+
+/** Shell del SPA tal cual, para rutas sin SEO propio (/admin, 404…). */
+async function serveSpaShell(res) {
+  const baseHtml = await getBaseHtml();
+  if (!baseHtml) return res.redirect(302, '/');
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', HTML_CACHE_CONTROL);
+  return res.status(200).send(baseHtml);
+}
+
 async function serveSeoPage(req, res, { ogData, jsonLd, pathname, content }) {
   const bodyHtml = buildStaticBodyHtml(pathname, content);
   const extraHead = pathname === '/' ? showreelPrefetchHead(content) : '';
@@ -399,7 +415,7 @@ async function serveSeoPage(req, res, { ogData, jsonLd, pathname, content }) {
 
   const baseHtml = await getBaseHtml();
   if (baseHtml) {
-    res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=3600, stale-while-revalidate=86400');
+    res.setHeader('Cache-Control', HTML_CACHE_CONTROL);
     return res.status(200).send(injectOGTags(baseHtml, ogData, jsonLd, { bodyHtml, extraHead }));
   }
 
@@ -414,6 +430,12 @@ module.exports = async (req, res) => {
   const { URL: NodeURL } = require('url');
   const parsed = new NodeURL(req.url, 'http://localhost');
   const pathname = parsed.pathname;
+
+  // fetchSpaHtml pide "/" a la propia web: no volver a entrar en bucle.
+  if (req.headers['user-agent'] === 'og-injector/1.0') {
+    return res.status(404).end();
+  }
+
   const content = await getMergedContent();
 
   if (pathname === '/showreel') {
@@ -430,7 +452,7 @@ module.exports = async (req, res) => {
 
   const projectMatch = pathname.match(/^\/project\/([^/?#]+)/);
   if (!projectMatch) {
-    return res.status(404).end();
+    return serveSpaShell(res);
   }
 
   const slug = decodeURIComponent(projectMatch[1]);
@@ -438,10 +460,7 @@ module.exports = async (req, res) => {
 
   // Proyecto no encontrado → devolver el SPA para que React muestre su 404
   if (!project) {
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    const baseHtml = await getBaseHtml();
-    if (baseHtml) return res.status(200).send(baseHtml);
-    return res.redirect(302, '/');
+    return serveSpaShell(res);
   }
 
   const ogData = buildOGData(project);

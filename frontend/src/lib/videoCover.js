@@ -60,3 +60,27 @@ export const computeVideoCoverVars = ({
       : {}),
   };
 };
+
+/**
+ * Llena el contenedor con la imagen útil de un vídeo que trae bandas negras
+ * dentro del archivo (p. ej. scope 2.39 en un 16:9). Sin zoom extra: solo
+ * agranda el iframe hasta que la imagen cubre el marco.
+ */
+export const computeLetterboxFillVars = ({
+  pictureRatio,
+  fileRatio = DEFAULT_VIDEO_RATIO,
+  containerRatio,
+}) => {
+  const picture = Number(pictureRatio);
+  const file = Number(fileRatio);
+  const container = Number(containerRatio);
+  if (![picture, file, container].every((n) => Number.isFinite(n) && n > 0)) {
+    return {};
+  }
+  const coverW = Math.max(1, picture / container);
+  return {
+    "--vf-cover-w": String(coverW),
+    "--vf-cover-h": String((coverW * container) / file),
+    "--vf-zoom": "1",
+  };
+};

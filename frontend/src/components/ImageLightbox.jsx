@@ -182,7 +182,7 @@ export function ImageLightbox({
         <div className="pointer-events-auto flex items-start justify-between px-5 pt-5 pb-16 md:px-10 md:pt-7 bg-gradient-to-b from-black/90 via-black/45 to-transparent">
           <div className="min-w-0 pr-6">
             {label && (
-              <p className="text-[9px] tracking-[0.35em] uppercase text-white/35 mb-1.5">
+              <p className="text-[10px] tracking-[0.35em] uppercase text-white/35 mb-1.5">
                 {label}
               </p>
             )}
@@ -195,7 +195,7 @@ export function ImageLightbox({
 
           <div className="flex items-center gap-3 shrink-0">
             {hasMultiple && (
-              <span className="text-[11px] tracking-[0.25em] text-white/40 tabular-nums">
+              <span className="text-[11px] tracking-[0.25em] text-white/55 tabular-nums">
                 {String(index + 1).padStart(2, "0")}
                 <span className="opacity-50">&thinsp;/&thinsp;</span>
                 {String(count).padStart(2, "0")}

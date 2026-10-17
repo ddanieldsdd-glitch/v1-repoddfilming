@@ -23,11 +23,11 @@ export const Footer = () => {
           <p className="text-xl tracking-[-0.02em] text-[var(--cinema-fg)] md:text-2xl">
             {content.site.name}
           </p>
-          <p className="mt-1.5 text-[10px] tracking-[0.16em] uppercase text-[var(--cinema-muted)]">
+          <p className="mt-1.5 text-[11px] tracking-[0.16em] uppercase text-[var(--cinema-muted)]">
             {tr(content.site.title, lang)}
           </p>
           {content.site.location && (
-            <p className="mt-6 text-xs text-white/45">
+            <p className="mt-6 text-xs text-white/60">
               {tr(content.site.location, lang)}
             </p>
           )}
@@ -42,7 +42,7 @@ export const Footer = () => {
           <a data-testid="footer-email" href={`mailto:${s.email}`} className="text-xs text-[var(--cinema-fg)] hover:opacity-60">Email ↗</a>
         </div>
       </div>
-      <div className="mt-12 md:mt-16 pt-6 border-t border-white/10 flex flex-col md:flex-row justify-between gap-2 text-[9px] tracking-[0.14em] uppercase text-white/40">
+      <div className="mt-12 md:mt-16 pt-6 border-t border-white/10 flex flex-col md:flex-row justify-between gap-2 text-[10px] tracking-[0.14em] uppercase text-white/55">
         <span>© {year} {content.site.name}</span>
       </div>
     </footer>

@@ -21,10 +21,16 @@ export function CategoryExploreLinks({
 
   if (!categories.length) return null;
 
+  // 4 categorías → 2×2 en móvil y una fila en escritorio; así ninguna queda sola.
+  const cols =
+    categories.length === 4
+      ? "grid-cols-2 lg:grid-cols-4"
+      : categories.length === 2
+        ? "grid-cols-1 sm:grid-cols-2"
+        : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3";
+
   return (
-    <div
-      className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 ${className}`}
-    >
+    <div className={`grid ${cols} gap-3 sm:gap-4 ${className}`}>
       {categories.map((c) => {
         const preview = projects.find(
           (p) => p.category === c.id && p.published !== false,

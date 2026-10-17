@@ -2,6 +2,7 @@ import {
   computeCoverScale,
   computeCropZoom,
   computeVideoCoverVars,
+  computeLetterboxFillVars,
   resolveVideoRatio,
 } from "./videoCover";
 
@@ -94,5 +95,24 @@ describe("videoCover", () => {
     expect(midZoom).toBeGreaterThan(containZoom);
     expect(midZoom).toBeLessThan(coverZoom);
     expect(midZoom).toBeCloseTo(containZoom + (coverZoom - containZoom) * 0.15);
+  });
+
+  test("computeLetterboxFillVars makes a scope picture fill a portrait screen", () => {
+    const vars = computeLetterboxFillVars({
+      pictureRatio: 2.39,
+      fileRatio: 16 / 9,
+      containerRatio: 375 / 812,
+    });
+    const w = Number(vars["--vf-cover-w"]) * 375;
+    const h = Number(vars["--vf-cover-h"]) * 812;
+    expect(w / h).toBeCloseTo(16 / 9);
+    // La imagen útil (sin bandas) mide exactamente el alto de la pantalla
+    expect(w / 2.39).toBeCloseTo(812);
+    expect(vars["--vf-zoom"]).toBe("1");
+  });
+
+  test("computeLetterboxFillVars never shrinks below the container width", () => {
+    const vars = computeLetterboxFillVars({ pictureRatio: 2.39, containerRatio: 3 });
+    expect(Number(vars["--vf-cover-w"])).toBe(1);
   });
 });

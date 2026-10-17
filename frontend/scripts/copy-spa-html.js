@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Copia el index.html del build junto a api/og.js.
+ * Mueve el index.html del build junto a api/og.js.
  * og.js lo lee del disco en vez de pedirlo a producción (cleanUrls redirige
  * /index.html → / y el auto-fetch desde la función suele fallar).
  */
@@ -23,4 +23,7 @@ if (!html.includes('id="root"') || !html.includes('static/js')) {
 }
 
 fs.writeFileSync(dest, html);
-console.log('Copied build/index.html → api/_spa.html');
+// Sin build/index.html, Vercel no sirve el shell estático en "/" y la ruta
+// pasa por los rewrites hacia api/og.js (SEO + preload del reel).
+fs.unlinkSync(src);
+console.log('Moved build/index.html → api/_spa.html');

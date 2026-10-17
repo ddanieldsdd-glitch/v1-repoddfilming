@@ -62,13 +62,13 @@ export default function About() {
           {/* Cabecera */}
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 pb-8 border-b border-black/10 dark:border-white/10 mb-14">
             <div>
-              <p className="text-[10px] tracking-[0.18em] uppercase text-[var(--cinema-muted)] mb-5">
+              <p className="text-[11px] tracking-[0.18em] uppercase text-[var(--cinema-muted)] mb-5">
                 {tr(T.about.title, lang)}
               </p>
               <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl tracking-[-0.045em] font-light leading-[0.9] text-[var(--cinema-fg)]">
                 {name}
               </h1>
-              <p className="mt-4 text-[10px] tracking-[0.16em] uppercase text-[var(--cinema-muted)]">
+              <p className="mt-4 text-[11px] tracking-[0.16em] uppercase text-[var(--cinema-muted)]">
                 {tr(title, lang)}
               </p>
             </div>
@@ -105,14 +105,14 @@ export default function About() {
                         className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
                       />
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/25">
-                        <span className="bg-white/90 dark:bg-black/75 backdrop-blur-md text-black dark:text-white text-[10px] tracking-[0.26em] uppercase px-5 py-2 rounded-full shadow-lg">
+                        <span className="bg-white/90 dark:bg-black/75 backdrop-blur-md text-black dark:text-white text-[11px] tracking-[0.26em] uppercase px-5 py-2 rounded-full shadow-lg">
                           {lang === "es" ? "Ampliar" : "Expand"}
                         </span>
                       </div>
                     </div>
                   </button>
 
-                  <p className="mt-3 shrink-0 text-[10px] tracking-[0.22em] uppercase text-neutral-400 dark:text-neutral-500 text-center">
+                  <p className="mt-3 shrink-0 text-[11px] tracking-[0.22em] uppercase text-neutral-400 dark:text-neutral-500 text-center">
                     {content.site.about_photo_caption || `${name} · ${tr(title, lang)}`}
                   </p>
                 </>

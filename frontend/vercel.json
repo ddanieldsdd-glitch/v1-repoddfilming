@@ -5,7 +5,7 @@
   "framework": "create-react-app",
   "functions": {
     "api/og.js": {
-      "includeFiles": "build/index.html"
+      "includeFiles": "api/_spa.html"
     }
   },
   "redirects": [
@@ -28,7 +28,7 @@
     { "source": "/work", "destination": "/api/og" },
     { "source": "/work/(.*)", "destination": "/api/og" },
     { "source": "/project/(.*)", "destination": "/api/og" },
-    { "source": "/(.*)", "destination": "/" }
+    { "source": "/(.*)", "destination": "/api/og" }
   ],
   "headers": [
     {

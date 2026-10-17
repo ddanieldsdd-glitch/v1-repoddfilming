@@ -8,7 +8,7 @@ import {
   pausePlayer,
   resumePlayer,
 } from "../lib/videoStore";
-import { computeVideoCoverVars } from "../lib/videoCover";
+import { computeVideoCoverVars, computeLetterboxFillVars } from "../lib/videoCover";
 
 /**
  * Vimeo: @vimeo/player SDK.
@@ -34,6 +34,8 @@ export const VideoPlayer = ({
   crop,
   /** 0 = contain, 1 = cover. Por defecto cover completo. */
   coverAmount,
+  /** Relación de la imagen útil si el archivo trae bandas negras (llena el marco con ella). */
+  pictureRatio,
   onReady,
   onPlay,
   onPause,
@@ -368,13 +370,20 @@ export const VideoPlayer = ({
 
   const coverStyle = useMemo(() => {
     if (!shouldCover) return undefined;
+    if (pictureRatio) {
+      return computeLetterboxFillVars({
+        pictureRatio,
+        fileRatio: previewVideoRatio,
+        containerRatio,
+      });
+    }
     return computeVideoCoverVars({
       previewVideoRatio,
       containerRatio,
       crop,
       coverAmount,
     });
-  }, [shouldCover, previewVideoRatio, containerRatio, crop, coverAmount]);
+  }, [shouldCover, previewVideoRatio, containerRatio, crop, coverAmount, pictureRatio]);
 
   return (
     <div
