@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { X, Volume2, VolumeX, Maximize, Minimize } from "lucide-react";
+import { Volume2, VolumeX, Maximize, Minimize } from "lucide-react";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 import { VideoPlayer } from "../components/VideoPlayer";
@@ -229,26 +229,17 @@ export default function Showreel() {
   return (
     <div
       data-testid="showreel-page"
-      className="fixed inset-0 z-40 flex flex-col bg-black"
-      style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+      className="fixed inset-0 z-40 flex flex-col bg-black pt-[calc(env(safe-area-inset-top,0px)+3.5rem)] md:pt-[calc(env(safe-area-inset-top,0px)+4.5rem)]"
     >
       <h1 className="sr-only">{title}</h1>
 
-      <Link
-        to="/"
-        className="absolute right-3 top-[max(0.75rem,env(safe-area-inset-top))] z-[60] flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 backdrop-blur-md transition hover:border-white/40 hover:text-white sm:right-6"
-        aria-label={lang === "es" ? "Cerrar showreel" : "Close showreel"}
-      >
-        <X className="h-4 w-4" strokeWidth={1.5} />
-      </Link>
-
-      <div className="flex flex-1 min-h-0 items-stretch justify-center sm:items-center sm:px-6 sm:py-16">
+      <div className="flex flex-1 min-h-0 items-stretch justify-center sm:items-center sm:px-6 sm:pb-12 sm:pt-4">
         <div
           ref={playerWrapRef}
           className={`hero-player showreel-player relative flex min-h-0 w-full flex-col bg-black overflow-hidden ${
             expanded
               ? "fixed inset-0 z-[55] max-h-none rounded-none"
-              : "h-full max-h-none flex-1 sm:h-auto sm:max-h-[calc(100svh-8rem)] sm:flex-none sm:aspect-video sm:max-w-5xl sm:rounded-2xl sm:shadow-[0_32px_100px_-24px_rgba(0,0,0,0.95)] sm:ring-1 sm:ring-white/10"
+              : "h-full max-h-none flex-1 sm:h-auto sm:max-h-[calc(100svh-10rem)] sm:flex-none sm:aspect-video sm:max-w-5xl sm:rounded-2xl sm:shadow-[0_32px_100px_-24px_rgba(0,0,0,0.95)] sm:ring-1 sm:ring-white/10"
           }`}
         >
           <div className="relative min-h-0 flex-1">
