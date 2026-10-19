@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ArrowUpRight, ChevronDown } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 import { VideoPlayer } from "./VideoPlayer";
@@ -38,13 +38,6 @@ export function HomeShowreel({ url }) {
   useEffect(() => {
     setFrameReady(false);
   }, [url]);
-
-  const scrollToWork = () => {
-    document.getElementById("home-work")?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  };
 
   if (!url) return null;
 
@@ -116,7 +109,7 @@ export function HomeShowreel({ url }) {
         )}
 
         {immersive ? (
-          <div className="absolute inset-x-0 bottom-0 z-[4] flex flex-col items-center px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-10 md:pb-12">
+          <div className="absolute inset-x-0 bottom-0 z-[4] flex flex-col items-center px-5 pb-[max(3rem,env(safe-area-inset-bottom))] pt-10 md:pb-16">
             <Link
               to="/showreel"
               className="flex items-center gap-2 rounded-full border border-white/20 bg-black/45 px-5 py-3 text-[11px] tracking-[0.18em] uppercase text-white backdrop-blur-md transition duration-300 hover:border-white/40 hover:bg-black/65 focus-visible:outline-white md:px-6"
@@ -124,14 +117,6 @@ export function HomeShowreel({ url }) {
               {tr(T.hero.showreel, lang)}
               <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={1.5} />
             </Link>
-            <button
-              type="button"
-              onClick={scrollToWork}
-              className="mt-14 flex items-center justify-center text-white/55 transition hover:text-white/75 md:mt-16"
-              aria-label={tr(T.hero.scroll, lang)}
-            >
-              <ChevronDown className="h-5 w-5 animate-bounce" strokeWidth={1.5} />
-            </button>
           </div>
         ) : (
           <Link

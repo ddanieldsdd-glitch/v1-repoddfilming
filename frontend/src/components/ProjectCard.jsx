@@ -186,8 +186,8 @@ export const ProjectCard = ({
   const stillCrop = previewCrop ?? project.preview_crop ?? project.work_crop;
   const stillPosition = !contain ? cropObjectPosition(stillCrop) : undefined;
   const radiusClass = compact
-    ? "rounded-[0.875rem] md:rounded-[1rem]"
-    : "rounded-[1rem] md:rounded-[1.25rem]";
+    ? "rounded-[0.375rem]"
+    : "rounded-[0.375rem] md:rounded-[0.5rem]";
   const sizeClass = fill ? "h-full min-h-0" : aspectClass;
   const imgW = ratio ? Math.round(ratio * 100) : 16;
   const imgH = 100;
@@ -205,7 +205,7 @@ export const ProjectCard = ({
       onTouchCancel={onTouchEnd}
     >
       <div
-        className={`relative overflow-hidden bg-neutral-950 ${sizeClass} w-full ring-1 ring-white/[0.08] transition-[box-shadow,outline-color] duration-500 ease-out group-hover:ring-white/[0.16] ${radiusClass}`}
+        className={`relative overflow-hidden bg-neutral-950 ${sizeClass} w-full ${radiusClass}`}
       >
         <div className="absolute inset-0 z-0 bg-neutral-950" />
 

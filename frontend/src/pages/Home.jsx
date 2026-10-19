@@ -57,9 +57,6 @@ export default function Home() {
             <h2 className="text-[11px] font-normal tracking-[0.22em] uppercase text-[var(--cinema-muted)]">
               {tr(T.work.title, lang)}
             </h2>
-            <span className="text-[11px] tabular-nums tracking-[0.14em] text-white/60">
-              {String(tiles.length).padStart(2, "0")}
-            </span>
           </div>
         )}
 
