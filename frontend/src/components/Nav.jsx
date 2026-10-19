@@ -53,7 +53,6 @@ export const Nav = () => {
   useEffect(() => setOpen(false), [location.pathname]);
 
   if (location.pathname.startsWith("/admin")) return null;
-  if (location.pathname === "/showreel") return null;
 
   const navShowreel =
     showreelInNav(content.site?.showreel_placement) && content.site?.showreel_url;
