@@ -277,7 +277,9 @@ export default function ProjectDetail() {
   const hasRecognitions = detailRecognitions.length > 0;
 
   return (
-    <div data-testid="project-detail-page" className="bg-black min-h-screen">
+    // key por slug: al saltar entre proyectos se monta todo de nuevo y el
+    // navegador no deja a la vista el póster/fotograma del proyecto anterior.
+    <div key={slug} data-testid="project-detail-page" className="bg-black min-h-screen">
 
       {/* ── HERO ──────────────────────────────────────────────── */}
       <section data-hero className="bg-black pt-16 md:pt-22 px-1.5 sm:px-4 md:px-8 lg:px-12">

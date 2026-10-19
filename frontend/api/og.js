@@ -276,7 +276,7 @@ function buildBotHTML(
   { title, description, image, url, ogType = 'article', imageAlt = title, embedUrl = null, bodyHtml = '' },
   jsonLd = '',
 ) {
-  const favicon = 'https://res.cloudinary.com/dsphxo7mx/image/upload/e_trim,w_32,h_32,c_pad,b_rgb:000000,q_auto,f_png/v1777731841/DD_BLANCO_l8xqal.png';
+  const favicon = `${BASE_URL}/favicon-light-32.png`;
   const mainContent = bodyHtml || buildVideoEmbedHtml(embedUrl, title);
   return `<!DOCTYPE html>
 <html lang="es">

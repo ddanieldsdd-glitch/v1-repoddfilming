@@ -74,7 +74,10 @@ function AdminChrome() {
               reader.readAsText(file);
               e.target.value = "";
             }} />
-            <AdminButton onClick={() => setConfirmReset(true)}>Reset</AdminButton>
+            {/* Acción destructiva: separada y en rojo para no confundirla con Exportar/Importar */}
+            <AdminButton variant="danger" className="md:ml-4" onClick={() => setConfirmReset(true)}>
+              Restablecer
+            </AdminButton>
             <AdminButton data-testid="admin-logout" variant="ghost" onClick={async () => { await logoutAdmin(); window.location.assign("/admin"); }}>Salir</AdminButton>
           </div>
         </div>

@@ -2,7 +2,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
-import { SITE_NAV_LOGO, SITE_NAV_LOGO_SRCSET } from "../lib/siteAssets";
+import { LogoMark } from "./LogoMark";
 import { showreelInNav } from "../lib/crop";
 
 export const Nav = () => {
@@ -61,8 +61,6 @@ export const Nav = () => {
   const isTransparent = overHero && !open;
   const isHidden      = isFullscreen;
 
-  const logoUrl = SITE_NAV_LOGO;
-
   const linkClass = ({ isActive }) =>
     `relative text-[11px] tracking-[0.18em] uppercase transition-colors duration-300 px-3 py-2 after:absolute after:left-3 after:right-3 after:bottom-1 after:h-px after:bg-white after:origin-left after:transition-transform after:duration-300 ${
       isActive
@@ -85,17 +83,7 @@ export const Nav = () => {
 
         {/* Logo */}
         <Link to="/" data-testid="nav-logo" className="flex items-center gap-2 leading-none shrink-0">
-          {logoUrl && (
-            <img
-              src={logoUrl}
-              srcSet={SITE_NAV_LOGO_SRCSET}
-              alt="DD"
-              width={88}
-              height={44}
-              decoding="async"
-              className="h-7 w-auto md:h-10 transition-all duration-500 invert"
-            />
-          )}
+          <LogoMark className="h-7 w-7 md:h-10 md:w-10 text-white" />
           <span className="flex flex-col">
             <span className="font-medium text-[13px] md:text-sm tracking-[0.02em] text-white">
               {content.site.name}

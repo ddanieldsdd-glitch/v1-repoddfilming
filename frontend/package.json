@@ -78,7 +78,7 @@
         "restore:content": "node scripts/content-restore.js",
         "dedupe:content": "node scripts/content-dedupe.js",
         "dedupe:content:apply": "node scripts/content-dedupe.js --apply",
-        "predeploy": "cross-env CI=false ESLINT_NO_DEV_ERRORS=true craco build && node scripts/copy-spa-html.js"
+        "predeploy": "cross-env CI=false ESLINT_NO_DEV_ERRORS=true GENERATE_SOURCEMAP=false craco build && node scripts/copy-spa-html.js"
     },
     "browserslist": {
         "production": [
