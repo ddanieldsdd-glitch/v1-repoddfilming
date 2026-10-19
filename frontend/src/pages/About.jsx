@@ -97,7 +97,7 @@ export default function About() {
                       })
                     }
                   >
-                    <div className="relative flex-1 min-h-[360px] md:min-h-0 overflow-hidden rounded-[1rem] md:rounded-[1.25rem] bg-neutral-900 ring-1 ring-white/[0.06]">
+                    <div className="relative flex-1 min-h-[360px] md:min-h-0 overflow-hidden rounded-[0.375rem] md:rounded-[0.5rem] bg-neutral-900">
                       <img
                         src={photo}
                         alt={name}

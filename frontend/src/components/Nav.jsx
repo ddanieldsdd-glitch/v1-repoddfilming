@@ -65,10 +65,10 @@ export const Nav = () => {
   const logoUrl = SITE_NAV_LOGO;
 
   const linkClass = ({ isActive }) =>
-    `text-[11px] tracking-[0.18em] uppercase transition-all duration-300 px-3 py-2 rounded-full ${
+    `relative text-[11px] tracking-[0.18em] uppercase transition-colors duration-300 px-3 py-2 after:absolute after:left-3 after:right-3 after:bottom-1 after:h-px after:bg-white after:origin-left after:transition-transform after:duration-300 ${
       isActive
-        ? "text-white bg-white/[0.08]"
-        : "text-white/55 hover:text-white hover:bg-white/[0.06]"
+        ? "text-white after:scale-x-100"
+        : "text-white/55 hover:text-white after:scale-x-0"
     }`;
 
   return (
@@ -124,22 +124,23 @@ export const Nav = () => {
             {tr(T.nav.contact, lang)}
           </NavLink>
 
-          {/* Idioma — pill compacta */}
-          <div className="ml-2.5 flex items-center gap-0.5 rounded-full bg-white/[0.05] border border-white/[0.08] p-1">
+          {/* Idioma — texto discreto */}
+          <div className="ml-3 flex items-center gap-1.5 text-[11px] tracking-[0.14em] uppercase">
             <button
               data-testid="lang-es"
               onClick={() => setLang("es")}
-              className={`px-2.5 py-1 rounded-full text-[10px] tracking-[0.12em] uppercase transition-all duration-300 ${
-                lang === "es" ? "bg-white/15 text-white" : "text-white/50 hover:text-white"
+              className={`py-1 transition-colors duration-300 ${
+                lang === "es" ? "text-white" : "text-white/40 hover:text-white"
               }`}
             >
               ES
             </button>
+            <span className="text-white/25" aria-hidden="true">/</span>
             <button
               data-testid="lang-en"
               onClick={() => setLang("en")}
-              className={`px-2.5 py-1 rounded-full text-[10px] tracking-[0.12em] uppercase transition-all duration-300 ${
-                lang === "en" ? "bg-white/15 text-white" : "text-white/50 hover:text-white"
+              className={`py-1 transition-colors duration-300 ${
+                lang === "en" ? "text-white" : "text-white/40 hover:text-white"
               }`}
             >
               EN

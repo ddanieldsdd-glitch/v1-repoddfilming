@@ -1,13 +1,10 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { getActiveCategories } from "../lib/contentStore";
-import { optimizeCloudinaryUrl } from "../lib/cloudinary";
-
-const isVideoUrl = (url) =>
-  /vimeo\.com|youtube\.com|youtu\.be/.test(String(url || ""));
 
 /**
- * Carteles horizontales por categoría (como «Explorar otras ramas» en la ficha).
+ * Categorías como lista de texto: sobria, para que las imágenes de los
+ * proyectos sean lo único que llame la atención.
  */
 export function CategoryExploreLinks({
   projects = [],
@@ -21,51 +18,35 @@ export function CategoryExploreLinks({
 
   if (!categories.length) return null;
 
-  // 4 categorías → 2×2 en móvil y una fila en escritorio; así ninguna queda sola.
-  const cols =
-    categories.length === 4
-      ? "grid-cols-2 lg:grid-cols-4"
-      : categories.length === 2
-        ? "grid-cols-1 sm:grid-cols-2"
-        : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3";
-
   return (
-    <div className={`grid ${cols} gap-3 sm:gap-4 ${className}`}>
+    <ul className={`border-t border-white/10 ${className}`}>
       {categories.map((c) => {
-        const preview = projects.find(
+        const count = projects.filter(
           (p) => p.category === c.id && p.published !== false,
-        );
-        const raw = preview?.poster || preview?.cover;
-        const thumb =
-          raw && !isVideoUrl(raw)
-            ? optimizeCloudinaryUrl(raw, { width: 640, quality: "good" })
-            : null;
+        ).length;
         return (
-          <Link
-            key={c.id}
-            to={`/work/${c.id}`}
-            data-testid={`category-explore-${c.id}`}
-            className="group relative overflow-hidden rounded-2xl bg-neutral-950 ring-1 ring-white/10 hover:ring-white/25 transition-all duration-500 p-5 flex flex-col justify-end min-h-[100px] sm:min-h-[120px]"
-          >
-            {thumb && (
-              <img
-                src={thumb}
-                alt=""
-                className="pointer-events-none absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-30 transition-opacity duration-500 scale-[1.04] group-hover:scale-100"
-              />
-            )}
-            <div className="relative z-10">
-              <span className="text-lg sm:text-xl font-light tracking-tight text-white">
+          <li key={c.id} className="border-b border-white/10">
+            <Link
+              to={`/work/${c.id}`}
+              data-testid={`category-explore-${c.id}`}
+              className="group flex items-center justify-between gap-6 py-5 md:py-6"
+            >
+              <span className="text-2xl md:text-4xl font-light tracking-[-0.02em] text-white/70 transition-colors duration-300 group-hover:text-white">
                 {c[lang]}
               </span>
-            </div>
-            <ArrowRight
-              className="absolute right-4 bottom-4 h-4 w-4 text-white/30 group-hover:text-white/70 group-hover:translate-x-1 transition-all"
-              strokeWidth={1.5}
-            />
-          </Link>
+              <span className="flex items-center gap-4 text-white/40 transition-colors duration-300 group-hover:text-white">
+                <span className="text-[11px] tabular-nums tracking-[0.14em]">
+                  {String(count).padStart(2, "0")}
+                </span>
+                <ArrowRight
+                  className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
+                  strokeWidth={1.5}
+                />
+              </span>
+            </Link>
+          </li>
         );
       })}
-    </div>
+    </ul>
   );
 }

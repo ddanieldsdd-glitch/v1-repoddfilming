@@ -1,4 +1,4 @@
-import { useRef, useMemo, useEffect, useCallback } from "react";
+import { useRef, useMemo, useEffect, useCallback, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { useContent, useLang } from "../lib/useContent";
@@ -12,6 +12,7 @@ import { useImageLightbox } from "../hooks/useImageLightbox";
 import { optimizeCloudinaryUrl, cloudinaryResponsive, IMG, STILL_PRESETS, COVER_PRESET, prefetchCloudinaryImages } from "../lib/cloudinary";
 import { getProjectVideoUrl, buildProjectVideoGraph } from "../lib/videoSeo";
 import { getDetailRecognitions } from "../lib/recognitions";
+import { getVimeoPosterUrl } from "../lib/vimeo";
 
 const oimg = (url, width = IMG.still, quality = "good") =>
   url ? optimizeCloudinaryUrl(url, { width, quality }) : url;
@@ -224,6 +225,19 @@ export default function ProjectDetail() {
     return getActiveCategories(projects).filter((c) => c.id !== project.category);
   }, [project, projects]);
 
+  // Siguiente proyecto publicado (en el orden de Obra, vuelve al primero al final).
+  const nextProject = useMemo(() => {
+    if (!project) return null;
+    const published = projects.filter((p) => p.published !== false);
+    if (published.length < 2) return null;
+    const at = published.findIndex((p) => p.slug === project.slug);
+    return published[(at + 1) % published.length];
+  }, [project, projects]);
+
+  // El vídeo del hero tarda en pintar: mientras, un fotograma fijo en su sitio.
+  const [heroFrameReady, setHeroFrameReady] = useState(false);
+  useEffect(() => setHeroFrameReady(false), [slug]);
+
   // Refs
   const metaRef    = useReveal([slug]);
   const stillsRef  = useRevealGrid([slug, project?.stills?.length ?? 0]);
@@ -232,10 +246,16 @@ export default function ProjectDetail() {
 
   if (!project) {
     return (
-      <div className="pt-40 px-6 md:px-12 lg:px-16 min-h-[60vh] bg-black" data-testid="project-not-found">
-        <p className="text-neutral-500 mb-6">{tr(T.project.notFound, lang)}</p>
-        <Link to="/work" className="text-sm border-b border-white pb-1 text-white">
-          {tr(T.project.back, lang)}
+      <div className="pt-40 pb-24 px-6 md:px-12 lg:px-16 min-h-[70vh] bg-black flex flex-col justify-center" data-testid="project-not-found">
+        <p className="text-[11px] tracking-[0.22em] uppercase text-[var(--cinema-muted)] mb-4">404</p>
+        <h1 className="text-3xl md:text-5xl font-light tracking-[-0.02em] text-white mb-10">
+          {tr(T.project.notFound, lang)}
+        </h1>
+        <Link
+          to="/work"
+          className="inline-flex w-fit items-center gap-2 text-[11px] tracking-[0.22em] uppercase text-white border-b border-white pb-1 hover:opacity-60 transition"
+        >
+          {tr(T.work.all, lang)} <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={1.5} />
         </Link>
       </div>
     );
@@ -245,6 +265,15 @@ export default function ProjectDetail() {
   const hasStills = project.stills && project.stills.length > 0;
   const hasBts = project.bts && project.bts.length > 0;
   const detailRecognitions = getDetailRecognitions(project);
+  const nextStill =
+    nextProject &&
+    ((nextProject.cover && !isVideoUrl(nextProject.cover) && nextProject.cover) ||
+      nextProject.stills?.[0] ||
+      nextProject.poster);
+  const heroStill =
+    (project.cover && !isVideoUrl(project.cover) && project.cover) ||
+    project.stills?.[0] ||
+    getVimeoPosterUrl(heroVideoUrl);
   const hasRecognitions = detailRecognitions.length > 0;
 
   return (
@@ -252,16 +281,28 @@ export default function ProjectDetail() {
 
       {/* ── HERO ──────────────────────────────────────────────── */}
       <section data-hero className="bg-black pt-16 md:pt-22 px-1.5 sm:px-4 md:px-8 lg:px-12">
-        <div className="relative overflow-hidden rounded-[1.5rem] sm:rounded-[1.75rem] md:rounded-[2.25rem] bg-neutral-950 shadow-[0_32px_80px_-20px_rgba(0,0,0,1)]">
+        <div className="relative overflow-hidden rounded-[0.5rem] md:rounded-[0.75rem] bg-neutral-950">
           {heroVideoUrl ? (
-            <div className="w-full aspect-video">
+            <div className="relative w-full aspect-video">
               <VideoPlayer
                 url={heroVideoUrl}
                 playerKey={`hero-${slug}`}
                 autoplay loop interactive
                 className="aspect-video w-full h-full"
                 testId="project-hero-video"
+                onFirstFrame={() => setHeroFrameReady(true)}
               />
+              {heroStill && (
+                <ResponsiveImg
+                  src={heroStill}
+                  preset="cover"
+                  eager
+                  alt=""
+                  className={`pointer-events-none absolute inset-0 z-[2] h-full w-full object-cover transition-opacity duration-700 ${
+                    heroFrameReady ? "opacity-0" : "opacity-100"
+                  }`}
+                />
+              )}
             </div>
           ) : project.cover && !isVideoUrl(project.cover) ? (
             <ResponsiveImg
@@ -383,13 +424,10 @@ export default function ProjectDetail() {
 
             {hasRecognitions && (
               <div className="mt-6 clear-left md:clear-none">
-                <p className="text-[11px] tracking-[0.22em] uppercase text-white/35 mb-3">
+                <p className="text-[11px] tracking-[0.22em] uppercase text-white/35 mb-4">
                   {tr(T.project.recognitions, lang)}
-                  <span className="ml-2 normal-case tracking-normal text-white/25">
-                    · {lang === "es" ? "clic para ampliar" : "click to enlarge"}
-                  </span>
                 </p>
-                <div className="flex flex-wrap items-center gap-5 md:gap-7">
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-4 md:gap-x-6">
                   {detailRecognitions.map((item, i) => (
                     <button
                       key={`${item.url}-${i}`}
@@ -408,7 +446,7 @@ export default function ProjectDetail() {
                         alt=""
                         loading="lazy"
                         decoding="async"
-                        className="h-14 sm:h-16 md:h-[4.5rem] w-auto max-w-[140px] sm:max-w-[160px] object-contain opacity-85 group-hover:opacity-100 transition-opacity duration-300"
+                        className="h-11 md:h-12 w-auto max-w-[96px] md:max-w-[110px] object-contain grayscale opacity-75 group-hover:grayscale-0 group-hover:opacity-100 transition duration-300"
                       />
                     </button>
                   ))}
@@ -416,7 +454,7 @@ export default function ProjectDetail() {
               </div>
             )}
 
-            {(project.external_link || hasStills || hasBts) && (
+            {(project.external_link || hasBts) && (
             <div className="mt-6 clear-left md:clear-none flex flex-wrap gap-2.5 items-center">
               {project.external_link && (
                 <a
@@ -429,28 +467,6 @@ export default function ProjectDetail() {
                   {tr(T.project.external, lang)}
                   <ArrowUpRight className="w-3 h-3" strokeWidth={1.5} />
                 </a>
-              )}
-              {hasStills && (
-                <button
-                  type="button"
-                  onClick={() => openStillsGallery(0)}
-                  className="group inline-flex items-center overflow-hidden rounded-full border border-white/15 hover:border-white/35 transition-all duration-300 outline-none focus:outline-none focus:ring-0"
-                  style={{ WebkitTapHighlightColor: "transparent" }}
-                  aria-label={`Ver fotogramas (${project.stills.length})`}
-                >
-                  <div className="h-7 w-11 overflow-hidden flex-shrink-0">
-                    <img
-                      src={oimg(project.stills[0], IMG.stillThumb)}
-                      alt=""
-                      loading="eager"
-                      decoding="async"
-                      className="h-full w-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-                    />
-                  </div>
-                  <span className="px-3 text-[11px] tracking-[0.24em] uppercase text-white/65 group-hover:text-white transition-colors duration-200 whitespace-nowrap">
-                    {lang === "es" ? "Fotogramas" : "Stills"} · {project.stills.length}
-                  </span>
-                </button>
               )}
               {hasBts && (
                 <button
@@ -479,7 +495,7 @@ export default function ProjectDetail() {
 
           {/* Ficha técnica */}
           <div className="w-full">
-            <div className="rounded-2xl bg-white/5 ring-1 ring-white/10 p-4 md:p-5 space-y-4">
+            <div className="rounded-[0.5rem] bg-white/[0.04] p-4 md:p-5 space-y-4">
               {project.director && (
                 <div>
                   <dt className="text-[10px] tracking-[0.22em] uppercase text-neutral-600 mb-0.5">{tr(T.project.director, lang)}</dt>
@@ -518,16 +534,9 @@ export default function ProjectDetail() {
         <section className="px-1.5 sm:px-4 md:px-8 lg:px-12 pb-10 md:pb-14">
           <div className="flex items-center gap-4 mb-3 px-1">
             <p className="text-[11px] tracking-[0.22em] uppercase text-neutral-500 shrink-0">
-              {lang === "es" ? "Fotogramas" : "Stills"} — {String(project.stills.length).padStart(2, "0")}
+              {lang === "es" ? "Fotogramas" : "Stills"}
             </p>
             <div className="flex-1 h-px bg-white/6" />
-            <button
-              type="button"
-              onClick={() => openStillsGallery(0)}
-              className="shrink-0 text-[11px] tracking-[0.24em] uppercase text-neutral-600 hover:text-white/80 transition-colors duration-200"
-            >
-              {lang === "es" ? "Ver todos →" : "View all →"}
-            </button>
           </div>
 
           <div ref={stillsRef} className="flex flex-col gap-1.5 sm:gap-2">
@@ -536,7 +545,7 @@ export default function ProjectDetail() {
               <button
                 type="button"
                 onClick={() => openStillsGallery(0)}
-                className="reveal-stagger group relative overflow-hidden rounded-2xl md:rounded-[1.75rem] bg-neutral-950 aspect-video cursor-zoom-in outline-none ring-1 ring-white/5 hover:ring-white/15 transition-all duration-500"
+                className="reveal-stagger group relative overflow-hidden rounded-[0.375rem] md:rounded-[0.5rem] bg-neutral-950 aspect-video cursor-zoom-in outline-none transition-all duration-500"
                 style={{ "--delay": "0ms" }}
                 aria-label={lang === "es" ? "Ver galería completa" : "View full gallery"}
               >
@@ -564,7 +573,7 @@ export default function ProjectDetail() {
                         key={src + i}
                         type="button"
                         onClick={() => openStillsGallery(i + 1)}
-                        className="reveal-stagger group relative overflow-hidden rounded-2xl bg-neutral-950 aspect-video sm:aspect-auto cursor-zoom-in outline-none ring-1 ring-white/5 hover:ring-white/15 transition-all duration-500"
+                        className="reveal-stagger group relative overflow-hidden rounded-[0.375rem] md:rounded-[0.5rem] bg-neutral-950 aspect-video sm:aspect-auto cursor-zoom-in outline-none transition-all duration-500"
                         style={{ "--delay": `${(i + 1) * 60}ms` }}
                         aria-label={`${lang === "es" ? "Fotograma" : "Still"} ${i + 2}`}
                       >
@@ -598,7 +607,7 @@ export default function ProjectDetail() {
                       key={src + i}
                       type="button"
                       onClick={() => openStillsGallery(showCount ? 0 : i + 3)}
-                      className="reveal-stagger group relative overflow-hidden rounded-xl md:rounded-2xl bg-neutral-950 aspect-video cursor-zoom-in outline-none ring-1 ring-white/5 hover:ring-white/15 transition-all duration-500"
+                      className="reveal-stagger group relative overflow-hidden rounded-[0.375rem] md:rounded-[0.5rem] bg-neutral-950 aspect-video cursor-zoom-in outline-none transition-all duration-500"
                       style={{ "--delay": `${(i + 3) * 55}ms` }}
                       aria-label={`${lang === "es" ? "Fotograma" : "Still"} ${i + 4}`}
                     >
@@ -634,6 +643,41 @@ export default function ProjectDetail() {
               </div>
             )}
           </div>
+        </section>
+      )}
+
+      {/* ── SIGUIENTE PROYECTO ────────────────────────────────── */}
+      {nextProject && (
+        <section className="border-t border-white/8 px-1.5 sm:px-4 md:px-8 lg:px-12 pt-10 pb-14 md:pt-14 md:pb-20">
+          <Link
+            to={`/project/${nextProject.slug}`}
+            data-testid="project-next"
+            className="group relative block overflow-hidden rounded-[0.375rem] md:rounded-[0.5rem] bg-neutral-950"
+          >
+            {nextStill && (
+              <ResponsiveImg
+                src={nextStill}
+                preset="cover"
+                alt={nextProject.title}
+                className="aspect-[21/9] w-full object-cover opacity-70 transition duration-700 group-hover:opacity-90 group-hover:scale-[1.02] motion-reduce:transition-none"
+              />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-5 md:p-8">
+              <div>
+                <p className="text-[11px] tracking-[0.22em] uppercase text-white/60 mb-2">
+                  {lang === "es" ? "Siguiente proyecto" : "Next project"}
+                </p>
+                <p className="text-2xl md:text-4xl font-light tracking-[-0.02em] text-white">
+                  {nextProject.title}
+                </p>
+              </div>
+              <ArrowUpRight
+                className="mb-1 h-5 w-5 shrink-0 text-white/60 transition group-hover:text-white group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                strokeWidth={1.5}
+              />
+            </div>
+          </Link>
         </section>
       )}
 
