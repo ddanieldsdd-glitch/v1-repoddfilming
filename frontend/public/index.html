@@ -8,13 +8,16 @@
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
         <link rel="canonical" href="https://ddanidiaz.com/" />
         <meta name="msvalidate.01" content="A645F21840B6F8A726C395FDE4425395" />
-        <!-- Favicon: ICO para compatibilidad universal, SVG para navegadores modernos -->
-        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <!-- Favicon: el SVG cambia de color con el tema (oscuro → blanco, claro → negro).
+             Los PNG con media cubren navegadores sin favicon SVG; el ICO es el último recurso.
+             Se generan con scripts/build-favicons.py -->
+        <link rel="icon" href="/favicon.ico" sizes="48x48" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-        <link rel="icon" type="image/png" sizes="256x256" href="/favicon-logo-256.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-logo-32.png" />
-        <!-- Apple touch icon (iOS) local -->
-        <link rel="apple-touch-icon" sizes="180x180" href="/favicon-logo-180.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-light-32.png" media="(prefers-color-scheme: light)" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-dark-32.png" media="(prefers-color-scheme: dark)" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/favicon-light-192.png" media="(prefers-color-scheme: light)" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/favicon-dark-192.png" media="(prefers-color-scheme: dark)" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <!-- Microsoft Clarity + Google Analytics — cargados tras el load para no bloquear LCP -->
         <script>
             window.addEventListener("load", function () {
