@@ -285,11 +285,16 @@ export default function ProjectDetail() {
           {heroVideoUrl ? (
             <div className="relative w-full aspect-video">
               <VideoPlayer
+                key={heroVideoUrl}
                 url={heroVideoUrl}
                 playerKey={`hero-${slug}`}
                 autoplay loop interactive
                 className="aspect-video w-full h-full"
                 testId="project-hero-video"
+                // Quitar el fotograma en cuanto el reproductor está listo: YouTube no
+                // avisa del primer fotograma y, si el navegador bloquea el autoplay,
+                // hay que ver el botón de play de Vimeo.
+                onReady={() => setHeroFrameReady(true)}
                 onFirstFrame={() => setHeroFrameReady(true)}
               />
               {heroStill && (
