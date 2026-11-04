@@ -2,6 +2,7 @@ import { ArrowUpRight } from "lucide-react";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 import { formatPhoneDisplay, telHref } from "../lib/utils";
+import { safeHref } from "../lib/safeUrl";
 
 export default function Contact() {
   const content = useContent();
@@ -9,10 +10,10 @@ export default function Contact() {
   const s = content.site.social;
 
   const links = [
-    { key: "instagram", label: "Instagram", href: s.instagram },
-    { key: "vimeo", label: "Vimeo", href: s.vimeo },
-    { key: "linkedin", label: "LinkedIn", href: s.linkedin },
-    { key: "imdb", label: "IMDb", href: s.imdb },
+    { key: "instagram", label: "Instagram", href: safeHref(s.instagram) },
+    { key: "vimeo", label: "Vimeo", href: safeHref(s.vimeo) },
+    { key: "linkedin", label: "LinkedIn", href: safeHref(s.linkedin) },
+    { key: "imdb", label: "IMDb", href: safeHref(s.imdb) },
   ].filter((l) => l.href);
 
   return (

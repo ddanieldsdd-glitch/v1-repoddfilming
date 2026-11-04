@@ -43,6 +43,8 @@ export async function uploadImageFile(
   form.append('signature', sign.signature);
   form.append('folder', sign.folder);
   form.append('transformation', sign.transformation);
+  // Firmado en el servidor: debe enviarse igual o Cloudinary rechaza la firma.
+  if (sign.allowedFormats) form.append('allowed_formats', sign.allowedFormats);
 
   const uploadRes = await fetch(CLOUDINARY_UPLOAD(sign.cloudName), {
     method: 'POST',

@@ -2,7 +2,7 @@
  * @deprecated Usar /api/upload-sign + subida directa desde el cliente.
  * Se mantiene por compatibilidad; redirige errores claros.
  */
-const verifyToken = require('./_verifyToken');
+const { requireAdmin } = require('./_auth');
 const applyCors = require('./_cors');
 
 module.exports = async (req, res) => {
@@ -13,9 +13,7 @@ module.exports = async (req, res) => {
     return res.status(405).end('Method Not Allowed');
   }
 
-  if (!verifyToken(req)) {
-    return res.status(401).json({ ok: false, message: 'No autorizado' });
-  }
+  if (!(await requireAdmin(req, res, { requireJson: false }))) return;
 
   return res.status(410).json({
     ok: false,

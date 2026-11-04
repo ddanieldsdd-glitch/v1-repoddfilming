@@ -2,6 +2,9 @@ const crypto = require('crypto');
 
 const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || 'dsphxo7mx';
 
+/** Solo imágenes: la firma no sirve para subir HTML, SVG, PDF ni vídeo. */
+const ALLOWED_FORMATS = 'jpg,jpeg,png,webp,avif,gif,heic';
+
 function signParams(params, apiSecret) {
   const sorted = Object.keys(params)
     .sort()
@@ -40,6 +43,7 @@ function createSignedUpload({ folder, assetType = 'site' }) {
   const timestamp = Math.round(Date.now() / 1000);
   const transformation = getIncomingTransformation(assetType);
   const params = {
+    allowed_formats: ALLOWED_FORMATS,
     folder,
     timestamp,
     transformation,
@@ -53,10 +57,12 @@ function createSignedUpload({ folder, assetType = 'site' }) {
     signature,
     folder,
     transformation,
+    allowedFormats: ALLOWED_FORMATS,
   };
 }
 
 module.exports = {
+  ALLOWED_FORMATS,
   CLOUDINARY_CLOUD_NAME,
   createSignedUpload,
   getIncomingTransformation,

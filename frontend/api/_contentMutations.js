@@ -410,12 +410,15 @@ async function replaceFullContent(db, collectionName, body) {
 }
 
 function toHttpError(err) {
+  const status = err.status || 500;
+  // Los 5xx no deben filtrar detalles internos (Mongo, rutas…) al navegador.
+  if (status >= 500) console.error('[content]', err.message);
   return {
-    status: err.status || 500,
+    status,
     body: {
       ok: false,
-      code: err.code || 'INTERNAL_ERROR',
-      message: err.message || 'Internal server error',
+      code: status >= 500 ? 'INTERNAL_ERROR' : err.code || 'BAD_REQUEST',
+      message: status >= 500 ? 'Error interno del servidor' : err.message || 'Solicitud no válida',
       server_updated_at: err.serverUpdatedAt || null,
     },
   };

@@ -1,4 +1,5 @@
-const verifyToken = require('./_verifyToken');
+const { requireAdmin } = require('./_auth');
+const { assertSafePayload } = require('./_sanitize');
 const applyCors = require('./_cors');
 const { getDb, COLLECTION } = require('./_content');
 const { updateSiteSection, toHttpError } = require('./_contentMutations');
@@ -11,12 +12,10 @@ module.exports = async (req, res) => {
     return res.status(405).json({ ok: false, message: 'Method not allowed' });
   }
 
-  const payload = verifyToken(req);
-  if (!payload) {
-    return res.status(401).json({ ok: false, message: 'No autorizado' });
-  }
+  if (!(await requireAdmin(req, res))) return;
 
   try {
+    assertSafePayload(req.body);
     const db = await getDb();
     if (!db) return res.status(503).json({ ok: false, message: 'Database unavailable' });
 

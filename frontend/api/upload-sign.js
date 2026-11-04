@@ -1,4 +1,4 @@
-const verifyToken = require('./_verifyToken');
+const { requireAdmin } = require('./_auth');
 const applyCors = require('./_cors');
 const { createSignedUpload } = require('./_cloudinaryUpload');
 const { resolveUploadFolder } = require('./_uploadPaths');
@@ -12,10 +12,7 @@ module.exports = async (req, res) => {
     return res.status(405).end('Method Not Allowed');
   }
 
-  const payload = verifyToken(req);
-  if (!payload) {
-    return res.status(401).json({ ok: false, message: 'No autorizado' });
-  }
+  if (!(await requireAdmin(req, res))) return;
 
   try {
     const { projectSlug, assetType = 'site' } = req.body || {};
@@ -31,9 +28,10 @@ module.exports = async (req, res) => {
       return res.status(400).json({ ok: false, message: err.message });
     }
     if (err.code === 'CLOUDINARY_NOT_CONFIGURED') {
-      return res.status(503).json({ ok: false, message: err.message });
+      console.error('[api/upload-sign]', err.message);
+      return res.status(503).json({ ok: false, message: 'Subida no disponible' });
     }
     console.error('[api/upload-sign]', err.message);
-    return res.status(500).json({ ok: false, message: err.message || 'Error al preparar la subida' });
+    return res.status(500).json({ ok: false, message: 'Error al preparar la subida' });
   }
 };
