@@ -78,6 +78,12 @@ export default function Showreel() {
 
   useEffect(() => {
     if (!watchVideo) return undefined;
+    // El servidor (api/og.js) ya inyecta el VideoObject del showreel con la
+    // fecha real de Vimeo; no duplicarlo con datos distintos.
+    const serverJsonLd = Array.from(
+      document.querySelectorAll('script[type="application/ld+json"]'),
+    ).some((el) => el.id !== "showreel-jsonld" && el.textContent.includes("/showreel#video"));
+    if (serverJsonLd) return undefined;
 
     const thumb = poster || content.site?.logo_white || "";
     const jsonLd = {

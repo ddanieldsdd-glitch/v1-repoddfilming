@@ -5,7 +5,7 @@
 
 const defaultContent = require('../src/data/content.json');
 const { getPublishedProjects } = require('./_content');
-const { resolveProjectVideo } = require('./_videoSeo');
+const { resolveProjectVideo, parseVideoUrl } = require('./_videoSeo');
 
 const BASE_URL = 'https://ddanidiaz.com';
 const OG_LOGO =
@@ -243,6 +243,12 @@ function buildSiteNavHtml() {
 </nav>`;
 }
 
+/** iframe del vídeo principal: lo primero que ve Google en una página de visualización. */
+function buildWatchIframe(embedUrl, title) {
+  if (!embedUrl) return '';
+  return `<iframe src="${esc(embedUrl)}" title="${esc(title)}" width="960" height="540" style="width:100%;max-width:100%;aspect-ratio:16/9;border:0;display:block;min-height:360px;margin:1rem 0 1.5rem" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+}
+
 function buildStaticBodyHtml(pathname, content, embedHtml = '') {
   const name = content?.site?.name || 'Dani Díaz';
   const nav = buildSiteNavHtml();
@@ -315,13 +321,20 @@ function buildStaticBodyHtml(pathname, content, embedHtml = '') {
     if (!project) return '';
     const synopsis = project.synopsis?.es || project.synopsis?.en || '';
     const video = resolveProjectVideo(project);
-    const videoBlock = video
-      ? `<iframe src="${video.embedUrl}" title="${esc(project.title)}" width="960" height="540" style="width:100%;max-width:100%;aspect-ratio:16/9;border:0;display:block;min-height:360px;margin-top:1.5rem" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`
-      : '';
+    const videoBlock = video ? buildWatchIframe(video.embedUrl, project.title) : embedHtml;
+    const facts = [
+      project.type && `Tipo: ${esc(tr(project.type))}`,
+      project.year && `Año: ${esc(project.year)}`,
+      project.format && `Formato: ${esc(tr(project.format))}`,
+      project.director && `Dirección: ${esc(project.director)}`,
+      project.production_company && `Producción: ${esc(project.production_company)}`,
+      `Dirección de fotografía: ${esc(name)}`,
+    ].filter(Boolean);
     return `<main id="seo-static-content" style="max-width:960px;margin:2rem auto;padding:0 1.5rem;color:#fff;font-family:system-ui,sans-serif">
   <h1>${esc(project.title)} — ${esc(name)}</h1>
+  ${videoBlock}
   <p>${esc(synopsis)}</p>
-  ${videoBlock || embedHtml}
+  <ul>${facts.map((f) => `<li>${f}</li>`).join('')}</ul>
   ${nav}
 </main>`;
   }
@@ -329,8 +342,8 @@ function buildStaticBodyHtml(pathname, content, embedHtml = '') {
   if (pathname === '/showreel') {
     return `<main id="seo-static-content" style="max-width:960px;margin:2rem auto;padding:0 1.5rem;color:#fff;font-family:system-ui,sans-serif">
   <h1>Showreel — ${esc(name)}</h1>
+  ${buildWatchIframe(parseVideoUrl(content?.site?.showreel_url)?.embedUrl, `Showreel — ${name}`) || embedHtml}
   <p>${esc(getSiteDescription(content))}</p>
-  ${embedHtml}
   ${nav}
 </main>`;
   }

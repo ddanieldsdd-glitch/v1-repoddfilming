@@ -4,6 +4,7 @@ import { ArrowUpRight } from "lucide-react";
 import { useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 import { VideoPlayer } from "./VideoPlayer";
+import { isCrawler } from "../lib/crawler";
 import { getVimeoPosterUrl } from "../lib/vimeo";
 import {
   isImmersiveHomeHero,
@@ -24,6 +25,7 @@ export function HomeShowreel({ url }) {
   const [frameReady, setFrameReady] = useState(false);
   const [sectionEl, setSectionEl] = useState(null);
   const poster = getVimeoPosterUrl(url);
+  const crawler = isCrawler();
   const immersive = isImmersiveHomeHero();
   const [portrait, setPortrait] = useState(isPortraitViewport);
   const fillPortrait = immersive && portrait;
@@ -38,6 +40,11 @@ export function HomeShowreel({ url }) {
   useEffect(() => {
     setFrameReady(false);
   }, [url]);
+
+  // Sin reproductor no hay primer fotograma: liberar ya las tarjetas del inicio.
+  useEffect(() => {
+    if (crawler) markHomeHeroReady();
+  }, [crawler]);
 
   if (!url) return null;
 
@@ -55,6 +62,8 @@ export function HomeShowreel({ url }) {
             : "relative aspect-video overflow-hidden rounded-[1.125rem] md:rounded-[1.5rem] bg-neutral-950 ring-1 ring-white/[0.08]"
         }
       >
+        {/* Crawlers: solo el póster; el showreel se indexa en /showreel. */}
+        {!crawler && (
         <VideoPlayer
             url={url}
             playerKey={HOME_SHOWREEL_KEY}
@@ -73,6 +82,7 @@ export function HomeShowreel({ url }) {
               markHomeHeroReady();
             }}
           />
+        )}
         {poster && (
           <img
             src={poster}

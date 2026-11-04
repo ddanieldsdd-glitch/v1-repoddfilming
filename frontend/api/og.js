@@ -19,6 +19,9 @@ const {
   parseVideoUrl,
   resolveProjectVideo,
   buildProjectVideoJsonLd,
+  FALLBACK_UPLOAD_DATE,
+  toIsoDuration,
+  getVideoMeta,
 } = require('./_videoSeo');
 
 const BASE_URL = 'https://ddanidiaz.com';
@@ -171,11 +174,12 @@ function injectVideoEmbed(html, embedUrl, title) {
  * Genera el bloque JSON-LD (VideoObject + WebPage) para una página de proyecto.
  * Aplica automáticamente a cualquier proyecto con preview_url o cover de vídeo.
  */
-function buildProjectJsonLd(project, pageUrl) {
-  return buildProjectVideoJsonLd(project, pageUrl);
+async function buildProjectJsonLd(project, pageUrl) {
+  const meta = await getVideoMeta(resolveProjectVideo(project));
+  return buildProjectVideoJsonLd(project, pageUrl, undefined, meta);
 }
 
-function buildShowreelJsonLd(content, pageUrl) {
+async function buildShowreelJsonLd(content, pageUrl) {
   const video = parseVideoUrl(content.site?.showreel_url);
   const title = 'Showreel — Dani Díaz';
   const description =
@@ -199,12 +203,17 @@ function buildShowreelJsonLd(content, pageUrl) {
   ];
 
   if (video) {
+    // Fecha real de subida y duración desde Vimeo (cacheado 24 h); si falla,
+    // fecha fija para que uploadDate (obligatorio para Google) nunca falte.
+    const meta = await getVideoMeta(video);
     graph.push({
       '@type': 'VideoObject',
       '@id': `${pageUrl}#video`,
       name: title,
       description,
       thumbnailUrl: thumb,
+      uploadDate: meta?.upload_date || FALLBACK_UPLOAD_DATE,
+      duration: toIsoDuration(meta?.duration),
       contentUrl: video.contentUrl,
       embedUrl: video.embedUrl,
       url: pageUrl,
@@ -424,7 +433,7 @@ module.exports = async (req, res) => {
 
   if (pathname === '/showreel') {
     const ogData = buildShowreelOG(content);
-    const jsonLd = buildShowreelJsonLd(content, `${BASE_URL}/showreel`);
+    const jsonLd = await buildShowreelJsonLd(content, `${BASE_URL}/showreel`);
     return serveSeoPage(req, res, { ogData, jsonLd, pathname, content });
   }
 
@@ -448,6 +457,6 @@ module.exports = async (req, res) => {
   }
 
   const ogData = buildOGData(project);
-  const jsonLd = buildProjectJsonLd(project, `${BASE_URL}/project/${project.slug}`);
+  const jsonLd = await buildProjectJsonLd(project, `${BASE_URL}/project/${project.slug}`);
   return serveSeoPage(req, res, { ogData, jsonLd, pathname, content });
 };

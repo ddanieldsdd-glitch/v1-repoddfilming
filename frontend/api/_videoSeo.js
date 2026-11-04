@@ -6,6 +6,8 @@
  * watch page, JSON-LD, sitemap de vídeo e iframe para crawlers.
  */
 
+const { getVimeoMeta } = require('./_vimeoMeta');
+
 function isVideoUrl(url) {
   return /vimeo\.com|youtube\.com|youtu\.be/i.test(String(url || ''));
 }
@@ -77,8 +79,52 @@ function projectDescription(project, fallback = 'Proyecto cinematográfico de Da
   return (project?.synopsis?.es || project?.synopsis?.en || fallback).slice(0, 500);
 }
 
+/**
+ * uploadDate es obligatorio para Google (VideoObject). Si no hay dato mejor,
+ * se usa esta fecha fija para que el nodo nunca quede sin el campo.
+ */
+const FALLBACK_UPLOAD_DATE = '2024-01-01T00:00:00+00:00';
+
+function projectUploadDate(project) {
+  const year = Number.parseInt(project?.year, 10);
+  return Number.isFinite(year) && year > 1900 ? `${year}-01-01T00:00:00+00:00` : FALLBACK_UPLOAD_DATE;
+}
+
+/**
+ * Metadatos reales del vídeo (fecha de subida, duración) desde Vimeo.
+ * Se resuelven por id en cada petición (caché 24 h), así que cambiar el
+ * vídeo desde /admin actualiza JSON-LD y sitemap sin tocar nada más.
+ * YouTube no expone la fecha sin API key: se usa el año del proyecto.
+ */
+async function getVideoMeta(video, { timeoutMs = 3000 } = {}) {
+  if (!video || video.provider !== 'vimeo') return null;
+  let timer;
+  const timeout = new Promise((resolve) => {
+    timer = setTimeout(() => resolve(null), timeoutMs);
+  });
+  try {
+    return await Promise.race([getVimeoMeta(video.id).catch(() => null), timeout]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function videoUploadDate(project, meta) {
+  return meta?.upload_date || projectUploadDate(project);
+}
+
+/** Segundos → duración ISO 8601 (65 → "PT1M5S"). */
+function toIsoDuration(seconds) {
+  const total = Math.round(Number(seconds));
+  if (!Number.isFinite(total) || total <= 0) return undefined;
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  return `PT${h ? `${h}H` : ''}${m ? `${m}M` : ''}${s || (!h && !m) ? `${s}S` : ''}`;
+}
+
 /** Nodos WebPage + VideoObject para JSON-LD de un proyecto. */
-function buildProjectVideoGraph(project, pageUrl, siteName = 'Dani Díaz') {
+function buildProjectVideoGraph(project, pageUrl, siteName = 'Dani Díaz', meta = null) {
   const video = resolveProjectVideo(project);
   const description = projectDescription(project);
   const videoNodeId = video ? `${pageUrl}#video` : undefined;
@@ -103,7 +149,8 @@ function buildProjectVideoGraph(project, pageUrl, siteName = 'Dani Díaz') {
       name: project.title,
       description,
       thumbnailUrl: getProjectVideoThumbnail(project, video),
-      uploadDate: project.year ? `${project.year}-01-01T00:00:00+00:00` : undefined,
+      uploadDate: videoUploadDate(project, meta),
+      duration: toIsoDuration(meta?.duration),
       contentUrl: video.contentUrl,
       embedUrl: video.embedUrl,
       url: pageUrl,
@@ -120,8 +167,8 @@ function buildProjectVideoGraph(project, pageUrl, siteName = 'Dani Díaz') {
   return graph;
 }
 
-function buildProjectVideoJsonLd(project, pageUrl, siteName) {
-  const graph = buildProjectVideoGraph(project, pageUrl, siteName);
+function buildProjectVideoJsonLd(project, pageUrl, siteName, meta = null) {
+  const graph = buildProjectVideoGraph(project, pageUrl, siteName, meta);
   return JSON.stringify(
     { '@context': 'https://schema.org', '@graph': graph },
     (_, v) => (v === undefined ? undefined : v),
@@ -130,7 +177,7 @@ function buildProjectVideoJsonLd(project, pageUrl, siteName) {
 }
 
 /** Bloque XML <video:video> para sitemap (Vimeo o YouTube). */
-function buildVideoSitemapBlock({ videoUrl, title, description, thumb }) {
+function buildVideoSitemapBlock({ videoUrl, title, description, thumb, publicationDate, durationSec }) {
   const video = parseVideoUrl(videoUrl);
   if (!video) return '';
 
@@ -151,6 +198,8 @@ function buildVideoSitemapBlock({ videoUrl, title, description, thumb }) {
     `      <video:title>${escXml(title)}</video:title>`,
     desc ? `      <video:description>${escXml(desc)}</video:description>` : '',
     `      <video:player_loc>${escXml(video.embedUrl)}</video:player_loc>`,
+    durationSec ? `      <video:duration>${Math.round(durationSec)}</video:duration>` : '',
+    publicationDate ? `      <video:publication_date>${escXml(publicationDate)}</video:publication_date>` : '',
     '      <video:family_friendly>yes</video:family_friendly>',
     '    </video:video>',
   ]
@@ -158,7 +207,7 @@ function buildVideoSitemapBlock({ videoUrl, title, description, thumb }) {
     .join('\n');
 }
 
-function buildProjectVideoSitemapBlock(project) {
+function buildProjectVideoSitemapBlock(project, meta = null) {
   const videoUrl = getProjectVideoUrl(project);
   if (!videoUrl) return '';
   const video = parseVideoUrl(videoUrl);
@@ -169,10 +218,17 @@ function buildProjectVideoSitemapBlock(project) {
     title: project.title,
     description: project.synopsis?.es || project.synopsis?.en || '',
     thumb: getProjectVideoThumbnail(project, video),
+    publicationDate: videoUploadDate(project, meta),
+    durationSec: meta?.duration,
   });
 }
 
 module.exports = {
+  getVideoMeta,
+  videoUploadDate,
+  FALLBACK_UPLOAD_DATE,
+  projectUploadDate,
+  toIsoDuration,
   isVideoUrl,
   parseVideoUrl,
   getProjectVideoUrl,

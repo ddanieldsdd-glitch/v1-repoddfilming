@@ -97,7 +97,12 @@ export function buildProjectVideoGraph(project, pageUrl, siteName = "Dani Díaz"
       name: project.title,
       description,
       thumbnailUrl: getProjectVideoThumbnail(project, video),
-      uploadDate: project.year ? `${project.year}-01-01T00:00:00+00:00` : undefined,
+      uploadDate: (() => {
+        const year = Number.parseInt(project?.year, 10);
+        return Number.isFinite(year) && year > 1900
+          ? `${year}-01-01T00:00:00+00:00`
+          : "2024-01-01T00:00:00+00:00";
+      })(),
       contentUrl: video.contentUrl,
       embedUrl: video.embedUrl,
       url: pageUrl,
