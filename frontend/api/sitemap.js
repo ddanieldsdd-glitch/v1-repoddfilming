@@ -6,12 +6,29 @@
 const { getMergedContent, getPublishedProjects } = require('./_content');
 const {
   parseVideoUrl,
+  resolveProjectVideo,
+  getVideoMeta,
+  FALLBACK_UPLOAD_DATE,
   buildVideoSitemapBlock,
   buildProjectVideoSitemapBlock,
 } = require('./_videoSeo');
 const defaultContent = require('../src/data/content.json');
 
 const BASE_URL = 'https://ddanidiaz.com';
+
+// Cambios desde /admin: la CDN sirve el sitemap como mucho 1 h desfasado.
+const CACHE_CONTROL = 'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400';
+
+/** ISO → "YYYY-MM-DD" (lastmod real: Google ignora lastmod que cambia a diario). */
+function toDay(value, fallback) {
+  const d = value ? new Date(value) : null;
+  return d && !Number.isNaN(d.getTime()) ? d.toISOString().split('T')[0] : fallback;
+}
+
+function latestDay(values, fallback) {
+  const days = values.map((v) => toDay(v, null)).filter(Boolean).sort();
+  return days.length ? days[days.length - 1] : fallback;
+}
 
 function escXml(str) {
   return String(str || '')
@@ -25,7 +42,7 @@ function escXml(str) {
 module.exports = async (req, res) => {
   if (req.method === 'HEAD') {
     res.setHeader('Content-Type', 'application/xml; charset=utf-8');
-    res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800');
+    res.setHeader('Cache-Control', CACHE_CONTROL);
     return res.status(200).end();
   }
   if (req.method !== 'GET') return res.status(405).end('Method Not Allowed');
@@ -39,19 +56,32 @@ module.exports = async (req, res) => {
 
   const categories = [...new Set(published.map((p) => p.category).filter(Boolean))];
 
+  const showreel = parseVideoUrl(content.site?.showreel_url);
+  // Metadatos de Vimeo en paralelo (caché 24 h por id, 3 s máx. cada uno).
+  const [showreelMeta, ...projectMetas] = await Promise.all([
+    getVideoMeta(showreel),
+    ...published.map((p) => getVideoMeta(resolveProjectVideo(p))),
+  ]);
+
   const showreelVideo = buildVideoSitemapBlock({
     videoUrl: content.site?.showreel_url,
     title: 'Showreel — Dani Díaz',
     description: siteDesc,
-    thumb: parseVideoUrl(content.site?.showreel_url)?.defaultThumbnail || '',
+    thumb: showreel?.defaultThumbnail || '',
+    publicationDate: showreelMeta?.upload_date || FALLBACK_UPLOAD_DATE,
+    durationSec: showreelMeta?.duration,
   });
 
+  const siteDay = toDay(content.site_updated_at || content.updated_at, today);
+  const homeDay = latestDay([content.home_updated_at, content.site_updated_at], siteDay);
+  const workDay = latestDay(published.map((p) => p.updated_at), siteDay);
+
   const staticUrls = [
-    { loc: '/',        priority: '1.0', changefreq: 'weekly',  lastmod: today, video: '' },
-    { loc: '/showreel', priority: '0.95', changefreq: 'monthly', lastmod: today, video: showreelVideo },
-    { loc: '/work',    priority: '0.9', changefreq: 'weekly',  lastmod: today, video: '' },
-    { loc: '/about',   priority: '0.8', changefreq: 'monthly', lastmod: today, video: '' },
-    { loc: '/contact', priority: '0.7', changefreq: 'monthly', lastmod: today, video: '' },
+    { loc: '/',        priority: '1.0', changefreq: 'weekly',  lastmod: latestDay([homeDay, workDay], today), video: '' },
+    { loc: '/showreel', priority: '0.95', changefreq: 'monthly', lastmod: siteDay, video: showreelVideo },
+    { loc: '/work',    priority: '0.9', changefreq: 'weekly',  lastmod: workDay, video: '' },
+    { loc: '/about',   priority: '0.8', changefreq: 'monthly', lastmod: siteDay, video: '' },
+    { loc: '/contact', priority: '0.7', changefreq: 'monthly', lastmod: siteDay, video: '' },
   ].map(({ loc, priority, changefreq, lastmod, video }) =>
     [
       '  <url>',
@@ -68,16 +98,16 @@ module.exports = async (req, res) => {
     [
       '  <url>',
       `    <loc>${BASE_URL}/work/${escXml(cat)}</loc>`,
-      `    <lastmod>${today}</lastmod>`,
+      `    <lastmod>${latestDay(published.filter((p) => p.category === cat).map((p) => p.updated_at), workDay)}</lastmod>`,
       '    <changefreq>weekly</changefreq>',
       '    <priority>0.8</priority>',
       '  </url>',
     ].join('\n')
   );
 
-  const projectUrls = published.map((p) => {
-    const lastmod    = p.year ? `${p.year}-06-01` : today;
-    const videoBlock = buildProjectVideoSitemapBlock(p);
+  const projectUrls = published.map((p, i) => {
+    const lastmod    = toDay(p.updated_at, p.year ? `${p.year}-06-01` : today);
+    const videoBlock = buildProjectVideoSitemapBlock(p, projectMetas[i]);
     return [
       '  <url>',
       `    <loc>${BASE_URL}/project/${escXml(p.slug)}</loc>`,
@@ -101,7 +131,7 @@ module.exports = async (req, res) => {
   ].join('\n');
 
   res.setHeader('Content-Type', 'application/xml; charset=utf-8');
-  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800');
+  res.setHeader('Cache-Control', CACHE_CONTROL);
   res.setHeader('X-Content-Type-Options', 'nosniff');
   return res.status(200).send(xml);
 };

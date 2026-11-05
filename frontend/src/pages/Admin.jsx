@@ -124,6 +124,7 @@ function AdminChrome() {
 export default function Admin() {
   const [authed, setAuthed] = useState(isAdminAuthed());
   const [pwd, setPwd] = useState("");
+  const [code, setCode] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
   const [content, setContent] = useState(null);
   const [contentLoading, setContentLoading] = useState(false);
@@ -160,14 +161,17 @@ export default function Admin() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
-        body: JSON.stringify({ password: pwd }),
+        body: JSON.stringify({ password: pwd, code }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.ok) {
         setAdminAuthed(true);
         setAuthed(true);
+        setPwd("");
+        setCode("");
       } else {
-        toast.error(data.message || "Contraseña incorrecta");
+        setCode("");
+        toast.error(data.message || "Credenciales inválidas");
       }
     } catch {
       toast.error("Error de conexión");
@@ -183,6 +187,19 @@ export default function Admin() {
           <Link to="/" className="text-[11px] tracking-[0.28em] uppercase text-neutral-400 mb-10 inline-block hover:text-white">← Volver</Link>
           <h1 className="text-3xl tracking-tight mb-8 font-light text-white">Admin</h1>
           <input type="password" data-testid="admin-password" value={pwd} onChange={(e) => setPwd(e.target.value)} onKeyDown={(e) => e.key === "Enter" && tryLogin()} placeholder="Contraseña" className={inputCls} autoComplete="current-password" />
+          <input
+            type="text"
+            data-testid="admin-totp"
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+            onKeyDown={(e) => e.key === "Enter" && tryLogin()}
+            placeholder="Código de verificación (6 dígitos)"
+            className={`${inputCls} mt-3 tracking-[0.3em]`}
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            maxLength={6}
+            aria-label="Código de verificación de tu app de autenticación"
+          />
           <button data-testid="admin-login-btn" type="button" onClick={tryLogin} disabled={loginLoading} className="mt-4 w-full border border-white/30 px-5 py-3 text-[11px] tracking-[0.28em] uppercase text-white hover:bg-white hover:text-black transition disabled:opacity-50">
             {loginLoading ? "Entrando…" : "Entrar"}
           </button>

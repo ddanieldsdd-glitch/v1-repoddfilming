@@ -32,6 +32,7 @@ async function listHistory(db, { limit = 30 } = {}) {
 
 async function getHistoryEntry(db, id) {
   const { ObjectId } = require('mongodb');
+  if (!ObjectId.isValid(String(id || ''))) return null;
   return db.collection(HISTORY_COLLECTION).findOne({ _id: new ObjectId(id) });
 }
 

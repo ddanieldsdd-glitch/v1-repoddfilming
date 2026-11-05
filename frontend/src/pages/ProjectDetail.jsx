@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { useContent, useLang } from "../lib/useContent";
 import { T, tr } from "../lib/i18n";
 import { VideoPlayer } from "../components/VideoPlayer";
+import { safeHref } from "../lib/safeUrl";
 import { getActiveCategories } from "../lib/contentStore";
 import { ProjectCard } from "../components/ProjectCard";
 import { CategoryExploreLinks } from "../components/CategoryExploreLinks";
@@ -199,8 +200,15 @@ export default function ProjectDetail() {
     if (!project) return undefined;
 
     const pageUrl = `https://ddanidiaz.com/project/${project.slug}`;
-    const graph = buildProjectVideoGraph(project, pageUrl, content.site?.name || "Dani Díaz");
     const scriptId = "project-jsonld";
+    // Carga directa de la URL: api/og.js ya sirvió el JSON-LD con la fecha y
+    // duración reales de Vimeo. No duplicarlo con datos distintos.
+    const fromServer = Array.from(
+      document.querySelectorAll('script[type="application/ld+json"]'),
+    ).some((el) => el.id !== scriptId && el.textContent.includes(`${pageUrl}#webpage`));
+    if (fromServer) return undefined;
+
+    const graph = buildProjectVideoGraph(project, pageUrl, content.site?.name || "Dani Díaz");
 
     document.getElementById(scriptId)?.remove();
 
@@ -262,6 +270,7 @@ export default function ProjectDetail() {
   }
 
   const catLabel = getActiveCategories(projects).find((c) => c.id === project.category)?.[lang] || "";
+  const externalLink = safeHref(project.external_link);
   const hasStills = project.stills && project.stills.length > 0;
   const hasBts = project.bts && project.bts.length > 0;
   const detailRecognitions = getDetailRecognitions(project);
@@ -461,11 +470,11 @@ export default function ProjectDetail() {
               </div>
             )}
 
-            {(project.external_link || hasBts) && (
+            {(externalLink || hasBts) && (
             <div className="mt-6 clear-left md:clear-none flex flex-wrap gap-2.5 items-center">
-              {project.external_link && (
+              {externalLink && (
                 <a
-                  href={project.external_link}
+                  href={externalLink}
                   target="_blank"
                   rel="noreferrer"
                   data-testid="project-external-link"

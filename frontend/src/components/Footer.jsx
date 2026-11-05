@@ -1,6 +1,7 @@
 import { useLocation } from "react-router-dom";
 import { useContent, useLang } from "../lib/useContent";
 import { tr } from "../lib/i18n";
+import { safeHref } from "../lib/safeUrl";
 
 export const Footer = () => {
   const content = useContent();
@@ -11,6 +12,8 @@ export const Footer = () => {
   if (location.pathname === "/showreel") return null;
 
   const s = content.site.social;
+  const instagram = safeHref(s.instagram);
+  const vimeo = safeHref(s.vimeo);
   const year = new Date().getFullYear();
 
   return (
@@ -33,11 +36,11 @@ export const Footer = () => {
           )}
         </div>
         <div className="flex flex-col items-start gap-3 md:col-span-5 md:items-end">
-          {s.instagram && (
-            <a data-testid="footer-instagram" href={s.instagram} target="_blank" rel="noreferrer" className="text-xs text-[var(--cinema-fg)] hover:opacity-60">Instagram ↗</a>
+          {instagram && (
+            <a data-testid="footer-instagram" href={instagram} target="_blank" rel="noreferrer" className="text-xs text-[var(--cinema-fg)] hover:opacity-60">Instagram ↗</a>
           )}
-          {s.vimeo && (
-            <a data-testid="footer-vimeo" href={s.vimeo} target="_blank" rel="noreferrer" className="text-xs text-[var(--cinema-fg)] hover:opacity-60">Vimeo ↗</a>
+          {vimeo && (
+            <a data-testid="footer-vimeo" href={vimeo} target="_blank" rel="noreferrer" className="text-xs text-[var(--cinema-fg)] hover:opacity-60">Vimeo ↗</a>
           )}
           <a data-testid="footer-email" href={`mailto:${s.email}`} className="text-xs text-[var(--cinema-fg)] hover:opacity-60">Email ↗</a>
         </div>

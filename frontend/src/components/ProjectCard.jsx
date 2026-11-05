@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import { T, tr } from "../lib/i18n";
 import { VideoPlayer } from "./VideoPlayer";
+import { isCrawler } from "../lib/crawler";
 import {
   HOME_SHOWREEL_KEY,
   pauseAllExcept,
@@ -144,7 +145,10 @@ export const ProjectCard = ({
   }, [cardSurface]);
 
   // Preload al acercarse o al hover. No montar todos los iframes de Obra a la vez.
-  const shouldPreload = Boolean(previewUrl && ((inView && heroReady) || hovered));
+  // Crawlers: sin iframe de vista previa (ver lib/crawler.js).
+  const shouldPreload = Boolean(
+    previewUrl && !isCrawler() && ((inView && heroReady) || hovered),
+  );
   const shouldPlay    = Boolean(previewUrl && (hovered || (alwaysPlay && playInView)));
 
   const onMouseEnter = () => {
